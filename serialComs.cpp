@@ -63,7 +63,11 @@ void SerialComs::comInit()
                     buff[17] = '\0';
                     qDebug() << "tiaoma qiang";
                     QString serialNums = QString(QLatin1String(buff));
-                    if(isRFID == 2)
+                    if(SaveWhat == "delete_car")
+                    {
+                        emit serialCom(serialNums,false,"queue");
+                    }
+                    else if(isRFID == 2)
                     {
 //                        if(SYSS == "ING")
                             emit  serialCom(serialNums,false,"queue");

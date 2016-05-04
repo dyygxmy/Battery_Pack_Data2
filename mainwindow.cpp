@@ -205,7 +205,6 @@ void MainWindow::sendWebValue(int states,QString namepdm)
 
 void MainWindow::VinPinCodeView(bool flags, int whichtmp)
 {
-
     if(flags)
     {
         emit sendnexo(serialNums);
@@ -1112,7 +1111,6 @@ void MainWindow::getSerialNum(QString serialNum,bool equeled,QString tempp)
             ui->label_tiaomastate->setText(tr("条码重复"));
         }else //不重复匹配
         {
-
             if(SYSS == "OK" || SYSS == "NOK")
             {
                 if(timerpdm.isActive())
@@ -1214,7 +1212,9 @@ void MainWindow::getSerialNum(QString serialNum,bool equeled,QString tempp)
             {
                 if(serialNums == VIN_PIN_SQL)
                 {
-                    qDebug()<<"qieshineng";
+                    //切使能
+                    ISRESET = true;
+                    emit sendoperate();
                 }
                 emit sendDeleteCar_VIN(serialNums);
                 query.exec("select RecordId, AutoNO from TaskPreview where VIN = '"+ serialNums+"'");

@@ -126,7 +126,7 @@ void TightenThread::receivehavedconnect(bool a)
                 if(sendheartt->isActive())
                     sendheartt->stop();
                 if(SYSS == "ING")
-                emit ReconnectSendOperate();
+                    emit ReconnectSendOperate();
                 sendheartt->start(5000);
             }
             if(!CsIsConnect)
