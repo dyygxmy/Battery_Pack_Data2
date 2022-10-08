@@ -1,1 +1,2 @@
-# Battery_Pack_Data2\nPack20210607
+# Battery_Pack_Data2
+Pack20210607版本
