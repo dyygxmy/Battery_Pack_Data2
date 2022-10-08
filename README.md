@@ -1,1 +1,2 @@
-# Battery_Pack_Data2\PackM44020191010
+# Battery_Pack_Data2
+PackM44020191010
