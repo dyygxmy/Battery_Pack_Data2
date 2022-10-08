@@ -51,7 +51,7 @@
   <widget class="QLabel" name="label_3">
    <property name="geometry">
     <rect>
-     <x>155</x>
+     <x>156</x>
      <y>100</y>
      <width>21</width>
      <height>31</height>
@@ -67,7 +67,7 @@
   <widget class="QLineEdit" name="lineEdit_bx1name">
    <property name="geometry">
     <rect>
-     <x>30</x>
+     <x>31</x>
      <y>100</y>
      <width>111</width>
      <height>35</height>
@@ -87,7 +87,7 @@ font: 14pt &quot;黑体&quot;;</string>
   <widget class="QLineEdit" name="lineEdit_bx1code">
    <property name="geometry">
     <rect>
-     <x>180</x>
+     <x>181</x>
      <y>100</y>
      <width>111</width>
      <height>35</height>
@@ -107,7 +107,7 @@ font: 14pt &quot;Arial&quot;;</string>
   <widget class="QPushButton" name="pushButton">
    <property name="geometry">
     <rect>
-     <x>270</x>
+     <x>271</x>
      <y>150</y>
      <width>53</width>
      <height>53</height>

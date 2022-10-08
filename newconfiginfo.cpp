@@ -19,11 +19,18 @@ Newconfiginfo::Newconfiginfo(QWidget *parent) :
     this->setWindowFlags(Qt::FramelessWindowHint);//去掉标题栏
     // this->setCursor(Qt::BlankCursor); //去掉光标
     this->setGeometry(QRect(0, 0, 1366, 768));
+    ui->lineEdit_G9->setEnabled(true);
+
+
+    ui->label_94->setGeometry(525,246,130,29);
+
+    area = new PaintArea(ui->tab_2);
     pagenum = 1;
     optionIscheck = false;
     numpdm = 0;
     temppdm = 0;
-    isrfid = isRFID;
+    isbarcode = isBarCode;
+    isrfid    = isRFID;
     line_ID = Line_ID;
     ui->label_100->hide();
     whichcar = 0;
@@ -56,39 +63,36 @@ Newconfiginfo::Newconfiginfo(QWidget *parent) :
     //    ui->pushButton_taotong_add->hide();
     //    ui->pushButton_taotong_minus->hide();
     //    ui->lineEdit_taotong->hide();
-    ui->lineEdit_taotong->setText(tr("无"));
+    ui->lineEdit_taotong->setText("OFF");
+    ui->lineEdit_channel->setText("OFF");
     ui->pushButton_10->setEnabled(false);
     ui->pushButton_11->setEnabled(false);
     ui->label_version->setText(Version);
     QSettings *configIniRead = new QSettings("/config.ini", QSettings::IniFormat);
 
-    cs351Ip = configIniRead->value("baseinfo/cs351Ip").toString();
-    PortA = configIniRead->value("baseinfo/PortA").toString();
-    PortB = configIniRead->value("baseinfo/PortB").toString();
+    controllerIp_01 = configIniRead->value("baseinfo/ControllerIp_1").toString();
+    controllerIp_02 = configIniRead->value("baseinfo/ControllerIp_2").toString();
+    //    PortA = configIniRead->value("baseinfo/PortA").toString();
+    //    PortB = configIniRead->value("baseinfo/PortB").toString();
     RfidIp = configIniRead->value("baseinfo/RfidIp").toString();
     RfidPort = configIniRead->value("baseinfo/RfidPort").toString();
     DataServerIp = configIniRead->value("baseinfo/DataServerIp").toString();
     CurveServerIp = configIniRead->value("baseinfo/CurveServerIp").toString();
     AndonServerIp = configIniRead->value("baseinfo/AndonServerIp").toString();
+    ServerPort = configIniRead->value("baseinfo/ServerPort").toString();
     BarcodeGun = configIniRead->value("baseinfo/BarcodeGun").toString();
+    Gcarcode = BarcodeGun.toInt();
     delete configIniRead;
 
     QRegExp rx("[0-9.]{7,15}");
     QValidator *validator = new QRegExpValidator(rx, this );
-    ui->lineEdit_localip->setValidator(validator);
-    ui->lineEdit_wirelessip->setValidator(validator);
-    ui->lineEdit_netmask->setValidator(validator);
-    ui->lineEdit_gateway->setValidator(validator);
     ui->lineEdit_tacktime->setValidator(validator);
-    ui->lineEdit_slave_1->setValidator(validator);
-    ui->lineEdit_slave_2->setValidator(validator);
-    ui->lineEdit_slave_3->setValidator(validator);
     ui->lineEdit_torque_max->setValidator(validator);
     ui->lineEdit_torque_min->setValidator(validator);
     ui->lineEdit_angle_max->setValidator(validator);
     ui->lineEdit_angle_min->setValidator(validator);
-    if(isRFID!=1)
-        ui->lineEdit_G9->setEnabled(false);
+    //    if(!isRFID)
+    //        ui->lineEdit_G9->setEnabled(false);
     QRegExp rx1("[0-9]{1,9}");
     QValidator *validator1 = new QRegExpValidator(rx1, this );
     ui->year->setValidator(validator1);
@@ -101,8 +105,32 @@ Newconfiginfo::Newconfiginfo(QWidget *parent) :
     ui->lineEdit_number->setValidator(validator1);
     ui->lineEdit_xuanpronum->setValidator(validator1);
     ui->lineEdit_xuannumber->setValidator(validator1);
+
+
+    //    QRegExp rx21("[0-9,A-Z,-,a-z]{1,21}");
+    //    QValidator *validator21 = new QRegExpValidator(rx21, this );
+
     ui->lineEdit_Lsnumber->setValidator(validator1);
     ui->lineEdit_xuanLsnum->setValidator(validator1);
+
+    QRegExp rx2("^((([1-9]{0,1}|2[0-4]|1\\d)\\d|25[0-5])(\\.|$)){4}");
+    QValidator *validator2 = new QRegExpValidator(rx2, this);
+    ui->lineEdit_localip->setValidator(validator2);
+    ui->lineEdit_localip2->setValidator(validator2);
+    ui->lineEdit_wirelessip->setValidator(validator2);
+    ui->lineEdit_netmask->setValidator(validator2);
+    ui->lineEdit_gateway->setValidator(validator2);
+    ui->lineEdit_slave_1->setValidator(validator2);
+    ui->lineEdit_slave_2->setValidator(validator2);
+    ui->lineEdit_slave_3->setValidator(validator2);
+    //    ipLineEdit->setValidator(validator2);
+    //    ui->lineEdit_localip->setInputMask("000.000.000.000;");
+    //    ui->lineEdit_wirelessip->setInputMask("000.000.000.000;");
+    //    ui->lineEdit_netmask->setInputMask("000.000.000.000;");
+    //    ui->lineEdit_gateway->setInputMask("000.000.000.000;");
+    //    ui->lineEdit_slave_1->setInputMask("000.000.000.000;");
+    //    ui->lineEdit_slave_2->setInputMask("000.000.000.000;");
+    //    ui->lineEdit_slave_3->setInputMask("000.000.000.000;");
 
     ui->lineEdit_psk->setEchoMode(QLineEdit::Password);
     ui->label_bx1name->setAttribute(Qt::WA_TransparentForMouseEvents);
@@ -136,12 +164,44 @@ Newconfiginfo::Newconfiginfo(QWidget *parent) :
     ui->pushButton_77->setAttribute(Qt::WA_TransparentForMouseEvents);
     ui->pushButton_78->setAttribute(Qt::WA_TransparentForMouseEvents);
     ui->pushButton_79->setAttribute(Qt::WA_TransparentForMouseEvents);
+    ui->label_143->setAttribute(Qt::WA_TransparentForMouseEvents);
+    ui->label_142->setAttribute(Qt::WA_TransparentForMouseEvents);
+    ui->label_167->setAttribute(Qt::WA_TransparentForMouseEvents);
+    ui->label_144->setAttribute(Qt::WA_TransparentForMouseEvents);
+    ui->label_171->setAttribute(Qt::WA_TransparentForMouseEvents);
+    ui->label_172->setAttribute(Qt::WA_TransparentForMouseEvents);
 
-    ui->stackedWidget_6->setCurrentIndex(1);
+    ui->stackedWidget_6->setCurrentIndex(0);
 
+    //    if(ControlType == "SB356")
+    //    {
+    //        ui->label_taotongg->setText(tr("通道选择："));
+    //    }
     connect_localMySQL();
     bound_init();
     // pdminit();
+    ui->pushButton_13->hide();
+    ui->pushButton_91->hide();
+    ui->label_78->hide();
+    ui->pushButton_97->hide();
+    ui->pushButton_100->hide();
+    ui->label_101->hide();
+    ui->pushButton_86->hide();
+    ui->label_99->hide();
+    ui->pushButton_taryContinue->hide();
+
+    initui();
+    pdminit();
+
+    IOput = new InOutput;
+    //    ui->stackedWidget_history->setCurrentIndex(0);
+
+    //    image = QImage(ui->page_25,QImage::Format_RGB32);
+    ////    image = QImage(600,300,QImage::Format_RGB32);  //画布的初始化大小设为600*500，使用32位颜色
+    //    QColor backColor = qRgb(248,248,255);    //画布初始化背景色使用白色
+    //    image.fill(backColor);//对画布进行填充
+    //    QPainter painter(ui->page_25);
+    //    painter.setRenderHint(QPainter::Antialiasing, true);//设置反锯齿模式，好看一点
 }
 
 Newconfiginfo::~Newconfiginfo()
@@ -158,10 +218,65 @@ void Newconfiginfo::clearCache()
     ui->label_Lsnum->clear();
     ui->label_pronum->clear();
     ui->label_number->clear();
-    // ui->label_pageum->setText("1");
-    pagenum = 2;
-    on_pushButton_8_clicked();
+    ui->label_108->show();
+    ui->label_pronum->show();
+    ui->label_number->show();
+    ui->label_isxuan->clear();
+    ui->pushButton_10->show();
+    ui->pushButton_11->show();
+    ui->label_109->show();
+    ui->label_110->show();
+    ui->pushButton_10->setEnabled(false);
+    ui->pushButton_11->setEnabled(false);
+    ui->label_currentindex->setText("1");
+    ui->label_currentindex->show();
+    ui->label_pageum->setText("1");
+    //    pagenum = 2;
+    //    on_pushButton_8_clicked();
+    ui->pushButton_xuan1->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+    ui->pushButton_xuan2->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+    ui->pushButton_xuan3->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+    ui->pushButton_xuan4->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+    ui->pushButton_xuan5->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+    ui->pushButton_xuan1->setEnabled(false);
+    ui->pushButton_xuan2->setEnabled(false);
+    ui->pushButton_xuan3->setEnabled(false);
+    ui->pushButton_xuan4->setEnabled(false);
+    ui->pushButton_xuan5->setEnabled(false);
+    ui->pushButton_70->setText("");
+    ui->pushButton_71->setText("");
+    ui->pushButton_72->setText("");
+    ui->pushButton_73->setText("");
+    ui->pushButton_74->setText("");
+    ui->pushButton_75->setText("");
+    ui->pushButton_76->setText("");
+    ui->pushButton_77->setText("");
+    ui->pushButton_78->setText("");
+    ui->pushButton_79->setText("");
 
+    QSettings *configIniRead = new QSettings("/config.ini", QSettings::IniFormat);
+    for(int i = 1;i < 6;i++ )
+    {
+        if(configIniRead->value(QString("carinfo").append(QString::number(i)).append("/IsOptionalStation")).toInt())
+        {
+            buttonbox[i-1]->setText(configIniRead->value(QString("carinfo").append(QString::number(i)).append("/carcx")).toString());
+            buttonbox[i-1]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/67.bmp);font:14pt;color: rgb(248, 248, 255);");
+        }
+        else
+        {
+            for(int k = 1;k < 6;k++)
+            {
+                if(configIniRead->value(QString("carinfo").append(QString::number(i)).append("/LSNumber").append(QString::number(k))).toInt())
+                {
+                    buttonbox[i-1]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/67.bmp);font:14pt;color: rgb(248, 248, 255);");
+                    buttonbox[i-1]->setText(configIniRead->value(QString("carinfo").append(QString::number(i)).append("/carcx")).toString());
+                    break;
+                }
+            }
+        }
+
+    }
+    delete configIniRead;
 }
 void Newconfiginfo::initui()
 {
@@ -203,72 +318,43 @@ void Newconfiginfo::initui()
 
     }
 
-    if(isJS)
-    {
-        //技术
-        ui->label_86->hide();
-        ui->pushButton_28->hide();
-        ui->stackedWidget_2->setCurrentIndex(0);
-        ui->label_stationname->setText(configIniRead->value("baseinfo/StationName").toString());
-        ui->label_stationid->setText(configIniRead->value("baseinfo/StationId").toString());
-        ui->label_localip->setText(configIniRead->value("baseinfo/LocalIp").toString());
-        ui->label_4->setText(configIniRead->value("baseinfo/Operator").toString());
-        ui->label_6->setText(configIniRead->value("baseinfo/WirelessIp").toString());
-        ui->label_csip->setText(configIniRead->value("baseinfo/cs351Ip").toString());
-        ui->label_csporta->setText(configIniRead->value("baseinfo/PortA").toString());
-        ui->label_csportb->setText(configIniRead->value("baseinfo/PortB").toString());
-        ui->label_rfip->setText(configIniRead->value("baseinfo/RfidIp").toString());
-        ui->label_rfport->setText(configIniRead->value("baseinfo/RfidPort").toString());
-        ui->label_dataserverip->setText(configIniRead->value("baseinfo/DataServerIp").toString());
-        ui->label_curveserverip->setText(configIniRead->value("baseinfo/CurveServerIp").toString());
-        ui->label_BarcodeGun_2->setText(configIniRead->value("baseinfo/BarcodeGun").toString());
-        ui->label_14->setText(configIniRead->value("baseinfo/SSID").toString());
-        ui->label_5->setText(configIniRead->value("baseinfo/TackTime").toString());   //节拍时间
+    //管理
+    //        if(isRFID == 1)   //RFID 条码抢模式的 界面初始化
+    //        {
+    //            ui->stackedWidget_4->setCurrentIndex(0);
+    //        }
+    //        else
+    //        {
+    //            ui->stackedWidget_4->setCurrentIndex(1);
+    //        }
+    ui->pushButton_28->show();
+    ui->stackedWidget_2->setCurrentIndex(2);
 
+    // ui->stackedWidget_4->setCurrentIndex(0);
+    ui->stackedWidget_5->setCurrentIndex(0);
 
-        if(isRFID == 1)   //RFID 条码抢模式的 界面初始化
-        {
-            ui->stackedWidget_7->setCurrentIndex(0);
-        }
-        else
-        {
-            ui->stackedWidget_7->setCurrentIndex(1);
-        }
-    }
+    ui->lineEdit_staname->setText(configIniRead->value("baseinfo/StationName").toString());
+    //        ui->lineEdit_Operator->setText(configIniRead->value("baseinfo/Operator").toString());
+    ui->lineEdit_localip->setText(configIniRead->value("baseinfo/LocalIp").toString());
+    ui->lineEdit_localip2->setText(configIniRead->value("baseinfo/LocalIp2").toString());
+    ui->lineEdit_wirelessip->setText(configIniRead->value("baseinfo/WirelessIp").toString());
+    ui->lineEdit_staid->setText(configIniRead->value("baseinfo/StationId").toString());
+    ui->label_97->setText(configIniRead->value("baseinfo/ControllerIp_1").toString());
+    //    ui->label_155->setText(configIniRead->value("baseinfo/RfidIp").toString());
+    ui->label_154->setText(configIniRead->value("baseinfo/DataServerIp").toString());
+    if(isRFID)
+        ui->label_153->setText(RfidIp);
+    else if(isBarCode)
+        ui->label_153->setText(BarcodeGun);
     else
-    {
-        //管理
-        if(isRFID == 1)   //RFID 条码抢模式的 界面初始化
-        {
-            ui->stackedWidget_4->setCurrentIndex(0);
-        }
-        else
-        {
-            ui->stackedWidget_4->setCurrentIndex(1);
-        }
-        ui->pushButton_28->show();
-        ui->stackedWidget_2->setCurrentIndex(2);
+        ui->label_153->setText("");
+    //        ui->label_153->setText(configIniRead->value("baseinfo/BarcodeGun").toString());
+    //        ui->lineEdit_csip->setText(configIniRead->value("baseinfo/cs351Ip").toString());
+    //        ui->lineEdit_csporta->setText(configIniRead->value("baseinfo/PortA").toString());
+    //        ui->lineEdit_csportb->setText(configIniRead->value("baseinfo/PortB").toString());
+    //        ui->lineEdit_serip->setText(configIniRead->value("baseinfo/ServerIp").toString());
+    //        ui->lineEdit_serport->setText(configIniRead->value("baseinfo/ServerPort").toString());
 
-        // ui->stackedWidget_4->setCurrentIndex(0);
-        ui->stackedWidget_5->setCurrentIndex(0);
-
-        ui->lineEdit_staname->setText(configIniRead->value("baseinfo/StationName").toString());
-        ui->lineEdit_Operator->setText(configIniRead->value("baseinfo/Operator").toString());
-        ui->lineEdit_localip->setText(configIniRead->value("baseinfo/LocalIp").toString());
-        ui->lineEdit_wirelessip->setText(configIniRead->value("baseinfo/WirelessIp").toString());
-        ui->lineEdit_staid->setText(configIniRead->value("baseinfo/StationId").toString());
-        ui->label_97->setText(configIniRead->value("baseinfo/cs351Ip").toString());
-        ui->label_155->setText(configIniRead->value("baseinfo/RfidIp").toString());
-        ui->label_154->setText(configIniRead->value("baseinfo/DataServerIp").toString());
-        ui->label_153->setText(configIniRead->value("baseinfo/BarcodeGun").toString());
-        //        ui->lineEdit_csip->setText(configIniRead->value("baseinfo/cs351Ip").toString());
-        //        ui->lineEdit_csporta->setText(configIniRead->value("baseinfo/PortA").toString());
-        //        ui->lineEdit_csportb->setText(configIniRead->value("baseinfo/PortB").toString());
-        //        ui->lineEdit_serip->setText(configIniRead->value("baseinfo/ServerIp").toString());
-        //        ui->lineEdit_serport->setText(configIniRead->value("baseinfo/ServerPort").toString());
-
-
-    }
 
     delete configIniRead;
 }
@@ -296,11 +382,17 @@ void Newconfiginfo::on_pushButton_clicked()
     }
     else
     {
-        if(isJS)
+        whichButtonClick = "baseback";
+        if(!isbaseinfochange)
+        {
+            baseInfoIsChange();
+        }
+        else
         {
             //QSqlDatabase::removeDatabase("QMYSQL");
             //QSqlDatabase::removeDatabase("qt_sql_default_connection");
             historyclear();
+            ui->tabWidget->setCurrentIndex(0);
             //workmode = true;
             //config->setValue("baseinfo/workmode","0");
             workmode = false;
@@ -312,42 +404,12 @@ void Newconfiginfo::on_pushButton_clicked()
                 numpdm--;
             }
             ui->listWidget->setCurrentRow(1);
+            DebugMode = false;
             this->close();
             emit closeconfig();
-            emit xmlcreate();
-            //delete this;
+            //                emit xmlcreate();
+            system("cp /config.ini /config1.ini &");
         }
-        else
-        {
-            whichButtonClick = "baseback";
-            if(!isbaseinfochange)
-            {
-                baseInfoIsChange();
-            }
-            else
-            {
-                //QSqlDatabase::removeDatabase("QMYSQL");
-                //QSqlDatabase::removeDatabase("qt_sql_default_connection");
-                historyclear();
-                //workmode = true;
-                //config->setValue("baseinfo/workmode","0");
-                workmode = false;
-                ISmaintenance = false;
-                int tempdata = numpdm;
-                for(int i = 0;i<tempdata;i++)
-                {
-                    delete butt1[i];
-                    numpdm--;
-                }
-                ui->listWidget->setCurrentRow(1);
-                DebugMode = false;
-                this->close();
-                emit closeconfig();
-                emit xmlcreate();
-                system("cp /config.ini /config1.ini &");
-            }
-        }
-
     }
 
     // on_pushButton_15_clicked();
@@ -358,18 +420,21 @@ void Newconfiginfo::baseInfoIsChange()
 {
     // 监听
     QSettings *configIniRead = new QSettings("/config.ini", QSettings::IniFormat);
-    if (cs351Ip != configIniRead->value("baseinfo/cs351Ip").toString()||
-            PortA != configIniRead->value("baseinfo/PortA").toString()||
-            PortB != configIniRead->value("baseinfo/PortB").toString()||
+    if (controllerIp_01 != configIniRead->value("baseinfo/ControllerIp_1").toString()||
+            controllerIp_02 != configIniRead->value("baseinfo/ControllerIp_2").toString()||
+            //PortA != configIniRead->value("baseinfo/PortA").toString()||
+            //PortB != configIniRead->value("baseinfo/PortB").toString()||
             RfidIp != configIniRead->value("baseinfo/RfidIp").toString()||
             RfidPort != configIniRead->value("baseinfo/RfidPort").toString()||
             DataServerIp != configIniRead->value("baseinfo/DataServerIp").toString()||
             CurveServerIp != configIniRead->value("baseinfo/CurveServerIp").toString()||
             AndonServerIp != configIniRead->value("baseinfo/AndonServerIp").toString()||
+            ServerPort != configIniRead->value("baseinfo/ServerPort").toString()||
             BarcodeGun != configIniRead->value("baseinfo/BarcodeGun").toString()||
             ui->lineEdit_staname->text() != configIniRead->value("baseinfo/StationName").toString()||
-            ui->lineEdit_Operator->text() != configIniRead->value("baseinfo/Operator").toString()||
+            //            ui->lineEdit_Operator->text() != configIniRead->value("baseinfo/Operator").toString()||
             ui->lineEdit_localip->text() != configIniRead->value("baseinfo/LocalIp").toString()||
+            ui->lineEdit_localip2->text() != configIniRead->value("baseinfo/LocalIp2").toString()||
             ui->lineEdit_wirelessip->text() != configIniRead->value("baseinfo/WirelessIp").toString()||
             ui->lineEdit_staid->text() != configIniRead->value("baseinfo/StationId").toString() )
     {
@@ -391,39 +456,7 @@ void Newconfiginfo::baseInfoIsChange()
         isbaseinfochange = true;
         if (whichButtonClick == "baseback")
         {
-            on_pushButton_clicked();
-            isbaseinfochange = false;
-        }
-        else if (whichButtonClick == "about")
-        {
-            on_pushButton_13_clicked();
-            isbaseinfochange = false;
-        }
-        else if (whichButtonClick == "PDMEdit")
-        {
-            on_pushButton_28_clicked();
-            isbaseinfochange = false;
-        }
-        else if (whichButtonClick == "config")
-        {
-            ui->stackedWidget_2->setCurrentIndex(4);
-            ui->label_83->hide();
-            ui->label_84->show();
-            ui->label_85->hide();
-            ui->label_86->hide();
-            //            ui->pushButton_13->hide();
-            //            ui->label_52->setFocus();
-            isbaseinfochange = false;
-        }
-        else if (whichButtonClick == "history")
-        {
-            ui->stackedWidget_2->setCurrentIndex(3);
-            ui->label_83->hide();
-            ui->label_84->hide();
-            ui->label_85->show();
-            ui->label_86->hide();
-            //            ui->pushButton_13->hide();
-            //            ui->label_52->setFocus();
+            on_pushButton_22_clicked();
             isbaseinfochange = false;
         }
         else if (whichButtonClick == "advanced")
@@ -431,11 +464,6 @@ void Newconfiginfo::baseInfoIsChange()
             on_pushButton_62_clicked();
             isbaseinfochange = false;
         }
-        //        else if (whichButtonClick == "base")
-        //        {
-        //            isbaseinfochange = false;
-        //        }
-
     }
 }
 
@@ -464,88 +492,55 @@ void Newconfiginfo::on_listWidget_currentRowChanged(int currentRow)
             delete butt1[i];
             numpdm--;
         }
-        ui->listWidget->setStyleSheet("QListWidget::item:seleted{ border-color: rgb(51, 153, 255);} QListWidget{font: 18pt ;color: rgb(248, 248, 255);background:transparent;}");
+        ui->listWidget->setStyleSheet("QListWidget::item:seleted{ border-color: rgb(51, 153, 255);}"
+                                      " QListWidget{font: 18pt ;color: rgb(248, 248, 255);background:transparent;}");
         SaveWhat = "";
-        if(isJS)
+
+        if(currentRow == 0)
         {
-            if(currentRow == 0)
+            historyclear();
+            ui->stackedWidget_2->setCurrentIndex(2);
+            ui->label_83->show();
+            ui->label_84->hide();
+            ui->label_85->hide();
+            ui->label_86->hide();
+            //            ui->pushButton_13->show();
+            //            ui->label_52->setFocus();
+
+        }
+        else if(currentRow == 3)
+        {
+            historyclear();
+            if (ui->stackedWidget_2->currentIndex()==2)
             {
-                historyclear();
-                ui->stackedWidget_2->setCurrentIndex(0);
-                ui->label_83->show();
-                ui->label_84->hide();
-                ui->label_85->hide();
-                //            ui->pushButton_13->show();
+                whichButtonClick = "config";
+                if(!isbaseinfochange)
+                    baseInfoIsChange();
             }
-            else if(currentRow == 3)
+            else
             {
-                historyclear();
                 ui->stackedWidget_2->setCurrentIndex(4);
                 ui->label_83->hide();
                 ui->label_84->show();
                 ui->label_85->hide();
-                //            ui->pushButton_13->hide();
-                //            ui->label_52->setFocus();
-
-            }else if(currentRow == 6)
+                ui->label_86->hide();
+            }
+        }
+        else if(currentRow == 6)
+        {
+            if (ui->stackedWidget_2->currentIndex()==2)
+            {
+                whichButtonClick = "history";
+                if(!isbaseinfochange)
+                    baseInfoIsChange();
+            }
+            else
             {
                 ui->stackedWidget_2->setCurrentIndex(3);
                 ui->label_83->hide();
                 ui->label_84->hide();
                 ui->label_85->show();
-                //            ui->pushButton_13->hide();
-                //            ui->label_52->setFocus();
-
-            }
-
-        }else
-        {
-            if(currentRow == 0)
-            {
-                historyclear();
-                ui->stackedWidget_2->setCurrentIndex(2);
-                ui->label_83->show();
-                ui->label_84->hide();
-                ui->label_85->hide();
                 ui->label_86->hide();
-                //            ui->pushButton_13->show();
-                //            ui->label_52->setFocus();
-
-            }
-            else if(currentRow == 3)
-            {
-                historyclear();
-                if (ui->stackedWidget_2->currentIndex()==2)
-                {
-                    whichButtonClick = "config";
-                    if(!isbaseinfochange)
-                        baseInfoIsChange();
-                }
-                else
-                {
-                    ui->stackedWidget_2->setCurrentIndex(4);
-                    ui->label_83->hide();
-                    ui->label_84->show();
-                    ui->label_85->hide();
-                    ui->label_86->hide();
-                }
-            }
-            else if(currentRow == 6)
-            {
-                if (ui->stackedWidget_2->currentIndex()==2)
-                {
-                    whichButtonClick = "history";
-                    if(!isbaseinfochange)
-                        baseInfoIsChange();
-                }
-                else
-                {
-                    ui->stackedWidget_2->setCurrentIndex(3);
-                    ui->label_83->hide();
-                    ui->label_84->hide();
-                    ui->label_85->show();
-                    ui->label_86->hide();
-                }
             }
         }
     }
@@ -553,43 +548,53 @@ void Newconfiginfo::on_listWidget_currentRowChanged(int currentRow)
 // cancel
 void Newconfiginfo::receivebaseinfocancel()
 {
-
     delete e3;
     ui->label_100->hide();
     delete basicset;
+    SaveWhat = "";
 }
-void Newconfiginfo::receiveBaseinfo(QString a , QString b, QString c)
+void Newconfiginfo::receiveBaseinfo(QString a , QString b, QString c, QString d)
 {
-    if (SaveWhat == "cs351")
+    if (SaveWhat == "Controller")
     {
-        cs351Ip = a;
-        PortA = b;
-        PortB = c;
-        ui->label_97->setText(cs351Ip);
+        controllerIp_01 = a;
+        controllerIp_02 = b;
+        //        PortB = c;
+        ui->label_97->setText(controllerIp_01);
     }
-    else if(SaveWhat=="RFID")
-    {
-        RfidIp = a;
-        RfidPort = b;
-        ui->label_155->setText(RfidIp);
+    //    else if(SaveWhat=="RFID")
+    //    {
+    //        RfidIp = a;
+    //        RfidPort = b;
+    //        ui->label_155->setText(RfidIp);
 
-    }
+    //    }
     else if(SaveWhat=="server")
     {
         DataServerIp = a;
         CurveServerIp = b;
         AndonServerIp = c;
+        ServerPort = d;
         ui->label_154->setText(DataServerIp);
     }
-    else if(SaveWhat=="Gun")
+    else if(SaveWhat=="Barcode")
     {
-        BarcodeGun = a;
-        ui->label_153->setText(BarcodeGun);
+        if(isBarCode)
+        {
+            BarcodeGun = c;
+            ui->label_153->setText(BarcodeGun);
+        }
+        if(isRFID)
+        {
+            RfidIp = a;
+            RfidPort = b;
+            ui->label_153->setText(RfidIp);
+        }
     }
     delete e3;
     ui->label_100->hide();
     delete basicset;
-
+    SaveWhat = "";
 }
 void Newconfiginfo::on_pushButton_59_clicked()
 {
@@ -599,32 +604,32 @@ void Newconfiginfo::on_pushButton_59_clicked()
     ui->label_100->setGraphicsEffect(e3);
     ui->label_100->show();
     ui->label_100->setGeometry(0,0,1366,768);
-    SaveWhat = "cs351";
+    SaveWhat = "Controller";
     basicset = new BasicSet(this);
-    basicset->setConfigValue351(cs351Ip,PortA,PortB);
-    connect(basicset,SIGNAL(sendBaseinfo(QString,QString,QString)),this,SLOT(receiveBaseinfo(QString,QString,QString)));
+    basicset->setConfigValue351(controllerIp_01,controllerIp_02);
+    connect(basicset,SIGNAL(sendBaseinfo(QString,QString,QString,QString)),this,SLOT(receiveBaseinfo(QString,QString,QString,QString)));
     connect(basicset,SIGNAL(sendbaseinfocancel()),this,SLOT(receivebaseinfocancel()));
+    connect(basicset,SIGNAL(sendTruncate()),this,SLOT(mysqlTruncate()));
+    connect(this,SIGNAL(sendTruncateResult(bool)),basicset,SLOT(receiveResult(bool)));
     basicset->show();
 
 }
-
-void Newconfiginfo::on_pushButton_60_clicked()
+void Newconfiginfo::mysqlTruncate()
 {
-    //RFID 设置按钮
-
-    e3 = new QGraphicsOpacityEffect(this);
-    e3->setOpacity(0.5);
-    ui->label_100->setGraphicsEffect(e3);
-    ui->label_100->show();
-    ui->label_100->setGeometry(0,0,1366,768);
-    SaveWhat = "RFID";
-    basicset = new BasicSet(this);
-    basicset->setSerialOrRfidMode(RfidIp,RfidPort);
-    connect(basicset,SIGNAL(sendBaseinfo(QString,QString,QString)),this,SLOT(receiveBaseinfo(QString,QString,QString)));
-    connect(basicset,SIGNAL(sendbaseinfocancel()),this,SLOT(receivebaseinfocancel()));
-    basicset->show();
-
+    query = new QSqlQuery(db);
+    qDebug()<<"truncate table "+Localtable;
+    if(!query->exec("truncate table "+Localtable))
+    {
+        qDebug()<<"truncate Databases fail"<<query->lastError();
+        emit sendTruncateResult(false);
+    }
+    else
+    {
+        qDebug()<<"truncate Databases success";
+        emit sendTruncateResult(true);
+    }
 }
+
 void Newconfiginfo::on_pushButton_61_clicked()
 {
     //server
@@ -635,8 +640,8 @@ void Newconfiginfo::on_pushButton_61_clicked()
     ui->label_100->setGeometry(0,0,1366,768);
     SaveWhat = "server";
     basicset = new BasicSet(this);
-    basicset->setServerValue(DataServerIp,CurveServerIp,AndonServerIp);
-    connect(basicset,SIGNAL(sendBaseinfo(QString,QString,QString)),this,SLOT(receiveBaseinfo(QString,QString,QString)));
+    basicset->setServerValue(DataServerIp,CurveServerIp,AndonServerIp,ServerPort);
+    connect(basicset,SIGNAL(sendBaseinfo(QString,QString,QString,QString)),this,SLOT(receiveBaseinfo(QString,QString,QString,QString)));
     connect(basicset,SIGNAL(sendbaseinfocancel()),this,SLOT(receivebaseinfocancel()));
     basicset->show();
 }
@@ -651,11 +656,10 @@ void Newconfiginfo::on_pushButton_65_clicked()
     ui->label_100->setGraphicsEffect(e3);
     ui->label_100->show();
     ui->label_100->setGeometry(0,0,1366,768);
-    SaveWhat = "Gun";
+    SaveWhat = "Barcode";
     basicset = new BasicSet(this);
-    basicset->setSerialOrRfidMode(BarcodeGun,"");
-    basicset->setchecking();
-    connect(basicset,SIGNAL(sendBaseinfo(QString,QString,QString)),this,SLOT(receiveBaseinfo(QString,QString,QString)));
+    basicset->setSerialOrRfidMode(RfidIp,RfidPort,BarcodeGun);
+    connect(basicset,SIGNAL(sendBaseinfo(QString,QString,QString,QString)),this,SLOT(receiveBaseinfo(QString,QString,QString,QString)));
     connect(basicset,SIGNAL(sendbaseinfocancel()),this,SLOT(receivebaseinfocancel()));
     basicset->show();
 }
@@ -666,25 +670,33 @@ void Newconfiginfo::on_pushButton_63_clicked()
     //取消
     QSettings *configIniRead = new QSettings("/config.ini", QSettings::IniFormat);
     ui->lineEdit_staname->setText(configIniRead->value("baseinfo/StationName").toString());
-    ui->lineEdit_Operator->setText(configIniRead->value("baseinfo/Operator").toString());
+    //    ui->lineEdit_Operator->setText(configIniRead->value("baseinfo/Operator").toString());
     ui->lineEdit_localip->setText(configIniRead->value("baseinfo/LocalIp").toString());
+    ui->lineEdit_localip2->setText(configIniRead->value("baseinfo/LocalIp2").toString());
     ui->lineEdit_wirelessip->setText(configIniRead->value("baseinfo/WirelessIp").toString());
     ui->lineEdit_staid->setText(configIniRead->value("baseinfo/StationId").toString());
 
-    cs351Ip = configIniRead->value("baseinfo/cs351Ip").toString();
-    PortA = configIniRead->value("baseinfo/PortA").toString();
-    PortB = configIniRead->value("baseinfo/PortB").toString();
+    controllerIp_01 = configIniRead->value("baseinfo/ControllerIp_1").toString();
+    controllerIp_02 = configIniRead->value("baseinfo/ControllerIp_2").toString();
+    //    PortA = configIniRead->value("baseinfo/PortA").toString();
+    //    PortB = configIniRead->value("baseinfo/PortB").toString();
     RfidIp = configIniRead->value("baseinfo/RfidIp").toString();
     RfidPort = configIniRead->value("baseinfo/RfidPort").toString();
     DataServerIp = configIniRead->value("baseinfo/DataServerIp").toString();
     CurveServerIp= configIniRead->value("baseinfo/CurveServerIp").toString();
     AndonServerIp= configIniRead->value("baseinfo/AndonServerIp").toString();
+    ServerPort= configIniRead->value("baseinfo/ServerPort").toString();
     BarcodeGun = configIniRead->value("baseinfo/BarcodeGun").toString();
 
-    ui->label_97->setText(cs351Ip);
-    ui->label_155->setText(RfidIp);
+    ui->label_97->setText(controllerIp_01);
+    //    ui->label_155->setText(RfidIp);
     ui->label_154->setText(DataServerIp);
-    ui->label_153->setText(BarcodeGun);
+    if(isRFID)
+        ui->label_153->setText(RfidIp);
+    else if(isBarCode)
+        ui->label_153->setText(BarcodeGun);
+    else
+        ui->label_153->setText("");
 
     ui->label_100->hide();
 
@@ -698,23 +710,28 @@ void Newconfiginfo::receiveBaseinfoSave(bool statetmp)
     {
         //true
         configIniRead->setValue("baseinfo/StationName",ui->lineEdit_staname->text());
-        configIniRead->setValue("baseinfo/Operator",ui->lineEdit_Operator->text());
-        Operator=ui->lineEdit_Operator->text();
+        //        configIniRead->setValue("baseinfo/Operator",ui->lineEdit_Operator->text());
+        //        Operator=ui->lineEdit_Operator->text();
         configIniRead->setValue("baseinfo/StationId",ui->lineEdit_staid->text());
-        configIniRead->setValue("baseinfo/cs351Ip",cs351Ip);
-        configIniRead->setValue("baseinfo/PortA",PortA);
-        configIniRead->setValue("baseinfo/PortB",PortB);
+        Station=ui->lineEdit_staid->text();
+        configIniRead->setValue("baseinfo/ControllerIp_1",controllerIp_01);
+        configIniRead->setValue("baseinfo/ControllerIp_2",controllerIp_02);
+        //        configIniRead->setValue("baseinfo/PortA",PortA);
+        //        configIniRead->setValue("baseinfo/PortB",PortB);
         configIniRead->setValue("baseinfo/RfidIp",RfidIp);
         configIniRead->setValue("baseinfo/RfidPort",RfidPort);
         configIniRead->setValue("baseinfo/AndonServerIp",AndonServerIp);
         configIniRead->setValue("baseinfo/BarcodeGun",BarcodeGun);
+        configIniRead->setValue("baseinfo/ServerPort",ServerPort);
 
 
         if(CurveServerIp != configIniRead->value("baseinfo/CurveServerIp").toString()||
-                DataServerIp != configIniRead->value("baseinfo/DataServerIp").toString()  )
+                DataServerIp != configIniRead->value("baseinfo/DataServerIp").toString()||
+                AndonServerIp != configIniRead->value("baseinfo/AndonServerIp").toString())
         {
             configIniRead->setValue("baseinfo/CurveServerIp",CurveServerIp);
             configIniRead->setValue("baseinfo/DataServerIp",DataServerIp);
+            configIniRead->setValue("baseinfo/AndonServerIp",AndonServerIp);
 
             QString fileName = "/usr/local/arm/freetds/etc/freetds.conf";
             QFile file(fileName);
@@ -725,6 +742,7 @@ void Newconfiginfo::receiveBaseinfoSave(bool statetmp)
             if(str.contains("[testdsn1]", Qt::CaseInsensitive)&&str.contains("[testdsn2]", Qt::CaseInsensitive)){
                 str.replace(QRegExp("\\[testdsn1\\]\\s*host = \\S*"),QString("[testdsn1]\n\thost = ")+CurveServerIp);
                 str.replace(QRegExp("\\[testdsn2\\]\\s*host = \\S*"),QString("[testdsn2]\n\thost = ")+DataServerIp);
+                str.replace(QRegExp("\\[testdsn3\\]\\s*host = \\S*"),QString("[testdsn3]\n\thost = ")+AndonServerIp);
             }
             file.close();
             if(!file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)){
@@ -734,40 +752,60 @@ void Newconfiginfo::receiveBaseinfoSave(bool statetmp)
             file.close();
         }
 
-        configIniRead->setValue("baseinfo/DataServerIp",DataServerIp);
+        //        configIniRead->setValue("baseinfo/DataServerIp",DataServerIp);
 
         if(ui->lineEdit_localip->text() != configIniRead->value("baseinfo/LocalIp").toString()||
+                ui->lineEdit_localip2->text() != configIniRead->value("baseinfo/LocalIp2").toString()||
                 ui->lineEdit_wirelessip->text() != configIniRead->value("baseinfo/WirelessIp").toString())
         {
-            QString fileName = "/etc/profile";
-            QFile file(fileName);
-            if(!file.open(QIODevice::ReadOnly| QIODevice::Text)){
-                qDebug()   << "Cannot open profile file for Reading";
-            }
-            QString str (file.readAll());
+            //            QString fileName = "/etc/profile";
+            //            QFile file(fileName);
+            //            if(!file.open(QIODevice::ReadOnly| QIODevice::Text)){
+            //                qDebug()   << "Cannot open profile file for Reading";
+            //            }
+            //            QString str (file.readAll());
+            int connectNet = configIniRead->value("baseinfo/connectNet").toInt();
             if(ui->lineEdit_localip->text() != configIniRead->value("baseinfo/LocalIp").toString())
             {
                 configIniRead->setValue("baseinfo/LocalIp",ui->lineEdit_localip->text());
-                system(QString("ifconfig eth0 ").append(ui->lineEdit_localip->text()+" &").toLatin1().data());
-                if(str.contains("ifconfig eth0", Qt::CaseInsensitive)){
-                    str.replace(QRegExp("ifconfig eth0 \\S*"),QString("ifconfig eth0 ")+ui->lineEdit_localip->text());
-                }
+                if(connectNet == 1)
+                    system(QString("ifconfig eth0 "+ui->lineEdit_localip->text()+" netmask "+configIniRead->value("baseinfo/netmask").toString()+"  &").toLatin1().data());
+                else
+                    system(QString("ifconfig eth0 "+ui->lineEdit_localip->text()+" netmask 255.255.255.0 &").toLatin1().data());
+
+                //                system(QString("ifconfig eth0 ").append(ui->lineEdit_localip->text()+" netmask 255.255.255.0 &").toLatin1().data());
+                //                if(str.contains("ifconfig eth0", Qt::CaseInsensitive)){
+                //                    str.replace(QRegExp("ifconfig eth0 \\S*"),QString("ifconfig eth0 ")+ui->lineEdit_localip->text());
+                //                }
+            }
+            if(ui->lineEdit_localip2->text() != configIniRead->value("baseinfo/LocalIp2").toString())
+            {
+                configIniRead->setValue("baseinfo/LocalIp2",ui->lineEdit_localip2->text());
+                if(connectNet == 2)
+                    system(QString("ifconfig eth1 "+ui->lineEdit_localip2->text()+" netmask "+configIniRead->value("baseinfo/netmask").toString()+"  &").toLatin1().data());
+                else
+                    system(QString("ifconfig eth1 "+ui->lineEdit_localip2->text()+" netmask 255.255.0.0 &").toLatin1().data());
+                //                system(QString("ifconfig eth1 "+ui->lineEdit_localip2->text()+" netmask 255.255.255.0 &").toLatin1().data());
             }
             if(ui->lineEdit_wirelessip->text() != configIniRead->value("baseinfo/WirelessIp").toString())
             {
                 configIniRead->setValue("baseinfo/WirelessIp",ui->lineEdit_wirelessip->text());
-                system((QString("ifconfig wlan0 ")+ui->lineEdit_wirelessip->text()+QString(" netmask ")+configIniRead->value("baseinfo/netmask").toString()+" &").toLatin1().data());
-                if(str.contains("ifconfig wlan0", Qt::CaseInsensitive)){
-                    str.replace(QRegExp("ifconfig wlan0 \\S*"),QString("ifconfig wlan0 ")+ui->lineEdit_wirelessip->text());
-                }
+                WirelessIp = ui->lineEdit_wirelessip->text();
+                if(connectNet == 0)
+                    system((QString("ifconfig wlan0 ")+ui->lineEdit_wirelessip->text()+QString(" netmask ")+configIniRead->value("baseinfo/netmask").toString()+" &").toLatin1().data());
+                else
+                    system(QString("ifconfig wlan0 "+ui->lineEdit_wirelessip->text()+" netmask 255.255.255.0 &").toLatin1().data());
+                //                if(str.contains("ifconfig wlan0", Qt::CaseInsensitive)){
+                //                    str.replace(QRegExp("ifconfig wlan0 \\S*"),QString("ifconfig wlan0 ")+ui->lineEdit_wirelessip->text());
+                //                }
             }
 
-            file.close();
-            if(!file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)){
-                qDebug()   << "Cannot open profile file for Writing";
-            }
-            file.write(str.toUtf8());
-            file.close();
+            //            file.close();
+            //            if(!file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)){
+            //                qDebug()   << "Cannot open profile file for Writing";
+            //            }
+            //            file.write(str.toUtf8());
+            //            file.close();
         }
 
         ui->label_100->hide();
@@ -778,23 +816,26 @@ void Newconfiginfo::receiveBaseinfoSave(bool statetmp)
     {
         //false
         ui->lineEdit_staname->setText(configIniRead->value("baseinfo/StationName").toString());
-        ui->lineEdit_Operator->setText(configIniRead->value("baseinfo/Operator").toString());
+        //        ui->lineEdit_Operator->setText(configIniRead->value("baseinfo/Operator").toString());
         ui->lineEdit_localip->setText(configIniRead->value("baseinfo/LocalIp").toString());
+        ui->lineEdit_localip2->setText(configIniRead->value("baseinfo/LocalIp2").toString());
         ui->lineEdit_wirelessip->setText(configIniRead->value("baseinfo/WirelessIp").toString());
         ui->lineEdit_staid->setText(configIniRead->value("baseinfo/StationId").toString());
 
-        cs351Ip = configIniRead->value("baseinfo/cs351Ip").toString();
-        PortA = configIniRead->value("baseinfo/PortA").toString();
-        PortB = configIniRead->value("baseinfo/PortB").toString();
+        controllerIp_01 = configIniRead->value("baseinfo/ControllerIp_1").toString();
+        controllerIp_02 = configIniRead->value("baseinfo/ControllerIp_2").toString();
+        //        PortA = configIniRead->value("baseinfo/PortA").toString();
+        //        PortB = configIniRead->value("baseinfo/PortB").toString();
         RfidIp = configIniRead->value("baseinfo/RfidIp").toString();
         RfidPort = configIniRead->value("baseinfo/RfidPort").toString();
         DataServerIp = configIniRead->value("baseinfo/DataServerIp").toString();
         CurveServerIp = configIniRead->value("baseinfo/CurveServerIp").toString();
         AndonServerIp = configIniRead->value("baseinfo/AndonServerIp").toString();
+        ServerPort = configIniRead->value("baseinfo/ServerPort").toString();
         BarcodeGun = configIniRead->value("baseinfo/BarcodeGun").toString();
 
-        ui->label_97->setText(cs351Ip);
-        ui->label_155->setText(RfidIp);
+        ui->label_97->setText(controllerIp_01);
+        //        ui->label_155->setText(RfidIp);
         ui->label_154->setText(DataServerIp);
         ui->label_153->setText(BarcodeGun);
         ui->label_100->hide();
@@ -806,7 +847,7 @@ void Newconfiginfo::receiveBaseinfoSave(bool statetmp)
 
     if(whichButtonClick == "baseback")
     {
-        on_pushButton_clicked();
+        on_pushButton_22_clicked();
         isbaseinfochange = false;
     }
     else if (whichButtonClick == "about")
@@ -888,6 +929,49 @@ void Newconfiginfo::moveDo()
     ui->label_Lsnum->clear();
     ui->label_pronum->clear();
     ui->label_number->clear();
+    ui->label_108->show();
+    ui->label_pronum->show();
+    ui->label_number->show();
+    ui->label_isxuan->clear();
+    ui->pushButton_10->show();
+    ui->pushButton_11->show();
+    ui->label_109->show();
+    ui->label_110->show();
+    ui->pushButton_10->setEnabled(false);
+    ui->pushButton_11->setEnabled(false);
+    ui->label_currentindex->setText("1");
+    ui->label_currentindex->show();
+    //    pagenum = 2;
+    //    on_pushButton_8_clicked();
+    ui->pushButton_xuan1->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+    ui->pushButton_xuan2->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+    ui->pushButton_xuan3->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+    ui->pushButton_xuan4->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+    ui->pushButton_xuan5->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+    ui->pushButton_xuan1->setEnabled(false);
+    ui->pushButton_xuan2->setEnabled(false);
+    ui->pushButton_xuan3->setEnabled(false);
+    ui->pushButton_xuan4->setEnabled(false);
+    ui->pushButton_xuan5->setEnabled(false);
+    ui->pushButton_70->setText("");
+    ui->pushButton_71->setText("");
+    ui->pushButton_72->setText("");
+    ui->pushButton_73->setText("");
+    ui->pushButton_74->setText("");
+    ui->pushButton_75->setText("");
+    ui->pushButton_76->setText("");
+    ui->pushButton_77->setText("");
+    ui->pushButton_78->setText("");
+    ui->pushButton_79->setText("");
+
+
+    //    ui->label_carname->clear();
+    //    ui->label_G9->clear();
+    //    ui->label_VIN->clear();
+    //    ui->label_isxuan->clear();
+    //    ui->label_Lsnum->clear();
+    //    ui->label_pronum->clear();
+    //    ui->label_number->clear();
     previouswhichar = 0;
     int buttnumber = 0;
     buttnumber = (pagenum -1)*5+1;
@@ -959,9 +1043,8 @@ void Newconfiginfo::buttclicked()
     ui->comboBox_2->addItem("");
     ui->pushButton_10->setEnabled(true);
     ui->pushButton_11->setEnabled(true);
-    for(int i= 0;i < 250 ;i++)
+    for(int i= 0;i < 100 ;i++)
     {
-
         if(configIniRead->value(QString("pdminfo").append(QString::number(i+1)).append("/pdmname")).toString()!= "")
         {
             ui->comboBox_2->addItem(configIniRead->value(QString("pdminfo").append(QString::number(i+1)).append("/pdmname")).toString());
@@ -1005,11 +1088,15 @@ void Newconfiginfo::buttclicked()
     ui->lineEdit_xuanLsnum->clear();
     ui->lineEdit_xuanpronum->setText("0");
     ui->lineEdit_xuannumber->setText("0");
-    ui->pushButton_22->hide();
+    ui->lineEdit_channel_2->setText("OFF");
+    ui->lineEdit_taotong_2->setText("OFF");
+    ui->label_126->hide();
     ui->comboBox_2->hide();
     isedit = 0;
     carStyle = "";
     G9tmp = "";
+    PDM_Name = "";
+    PDM_Name2 = "";
     Vintmp = "";
     pdmxuan = "";
     for(int m = 0;m<20;m++)
@@ -1018,11 +1105,17 @@ void Newconfiginfo::buttclicked()
         pro[m] = "0";
         lsnumers[m] = "0";
         taotong[m] = "0";
+        channel[m] = "0";
+        for(int q=0; q<5; q++)
+            ch[m][q] = false;
 
         luo2[m] = "0";
         pro2[m] = "0";
         lsnumers2[m] = "0";
         taotong2[m] = "0";
+        channel2[m] = "0";
+        for(int q=0;q<5;q++)
+            ch2[m][q] = false;
     }
     for(int i = 0;i<5;i++)
     {
@@ -1035,6 +1128,9 @@ void Newconfiginfo::buttclicked()
             bxuancodelist[i][k]="";
             kxuannamelist[i][k]="";
             kxuancodelist[i][k]="";
+            channelxuanlist[i][k]="0";
+            taotongxuanlist[i][k]="0";
+
             luoxuanlist2[i][k]="0";
             proxuanlist2[i][k]="0";
             lsnumersxuanlist2[i][k]="0";
@@ -1042,20 +1138,23 @@ void Newconfiginfo::buttclicked()
             bxuancodelist2[i][k]="";
             kxuannamelist2[i][k]="";
             kxuancodelist2[i][k]="";
+            channelxuanlist2[i][k]="0";
+            taotongxuanlist2[i][k]="0";
 
         }
-        pdmxuanlist[i]="";
-        pdmxuanlist2[i]="";
+
+        PDMxuan_Name[i]="";
+        PDMxuan_Name2[i]="";
+        //        pdmxuanlist[i]="";
+        //        pdmxuanlist2[i]="";
     }
 
     ui->label_currentindex->setText("1");
     ui->label_119->setText("1");
     ui->label_51->setText("1");
-    // qDebug() <<  "priouswhich car is   sjkdjf ji " << previouswhichar;
-
-    // currentpages = ui->label_51->text().toInt();
     int tmpisselect = configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/IsOptionalStation")).toInt();
     int tmpisselect1 = configIniRead->value(QString("carinfo").append(QString::number(previouswhichar)).append("/IsOptionalStation")).toInt();
+    qDebug() <<  "priouswhich car is   sjkdjf ji " << previouswhichar<<tmpisselect<<tmpisselect1;
     if(previouswhichar <= 5*pagenum && previouswhichar >0) //点击别的 回复之前button效果
     {
         if(previouswhichar == 4)
@@ -1098,6 +1197,7 @@ void Newconfiginfo::buttclicked()
         carStyle = configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/carcx")).toString();
         G9tmp = configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/G9")).toString();
         Vintmp = configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/VIN")).toString();
+
         ui->pushButton_15->hide();
         //for()
         ui->pushButton_70->show();
@@ -1143,7 +1243,8 @@ void Newconfiginfo::buttclicked()
                 luoxuanlist[j-1][i]  = configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/OPLuoSuanNum").append(QString::number(j)).append(QString::number(i+1))).toString();
                 proxuanlist[j-1][i]  =  configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/OPProNum").append(QString::number(j)).append(QString::number(i+1))).toString();
                 lsnumersxuanlist[j-1][i]=  configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/OPLSNumber").append(QString::number(j)).append(QString::number(i+1))).toString();
-
+                channelxuanlist[j-1][i]=  configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/OPChannel").append(QString::number(j)).append(QString::number(i+1))).toString();
+                taotongxuanlist[j-1][i]=  configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/OPTaotong").append(QString::number(j)).append(QString::number(i+1))).toString();
                 bxuannamelist[j-1][i] = configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/bxuanname").append(QString::number(j)).append(QString::number(i+1))).toString();
                 bxuancodelist[j-1][i] = configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/bxuancode").append(QString::number(j)).append(QString::number(i+1))).toString();
 
@@ -1152,14 +1253,19 @@ void Newconfiginfo::buttclicked()
                 luoxuanlist2[j-1][i] = luoxuanlist[j-1][i];
                 proxuanlist2[j-1][i]  = proxuanlist[j-1][i] ;
                 lsnumersxuanlist2[j-1][i] = lsnumersxuanlist[j-1][i];
+                channelxuanlist2[j-1][i] = channelxuanlist[j-1][i];
+                taotongxuanlist2[j-1][i] = taotongxuanlist[j-1][i];
                 bxuannamelist2[j-1][i] = bxuannamelist[j-1][i];
                 bxuancodelist2[j-1][i] = bxuancodelist[j-1][i];
                 kxuannamelist2[j-1][i] =  kxuannamelist[j-1][i];
                 kxuancodelist2[j-1][i] = kxuancodelist[j-1][i];
-
             }
-            pdmxuanlist2[j-1]=  configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/pdmyinyong").append(QString::number(j))).toString();
-            pdmxuanlist[j-1] = pdmxuanlist2[j-1];
+
+            PDMxuan_Name2[j-1]=  configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/pdmyinyong").append(QString::number(j))).toString();
+            PDMxuan_Name[j-1] = PDMxuan_Name2[j-1];
+
+            //            pdmxuanlist2[j-1]=  configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/pdmyinyong").append(QString::number(j))).toString();
+            //            pdmxuanlist[j-1] = pdmxuanlist2[j-1];
             if(lsnumersxuanlist[j-1][0].toInt())
             {
                 if(j == 1)
@@ -1168,10 +1274,6 @@ void Newconfiginfo::buttclicked()
                     ui->pushButton_xuan1->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/xuan.bmp);");
                     ui->pushButton_70->setText(proxuanlist[j-1][0]);
                     ui->pushButton_71->setText(lsnumersxuanlist[j-1][0]);
-                    if(isJS)
-                    {
-                        ui->pushButton_xuan1->setEnabled(true);
-                    }
 
 
                 }
@@ -1180,39 +1282,24 @@ void Newconfiginfo::buttclicked()
                     ui->pushButton_xuan2->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/xuan.bmp);");
                     ui->pushButton_72->setText(proxuanlist[j-1][0]);
                     ui->pushButton_73->setText(lsnumersxuanlist[j-1][0]);
-                    if(isJS)
-                    {
-                        ui->pushButton_xuan2->setEnabled(true);
-                    }
                 }
                 else if(j == 3)
                 {
                     ui->pushButton_xuan3->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/xuan.bmp);");
                     ui->pushButton_74->setText(proxuanlist[j-1][0]);
                     ui->pushButton_75->setText(lsnumersxuanlist[j-1][0]);
-                    if(isJS)
-                    {
-                        ui->pushButton_xuan3->setEnabled(true);
-                    }
+
                 } else if(j == 4)
                 {
                     ui->pushButton_xuan4->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/xuan.bmp);");
                     ui->pushButton_76->setText(proxuanlist[j-1][0]);
                     ui->pushButton_77->setText(lsnumersxuanlist[j-1][0]);
-                    if(isJS)
-                    {
-                        ui->pushButton_xuan4->setEnabled(true);
-                    }
                 }
                 else if(j == 5)
                 {
                     ui->pushButton_xuan5->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/xuan.bmp);");
                     ui->pushButton_78->setText(proxuanlist[j-1][0]);
                     ui->pushButton_79->setText(lsnumersxuanlist[j-1][0]);
-                    if(isJS)
-                    {
-                        ui->pushButton_xuan5->setEnabled(true);
-                    }
                 }
 
 
@@ -1251,61 +1338,70 @@ void Newconfiginfo::buttclicked()
 
             }
         }
-        if(isJS)
-        {
-            ui->pushButton_12->hide();
-            ui->stackedWidget_13->setCurrentIndex(1);
-        }
 
     }else // 非选配  再判断是否有值
     {
         int i = 1;
         for(i = 1;i < 6;i++)
         {
+            qDebug()<<"111111  @@@ 1111111"<<i;
             if(configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/LSNumber").append(QString::number(i))).toInt())
             {
                 //有车型  把编辑 使能
 
-                if(isJS)
-                    ui->pushButton_12->hide();
-                else
-                    ui->pushButton_12->show();
+                ui->pushButton_12->show();
                 //没选配
                 //将5个螺栓编号 全部取出放到数组
                 carStyle =  configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/carcx")).toString();
                 G9tmp = configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/G9")).toString();
                 Vintmp = configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/VIN")).toString();
+                PDM_Name = configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/pdmyinyong0")).toString();
+                PDM_Name2 = PDM_Name;
+
+                ui->comboBox_2->setCurrentIndex(ui->comboBox_2->findText(PDM_Name));
+
                 for(int i =0;i<20;i++)
                 {
                     luo[i] =  configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/LuoSuanNum").append(QString::number(i+1))).toString();
                     pro[i] =  configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/ProNum").append(QString::number(i+1))).toString();
                     lsnumers[i] = configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/LSNumber").append(QString::number(i+1))).toString();
                     taotong[i] =  configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/Taotong").append(QString::number(i+1))).toString();
+                    channel[i] =  configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/Channel").append(QString::number(i+1))).toString();
+                    for(int q=0; q<5; q++)
+                    {
+                        ch[i][q] = configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/ch").append(QString::number(q)+"_").append(QString::number(i+1))).toBool();
+                    }
                     luo2[i] = luo[i];
                     pro2[i] =  pro[i];
                     lsnumers2[i]  =  lsnumers[i] ;
-                   // qDebug() << "taotong["+QString::number(i+1)+"]" << taotong[i];
-                    if(taotong[i]!="1"&& taotong[i]!="2"&& taotong[i]!="3"&& taotong[i]!="4")
+                    for(int q=0;q<5;q++)
+                        ch2[i][q] = ch[i][q];
+                    //                    qDebug() << "**************taotong***1111111***" << taotong[i];
+                    bool condition=false;
+
+                    condition = (taotong[i].toInt() >8) || (taotong[i].toInt() < 1);
+
+                    if(condition)
                     {
                         configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/Taotong").append(QString::number(i+1)),"0");
-                        taotong[i] = "0"; 
+                        taotong[i] = "0";
+                        //                        qDebug() << "****************3333333333333333******************************";
                     }
                     taotong2[i]  = taotong[i];
-                    // qDebug() << "taotong2["+QString::number(i+1)+"]" << taotong[i];
-                }
-                for(int k = 0;k< 250;k++)
-                {
-                    if(configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/pdmyinyong")).toString() == ui->comboBox_2->itemText(k))
+                    //                    qDebug() << "**************taotong***222222****" << taotong[i];
+                    condition=false;
+                    condition = (channel[i].toInt() >5) || (channel[i].toInt() < 1);
+                    if(condition)
                     {
-                        ui->comboBox_2->setCurrentIndex(k);
-                        break;
+                        configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/Channel").append(QString::number(i+1)),"0");
+                        channel[i] = "0";
                     }
-
+                    channel2[i]  = channel[i];
                 }
 
                 isedit = 0;
                 isoption = false;
-                ui->pushButton_22->show();
+                ui->label_126->show();
                 ui->comboBox_2->show();
                 ui->pushButton_15->hide();
                 ui->stackedWidget_5->setCurrentIndex(0);
@@ -1363,135 +1459,127 @@ void Newconfiginfo::buttclicked()
                 ui->label_Lsnum->setText(luo[0]);
                 ui->label_pronum->setText(pro[0]);
                 ui->label_number->setText(lsnumers[0]);
+                ui->checkBox_ch_1->setChecked(ch[0][0]);
+                ui->checkBox_ch_2->setChecked(ch[0][1]);
+                ui->checkBox_ch_3->setChecked(ch[0][2]);
+                ui->checkBox_ch_4->setChecked(ch[0][3]);
+                ui->checkBox_ch_5->setChecked(ch[0][4]);
+                qDebug()<<"111111  @@@ 2222222";
+
                 break;
             }
         }
         if(i == 6)
         {
-            if(!isJS)
+            isedit = 0;
+            isoption = false;
+            ui->stackedWidget_3->setCurrentIndex(1);
+            ui->pushButton_8->setEnabled(false);
+            ui->pushButton_9->setEnabled(false);
+            ui->pushButton_12->hide();
+            ui->pushButton_16->show();
+            ui->pushButton_15->show();
+            ui->pushButton_14->show();
+            ui->label_115->show();
+            ui->label_116->show();
+            ui->label_117->show();
+            ui->label_119->show();
+            ui->label_60->show();
+            ui->pushButton_6->show();
+            ui->pushButton_7->show();
+            ui->lineEdit_Lsnumber->show();
+            ui->lineEdit_pronum->show();
+            ui->lineEdit_number->show();
+
+            ui->pushButton_pronum_add->show();
+            ui->pushButton_pronum_minus->show();
+            ui->pushButton_number_add->show();
+            ui->pushButton_number_minus->show();
+
+
+            ui->label_taotongg->show();
+            ui->pushButton_taotong_add->show();
+            ui->pushButton_taotong_minus->show();
+            ui->lineEdit_taotong->show();
+
+            ui->label_channel->show();
+            ui->lineEdit_channel->show();
+            ui->pushButton_channel_add->show();
+            ui->pushButton_channel_minus->show();
+
+            ui->pushButton_52->show();
+            ui->label_126->show();
+            ui->comboBox_2->show();
+            ui->pushButton_5->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/14.bmp);");
+            ui->label_carname->clear();
+            ui->label_G9->clear();
+            ui->label_VIN->clear();
+            ui->label_isxuan->clear();
+            ui->label_Lsnum->clear();
+            ui->label_pronum->clear();
+            ui->label_number->clear();
+            ui->lineEdit_taotong->setText("OFF");
+            ui->lineEdit_channel->setText("OFF");
+
+            optionIscheck = false;
+            if(whichcar == 1 || whichcar == 6 || whichcar == 11 || whichcar == 16)
             {
-                isedit = 0;
-                isoption = false;
-                ui->stackedWidget_3->setCurrentIndex(1);
-                ui->pushButton_8->setEnabled(false);
-                ui->pushButton_9->setEnabled(false);
-                ui->pushButton_12->hide();
-                ui->pushButton_16->show();
-                ui->pushButton_15->show();
-                ui->pushButton_14->show();
-                ui->label_115->show();
-                ui->label_116->show();
-                ui->label_117->show();
-                ui->label_119->show();
-                ui->label_60->show();
-                ui->pushButton_6->show();
-                ui->pushButton_7->show();
-                ui->lineEdit_Lsnumber->show();
-                ui->lineEdit_pronum->show();
-                ui->lineEdit_number->show();
-
-                ui->pushButton_pronum_add->show();
-                ui->pushButton_pronum_minus->show();
-                ui->pushButton_number_add->show();
-                ui->pushButton_number_minus->show();
-                ui->pushButton_52->show();
-                ui->pushButton_22->show();
-                ui->comboBox_2->show();
-                ui->pushButton_5->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/14.bmp);");
-                ui->label_carname->clear();
-                ui->label_G9->clear();
-                ui->label_VIN->clear();
-                ui->label_isxuan->clear();
-                ui->label_Lsnum->clear();
-                ui->label_pronum->clear();
-                ui->label_number->clear();
-                ui->lineEdit_taotong->setText(tr("无"));
-                optionIscheck = false;
-                if(whichcar == 1 || whichcar == 6 || whichcar == 11 || whichcar == 16)
-                {
-                    ui->pushButton_butt2->setEnabled(false);
-                    ui->pushButton_butt3->setEnabled(false);
-                    ui->pushButton_butt4->setEnabled(false);
-                    ui->pushButton_butt5->setEnabled(false);
-                    ui->pushButton_butt2->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
-                    ui->pushButton_butt3->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
-                    ui->pushButton_butt4->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
-                    ui->pushButton_butt5->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
-                }else if(whichcar == 2 || whichcar == 7 || whichcar == 12 || whichcar == 17)
-                {
-                    ui->pushButton_butt1->setEnabled(false);
-                    ui->pushButton_butt3->setEnabled(false);
-                    ui->pushButton_butt4->setEnabled(false);
-                    ui->pushButton_butt5->setEnabled(false);
-                    ui->pushButton_butt1->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
-                    ui->pushButton_butt3->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
-                    ui->pushButton_butt4->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
-                    ui->pushButton_butt5->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
-                }
-                else if(whichcar == 3 || whichcar == 8 || whichcar == 13 || whichcar == 18)
-                {
-                    ui->pushButton_butt1->setEnabled(false);
-                    ui->pushButton_butt2->setEnabled(false);
-                    ui->pushButton_butt4->setEnabled(false);
-                    ui->pushButton_butt5->setEnabled(false);
-                    ui->pushButton_butt1->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
-                    ui->pushButton_butt2->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
-                    ui->pushButton_butt4->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
-                    ui->pushButton_butt5->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
-                }else if(whichcar == 4 || whichcar == 9 || whichcar == 14 || whichcar == 19)
-                {
-                    ui->pushButton_butt1->setEnabled(false);
-                    ui->pushButton_butt2->setEnabled(false);
-                    ui->pushButton_butt3->setEnabled(false);
-                    ui->pushButton_butt5->setEnabled(false);
-                    ui->pushButton_butt1->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
-                    ui->pushButton_butt2->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
-                    ui->pushButton_butt3->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
-                    ui->pushButton_butt5->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
-                }else if(whichcar == 5 || whichcar == 10 || whichcar == 15 || whichcar == 20)
-                {
-                    ui->pushButton_butt1->setEnabled(false);
-                    ui->pushButton_butt2->setEnabled(false);
-                    ui->pushButton_butt3->setEnabled(false);
-                    ui->pushButton_butt4->setEnabled(false);
-                    ui->pushButton_butt1->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
-                    ui->pushButton_butt2->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
-                    ui->pushButton_butt3->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
-                    ui->pushButton_butt4->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
-                }
-                ui->pushButton_5->setEnabled(true);  //选配按钮
-
-                ui->stackedWidget_5->setCurrentIndex(1);
-            }
-            else
+                ui->pushButton_butt2->setEnabled(false);
+                ui->pushButton_butt3->setEnabled(false);
+                ui->pushButton_butt4->setEnabled(false);
+                ui->pushButton_butt5->setEnabled(false);
+                ui->pushButton_butt2->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+                ui->pushButton_butt3->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+                ui->pushButton_butt4->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+                ui->pushButton_butt5->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+            }else if(whichcar == 2 || whichcar == 7 || whichcar == 12 || whichcar == 17)
             {
-                //技术操作员
-                if(whichcar == 1 || whichcar == 6 || whichcar == 11 || whichcar == 16)
-                {
-                    ui->pushButton_butt1->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/16.bmp);");
-                }else if(whichcar == 2 || whichcar == 7 || whichcar == 12 || whichcar == 17)
-                {
-                    ui->pushButton_butt2->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/16.bmp);");
-                }
-                else if(whichcar == 3 || whichcar == 8 || whichcar == 13 || whichcar == 18)
-                {
-                    ui->pushButton_butt3->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/16.bmp);");
-
-                }else if(whichcar == 4 || whichcar == 9 || whichcar == 14 || whichcar == 19)
-                {
-                    ui->pushButton_butt4->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/16.bmp);");
-
-                }else if(whichcar == 5 || whichcar == 10 || whichcar == 15 || whichcar == 20)
-                {
-                    ui->pushButton_butt5->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/16.bmp);");
-                }
-                ui->pushButton_12->hide();
+                ui->pushButton_butt1->setEnabled(false);
+                ui->pushButton_butt3->setEnabled(false);
+                ui->pushButton_butt4->setEnabled(false);
+                ui->pushButton_butt5->setEnabled(false);
+                ui->pushButton_butt1->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+                ui->pushButton_butt3->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+                ui->pushButton_butt4->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+                ui->pushButton_butt5->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
             }
+            else if(whichcar == 3 || whichcar == 8 || whichcar == 13 || whichcar == 18)
+            {
+                ui->pushButton_butt1->setEnabled(false);
+                ui->pushButton_butt2->setEnabled(false);
+                ui->pushButton_butt4->setEnabled(false);
+                ui->pushButton_butt5->setEnabled(false);
+                ui->pushButton_butt1->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+                ui->pushButton_butt2->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+                ui->pushButton_butt4->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+                ui->pushButton_butt5->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+            }else if(whichcar == 4 || whichcar == 9 || whichcar == 14 || whichcar == 19)
+            {
+                ui->pushButton_butt1->setEnabled(false);
+                ui->pushButton_butt2->setEnabled(false);
+                ui->pushButton_butt3->setEnabled(false);
+                ui->pushButton_butt5->setEnabled(false);
+                ui->pushButton_butt1->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+                ui->pushButton_butt2->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+                ui->pushButton_butt3->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+                ui->pushButton_butt5->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+            }else if(whichcar == 5 || whichcar == 10 || whichcar == 15 || whichcar == 20)
+            {
+                ui->pushButton_butt1->setEnabled(false);
+                ui->pushButton_butt2->setEnabled(false);
+                ui->pushButton_butt3->setEnabled(false);
+                ui->pushButton_butt4->setEnabled(false);
+                ui->pushButton_butt1->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+                ui->pushButton_butt2->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+                ui->pushButton_butt3->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+                ui->pushButton_butt4->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
+            }
+            ui->pushButton_5->setEnabled(true);  //选配按钮
 
+            ui->stackedWidget_5->setCurrentIndex(1);
         }
-
-
     }
+    qDebug()<<"111111  @@@ 33333";
     previouswhichar = whichcar;
     delete configIniRead;
 }
@@ -1502,7 +1590,6 @@ void Newconfiginfo::on_pushButton_butt1_clicked()
     int toolpagenum = pagenum -1;
     for(int i = 0;i< 4;i++)
     {
-
         if(toolpagenum == i)
         {
             whichcar = toolpagenum*5 + 1;  //算出当前是哪辆车被选中
@@ -1510,9 +1597,8 @@ void Newconfiginfo::on_pushButton_butt1_clicked()
         }
 
     }
+    qDebug()<<"&&&&&&&&&&&&&&&&&&&&&&&&&&&&"<<pagenum<<toolpagenum<<whichcar;
     buttclicked();
-
-
 }
 void Newconfiginfo::on_pushButton_butt2_clicked()
 {
@@ -1642,7 +1728,9 @@ void Newconfiginfo::updownReadOperate(int judges)
         ui->label_75->setText(luoxuanlist2[whichoption-1][currentpages-1]);
         ui->label_76->setText(proxuanlist2[whichoption-1][currentpages-1]);
         ui->label_77->setText(lsnumersxuanlist2[whichoption-1][currentpages-1]);
-        ui->label_78->setText(pdmxuanlist2[whichoption-1]);
+        //        ui->lineEdit_channel_2->setText(channelxuanlist2[whichoption-1][currentpages-1]);
+        //        ui->lineEdit_taotong_2->setText(taotongxuanlist2[whichoption-1][currentpages-1]);
+        //        ui->label_78->setText(pdmxuanlist2[whichoption-1]);
         //QString pathpdm = configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/pdmyinyong").append(QString::number(whichoption)).append(QString::number(currentpages))).toString();
         // qDebug() << "";
         //ui->label_78->setText(configIniRead->value(pathpdm.append("/pdmname")).toString());
@@ -1667,6 +1755,7 @@ void Newconfiginfo::on_pushButton_11_clicked()
 void Newconfiginfo::on_pushButton_5_clicked()
 {
     //选配按钮
+
     if(optionIscheck)
     {
         isedit = 0;
@@ -1680,17 +1769,22 @@ void Newconfiginfo::on_pushButton_5_clicked()
         ui->lineEdit_Lsnumber->show();
         ui->lineEdit_pronum->show();
         ui->lineEdit_number->show();
+
         ui->label_taotongg->show();
         ui->pushButton_taotong_add->show();
         ui->pushButton_taotong_minus->show();
         ui->lineEdit_taotong->show();
+        ui->label_channel->show();
+        ui->lineEdit_channel->show();
+        ui->pushButton_channel_add->show();
+        ui->pushButton_channel_minus->show();
 
         ui->pushButton_pronum_add->show();
         ui->pushButton_pronum_minus->show();
         ui->pushButton_number_add->show();
         ui->pushButton_number_minus->show();
         ui->pushButton_52->show();
-        ui->pushButton_22->show();
+        ui->label_126->show();
         ui->comboBox_2->show();
         ui->pushButton_xuan1->setEnabled(false);
         ui->pushButton_xuan2->setEnabled(false);
@@ -1735,6 +1829,10 @@ void Newconfiginfo::on_pushButton_5_clicked()
         ui->pushButton_taotong_add->hide();
         ui->pushButton_taotong_minus->hide();
         ui->lineEdit_taotong->hide();
+        ui->label_channel->hide();
+        ui->lineEdit_channel->hide();
+        ui->pushButton_channel_add->hide();
+        ui->pushButton_channel_minus->hide();
         ui->pushButton_pronum_add->hide();
         ui->pushButton_pronum_minus->hide();
         ui->pushButton_number_add->hide();
@@ -1761,7 +1859,7 @@ void Newconfiginfo::on_pushButton_5_clicked()
         ui->pushButton_77->show();
         ui->pushButton_78->show();
         ui->pushButton_79->show();
-        ui->pushButton_22->hide();
+        ui->label_126->hide();
         ui->comboBox_2->hide();
         QSettings *configIniRead = new QSettings("/config.ini", QSettings::IniFormat);
         for(int i = 0;i<5;i++)
@@ -1801,6 +1899,7 @@ void Newconfiginfo::on_pushButton_5_clicked()
         delete  configIniRead;
         optionIscheck = true;
     }
+
 }
 void Newconfiginfo::updownWriteOperate(int judges)
 {
@@ -1833,6 +1932,20 @@ void Newconfiginfo::updownWriteOperate(int judges)
         if (lsnumersxuanlist2[whichoption-1][currentpages-1] == "")
             ui->lineEdit_xuannumber->setText("0");
         else ui->lineEdit_xuannumber->setText(lsnumersxuanlist2[whichoption-1][currentpages-1]);
+        if (channelxuanlist2[whichoption-1][currentpages-1] == "")
+            ui->lineEdit_channel_2->setText("1");
+        else ui->lineEdit_channel_2->setText(channelxuanlist2[whichoption-1][currentpages-1]);
+        if (taotongxuanlist2[whichoption-1][currentpages-1] == ""||taotongxuanlist2[whichoption-1][currentpages-1] == "0")
+            ui->lineEdit_taotong_2->setText("OFF");
+        else ui->lineEdit_taotong_2->setText(taotongxuanlist2[whichoption-1][currentpages-1]);
+        //        for(int k = 0;k< ui->comboBox_3->count();k++)
+        //        {
+        //            if(PDMxuan_Name2[whichoption-1][ui->lineEdit_channel_2->text().toInt()-1] == ui->comboBox_3->itemText(k))
+        //            {
+        //                ui->comboBox_3->setCurrentIndex(k);
+        //                break;
+        //            }
+        //        }
     }
     else
     {
@@ -1858,6 +1971,11 @@ void Newconfiginfo::updownWriteOperate(int judges)
         ui->lineEdit_VIN->setText(Vintmp);
 
         ui->lineEdit_Lsnumber->setText(luo2[currentpages-1]);
+        ui->checkBox_ch_1->setChecked(ch2[currentpages-1][0]);
+        ui->checkBox_ch_2->setChecked(ch2[currentpages-1][1]);
+        ui->checkBox_ch_3->setChecked(ch2[currentpages-1][2]);
+        ui->checkBox_ch_4->setChecked(ch2[currentpages-1][3]);
+        ui->checkBox_ch_5->setChecked(ch2[currentpages-1][4]);
         if (pro2[currentpages-1] == "")
             ui->lineEdit_pronum->setText("0");
         else
@@ -1867,11 +1985,22 @@ void Newconfiginfo::updownWriteOperate(int judges)
         else
             ui->lineEdit_number->setText(lsnumers2[currentpages-1]);
         if(taotong2[currentpages-1] == "0" || taotong2[currentpages-1] == "")
-            ui->lineEdit_taotong->setText(tr("无"));
+            ui->lineEdit_taotong->setText("OFF");
         else
             ui->lineEdit_taotong->setText(taotong2[currentpages-1]);
+        if (channel2[currentpages-1] == "0" || channel2[currentpages-1] == "")
+            ui->lineEdit_channel->setText("OFF");
+        else
+            ui->lineEdit_channel->setText(channel2[currentpages-1]);
 
-
+        //        for(int k = 0;k< ui->comboBox_2->count();k++)
+        //        {
+        //            if(PDM_Name2 == ui->comboBox_2->itemText(k))
+        //            {
+        //                ui->comboBox_2->setCurrentIndex(k);
+        //                break;
+        //            }
+        //        }
     }
     delete configIniRead;
 }
@@ -1883,10 +2012,26 @@ void Newconfiginfo::on_pushButton_6_clicked()
     carStyle = ui->lineEdit_carname->text();
     G9tmp = ui->lineEdit_G9->text();
     Vintmp = ui->lineEdit_VIN->text();
+
     luo2[ui->label_119->text().toInt()-1] = ui->lineEdit_Lsnumber->text();
     pro2[ui->label_119->text().toInt()-1] = ui->lineEdit_pronum->text();
     lsnumers2[ui->label_119->text().toInt()-1] = ui->lineEdit_number->text();
-    taotong2[ui->label_119->text().toInt()-1] = ui->lineEdit_taotong->text();
+    ch2[ui->label_119->text().toInt()-1][0] = ui->checkBox_ch_1->isChecked();
+    ch2[ui->label_119->text().toInt()-1][1] = ui->checkBox_ch_2->isChecked();
+    ch2[ui->label_119->text().toInt()-1][2] = ui->checkBox_ch_3->isChecked();
+    ch2[ui->label_119->text().toInt()-1][3] = ui->checkBox_ch_4->isChecked();
+    ch2[ui->label_119->text().toInt()-1][4] = ui->checkBox_ch_5->isChecked();
+    if(ui->lineEdit_taotong->text() != "OFF")
+        taotong2[ui->label_119->text().toInt()-1] = ui->lineEdit_taotong->text();
+    else
+        taotong2[ui->label_119->text().toInt()-1] = "0";
+
+    if(ui->lineEdit_channel->text() != "OFF")
+        channel2[ui->label_119->text().toInt()-1] = ui->lineEdit_channel->text();
+    else
+        channel2[ui->label_119->text().toInt()-1] = "0";
+
+    //    PDM_Name2[channel2[ui->label_119->text().toInt()-1].toInt()-1]=ui->comboBox_2->currentText();
     updownWriteOperate(1);
 
 }
@@ -1897,17 +2042,36 @@ void Newconfiginfo::on_pushButton_7_clicked()
     carStyle = ui->lineEdit_carname->text();
     G9tmp = ui->lineEdit_G9->text();
     Vintmp = ui->lineEdit_VIN->text();
+
     luo2[ui->label_119->text().toInt()-1] = ui->lineEdit_Lsnumber->text();
     pro2[ui->label_119->text().toInt()-1] = ui->lineEdit_pronum->text();
     lsnumers2[ui->label_119->text().toInt()-1] = ui->lineEdit_number->text();
-    taotong2[ui->label_119->text().toInt()-1] = ui->lineEdit_taotong->text();
+    ch2[ui->label_119->text().toInt()-1][0] = ui->checkBox_ch_1->isChecked();
+    ch2[ui->label_119->text().toInt()-1][1] = ui->checkBox_ch_2->isChecked();
+    ch2[ui->label_119->text().toInt()-1][2] = ui->checkBox_ch_3->isChecked();
+    ch2[ui->label_119->text().toInt()-1][3] = ui->checkBox_ch_4->isChecked();
+    ch2[ui->label_119->text().toInt()-1][4] = ui->checkBox_ch_5->isChecked();
+    if(ui->lineEdit_taotong->text() != "OFF")
+        taotong2[ui->label_119->text().toInt()-1] = ui->lineEdit_taotong->text();
+    else
+        taotong2[ui->label_119->text().toInt()-1] = "0";
+
+    if(ui->lineEdit_channel->text() != "OFF")
+        channel2[ui->label_119->text().toInt()-1] = ui->lineEdit_channel->text();
+    else
+        channel2[ui->label_119->text().toInt()-1] = "0";
+
     updownWriteOperate(0);
 }
 
 void Newconfiginfo::on_pushButton_14_clicked()
 {
+    //    qDebug()<<"%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"<<SaveWhat;
     //edit 保存
-    ui->stackedWidget_3->setCurrentIndex(0);
+    //    ui->stackedWidget_5->setCurrentIndex(0);
+    ui->stackedWidget_3->setCurrentIndex(3);
+
+    //    ui->stackedWidget_3->setCurrentIndex(0);
     ui->pushButton_5->setEnabled(false);
 
 
@@ -1932,30 +2096,69 @@ void Newconfiginfo::on_pushButton_14_clicked()
             carStyle = ui->lineEdit_carname->text();
             G9tmp = ui->lineEdit_G9->text();
             Vintmp = ui->lineEdit_VIN->text();
+
             luo2[ui->label_119->text().toInt()-1] = ui->lineEdit_Lsnumber->text();
             pro2[ui->label_119->text().toInt()-1] = ui->lineEdit_pronum->text();
             lsnumers2[ui->label_119->text().toInt()-1] = ui->lineEdit_number->text();
-            if(ui->lineEdit_taotong->text()!="1"&& ui->lineEdit_taotong->text()!="2"&&ui->lineEdit_taotong->text()!="3"&&ui->lineEdit_taotong->text()!="4")
+            ch2[ui->label_119->text().toInt()-1][0] = ui->checkBox_ch_1->isChecked();
+            ch2[ui->label_119->text().toInt()-1][1] = ui->checkBox_ch_2->isChecked();
+            ch2[ui->label_119->text().toInt()-1][2] = ui->checkBox_ch_3->isChecked();
+            ch2[ui->label_119->text().toInt()-1][3] = ui->checkBox_ch_4->isChecked();
+            ch2[ui->label_119->text().toInt()-1][4] = ui->checkBox_ch_5->isChecked();
+
+            bool condition = false;
+
+            condition = (ui->lineEdit_taotong->text().toInt()>8) || (ui->lineEdit_taotong->text().toInt()<1);
+
+            if(condition)
                 taotong2[ui->label_119->text().toInt()-1] = "0";
             else
                 taotong2[ui->label_119->text().toInt()-1] = ui->lineEdit_taotong->text();
 
+
+            condition = false;
+            condition = (ui->lineEdit_channel->text().toInt()>5) || (ui->lineEdit_channel->text().toInt()<1);
+            if(condition)
+                channel2[ui->label_119->text().toInt()-1] = "0";
+            else
+                channel2[ui->label_119->text().toInt()-1] = ui->lineEdit_channel->text();
+
+            PDM_Name2=ui->comboBox_2->currentText();
             //qDebug() << ui->label_119->text().toInt()-1;
             QSettings *configIniRead = new QSettings("/config.ini", QSettings::IniFormat);
             configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/carcx"),ui->lineEdit_carname->text());
             configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/G9"),ui->lineEdit_G9->text());
             configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/VIN"),ui->lineEdit_VIN->text());
-            configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/pdmyinyong"),ui->comboBox_2->currentText());
+
+            configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/pdmyinyong0"),PDM_Name2);
+            PDM_Name = PDM_Name2;
+
             for(int i = 0;i< 20;i++)
             {
                 luo[i] = luo2[i];
                 pro[i] =  pro2[i];
                 lsnumers[i]  =  lsnumers2[i] ;
                 taotong[i] = taotong2[i];
-                if(taotong[i]!="1"&& taotong[i]!="2"&& taotong[i]!="3"&& taotong[i]!="4")
+                channel[i] = channel2[i];
+                for(int q=0;q<5;q++)
+                {
+                    ch[i][q] = ch2[i][q];
+                }
+                bool condition = false;
+
+                condition = (taotong[i].toInt() >8) || (taotong[i].toInt() < 1);
+
+                if( condition )
                 {
                     //configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/Taotong").append(QString::number(i+1)),"0");
                     taotong[i] = "0";
+                }
+
+                condition = false;
+                condition = (channel[i].toInt() >5) || (channel[i].toInt() < 1);
+                if( condition )
+                {
+                    channel[i] = "0";
                 }
             }
             int counts = 0;
@@ -1969,14 +2172,17 @@ void Newconfiginfo::on_pushButton_14_clicked()
                 configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/ProNum").append(QString::number(i+1)),pro[i]);
                 configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/LSNumber").append(QString::number(i+1)),lsnumers[i]);
                 configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/Taotong").append(QString::number(i+1)),taotong[i]);
+                configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/Channel").append(QString::number(i+1)),channel[i]);
+                for(int q=0;q<5;q++)
+                {
+                    configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/ch").append(QString::number(q)+"_").append(QString::number(i+1)),ch[i][q]);
+                }
             }
 
             for(int j = 1;j < 6;j++)
             {
                 for(int i = 0;i< 20;i++)
                 {
-
-
                     configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/OPLuoSuanNum").append(QString::number(j)).append(QString::number(i+1)),"0");
                     configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/OPProNum").append(QString::number(j)).append(QString::number(i+1)),"0");
                     configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/OPLSNumber").append(QString::number(j)).append(QString::number(i+1)),"0");
@@ -2025,6 +2231,11 @@ void Newconfiginfo::on_pushButton_14_clicked()
             ui->label_Lsnum->setText(luo[0]);
             ui->label_pronum->setText(pro[0]);
             ui->label_number->setText(lsnumers[0]);
+            ui->checkBox_ch_1->setChecked(ch[0][0]);
+            ui->checkBox_ch_2->setChecked(ch[0][1]);
+            ui->checkBox_ch_3->setChecked(ch[0][2]);
+            ui->checkBox_ch_4->setChecked(ch[0][3]);
+            ui->checkBox_ch_5->setChecked(ch[0][4]);
             ui->label_isxuan->setText("no");
 
             ui->label_Lsnum->show();
@@ -2052,6 +2263,7 @@ void Newconfiginfo::on_pushButton_14_clicked()
             carStyle = ui->lineEdit_carname->text();
             G9tmp = ui->lineEdit_G9->text();
             Vintmp = ui->lineEdit_VIN->text();
+
             ui->label_carname->setText(carStyle);
             ui->label_VIN->setText(Vintmp);
             ui->label_G9->setText(G9tmp);
@@ -2069,6 +2281,8 @@ void Newconfiginfo::on_pushButton_14_clicked()
                     configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/OPLuoSuanNum").append(QString::number(j)).append(QString::number(i+1)),luoxuanlist2[j-1][i]);
                     configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/OPProNum").append(QString::number(j)).append(QString::number(i+1)),proxuanlist2[j-1][i]);
                     configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/OPLSNumber").append(QString::number(j)).append(QString::number(i+1)),lsnumersxuanlist2[j-1][i]);
+                    configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/OPChannel").append(QString::number(j)).append(QString::number(i+1)),channelxuanlist2[j-1][i]);
+                    configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/OPTaotong").append(QString::number(j)).append(QString::number(i+1)),taotongxuanlist2[j-1][i]);
 
                     configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/bxuanname").append(QString::number(j)).append(QString::number(i+1)),bxuannamelist2[j-1][i]);
                     configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/bxuancode").append(QString::number(j)).append(QString::number(i+1)),bxuancodelist2[j-1][i]);
@@ -2076,7 +2290,8 @@ void Newconfiginfo::on_pushButton_14_clicked()
                     configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/kxuancode").append(QString::number(j)).append(QString::number(i+1)),kxuancodelist2[j-1][i]);
 
                 }
-                configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/pdmyinyong").append(QString::number(j)),pdmxuanlist[j-1]);
+                configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/pdmyinyong").append(QString::number(j)),PDMxuan_Name2[j-1]);
+                //                configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/pdmyinyong").append(QString::number(j)),pdmxuanlist[j-1]);
                 //                configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/OptionInfoNum").append(QString::number(j)),QString::number(counts));
                 if(!counts)
                     countnum++;
@@ -2124,8 +2339,9 @@ void Newconfiginfo::on_pushButton_14_clicked()
                 configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/ProNum").append(QString::number(i+1)),"0");
                 configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/LSNumber").append(QString::number(i+1)),"0");
                 configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/Taotong").append(QString::number(i+1)),"0");
+                configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/Channel").append(QString::number(i+1)),"0");
             }
-            configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/pdmyinyong"),"");
+            //            configIniRead->setValue(QString("carinfo").append(QString::number(whichcar)).append("/pdmyinyong"),"");
             SaveWhat = "";
             delete configIniRead;
             ui->pushButton_xuan1->setEnabled(false);
@@ -2180,12 +2396,17 @@ void Newconfiginfo::receiveDesignle(bool tmp)
                 luo[i] =  configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/LuoSuanNum").append(QString::number(i+1))).toString();
                 pro[i] =  configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/ProNum").append(QString::number(i+1))).toString();
                 lsnumers[i] = configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/LSNumber").append(QString::number(i+1))).toString();
+                for(int q=0;q<5;q++)
+                {
+                    ch[i][q] =  configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/ch").append(QString::number(q)+"_").append(QString::number(i+1))).toBool();
+                }
             }
             delete configIniRead;
             // on_pushButton_15_clicked();
         }
 
-    }else  if(SaveWhat == "")
+    }
+    else if(SaveWhat == "")
     {
 
         if(tmp)
@@ -2208,37 +2429,46 @@ void Newconfiginfo::receiveDesignle(bool tmp)
                     luo[i] =  configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/LuoSuanNum").append(QString::number(i+1))).toString();
                     pro[i] =  configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/ProNum").append(QString::number(i+1))).toString();
                     lsnumers[i] = configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/LSNumber").append(QString::number(i+1))).toString();
+                    for(int q=0;q<5;q++)
+                    {
+                        ch[i][q] =  configIniRead->value(QString("carinfo").append(QString::number(whichcar)).append("/ch").append(QString::number(q)+"_").append(QString::number(i+1))).toBool();
+                    }
                 }
                 delete configIniRead;
                 backShow();
             }else
             {
-              if(whichoption >=1 && whichoption < 6)
-              {
-                for(int j = 0;j< 20;j++)
+                if(whichoption >=1 && whichoption < 6)
                 {
-                    //luoxuanlist2[whichoption-1][j] = luoxuanlist[whichoption-1][j];
-                    //proxuanlist2[whichoption-1][j] = proxuanlist[whichoption-1][j];
+                    for(int j = 0;j< 20;j++)
+                    {
+                        //luoxuanlist2[whichoption-1][j] = luoxuanlist[whichoption-1][j];
+                        //proxuanlist2[whichoption-1][j] = proxuanlist[whichoption-1][j];
 
-                    lsnumersxuanlist2[whichoption-1][j] = lsnumersxuanlist[whichoption-1][j];
-                    bxuannamelist2[whichoption-1][j] = bxuannamelist[whichoption-1][j];
-                    bxuancodelist2[whichoption-1][j] = bxuancodelist[whichoption-1][j];
-                    kxuannamelist2[whichoption-1][j] = kxuannamelist[whichoption-1][j];
-                    kxuancodelist2[whichoption-1][j] = kxuancodelist[whichoption-1][j];
+                        lsnumersxuanlist2[whichoption-1][j] = lsnumersxuanlist[whichoption-1][j];
+                        channelxuanlist2[whichoption-1][j] = channelxuanlist[whichoption-1][j];
+                        taotongxuanlist2[whichoption-1][j] = taotongxuanlist[whichoption-1][j];
+                        bxuannamelist2[whichoption-1][j] = bxuannamelist[whichoption-1][j];
+                        bxuancodelist2[whichoption-1][j] = bxuancodelist[whichoption-1][j];
+                        kxuannamelist2[whichoption-1][j] = kxuannamelist[whichoption-1][j];
+                        kxuancodelist2[whichoption-1][j] = kxuancodelist[whichoption-1][j];
+
+                    }
+
+                    PDMxuan_Name2[whichoption-1] = PDMxuan_Name[whichoption-1];
+
+                    backShow();
+                    //                    pdmxuanlist2[whichoption-1]=  pdmxuanlist[whichoption-1];
+                    ui->pushButton_xuan1->setEnabled(false);
+                    ui->pushButton_xuan2->setEnabled(false);
+                    ui->pushButton_xuan3->setEnabled(false);
+                    ui->pushButton_xuan4->setEnabled(false);
+
+                    ui->pushButton_xuan5->setEnabled(false);
+                    isoptionsaved = true;
 
                 }
-                backShow();
-                pdmxuanlist2[whichoption-1]=  pdmxuanlist[whichoption-1];
-                ui->pushButton_xuan1->setEnabled(false);
-                ui->pushButton_xuan2->setEnabled(false);
-                ui->pushButton_xuan3->setEnabled(false);
-                ui->pushButton_xuan4->setEnabled(false);
-
-                ui->pushButton_xuan5->setEnabled(false);
-                isoptionsaved = true;
-
             }
-           }
 
         }
         ui->stackedWidget_5->setCurrentIndex(0);
@@ -2247,7 +2477,8 @@ void Newconfiginfo::receiveDesignle(bool tmp)
         {
             ui->pushButton_12->hide();
         }
-    }else if(SaveWhat == "save2")
+    }
+    else if(SaveWhat == "save2")
     {
         if(tmp)
         {
@@ -2268,10 +2499,11 @@ void Newconfiginfo::receiveDesignle(bool tmp)
             ui->lineEdit_carname->clear();
             ui->lineEdit_G9->clear();
             ui->lineEdit_VIN->clear();
-            ui->lineEdit_Lsnumber->setText("0");
+            ui->lineEdit_Lsnumber->setText("");
             ui->lineEdit_pronum->setText("0");
             ui->lineEdit_number->setText("0");
-            ui->lineEdit_taotong->setText(tr("无"));
+            ui->lineEdit_taotong->setText("OFF");
+            ui->lineEdit_channel->setText("OFF");
             ui->label_carname->clear();
             ui->label_G9->clear();
             ui->label_VIN->clear();
@@ -2284,12 +2516,16 @@ void Newconfiginfo::receiveDesignle(bool tmp)
             carStyle="";
             G9tmp="";
             Vintmp="";
+
             for(int k = 1;k < 6;k++) //5个程序号 删除
             {
                 luo2[k-1]="0";
                 pro2[k-1]="0";
                 lsnumers2[k-1]="0";
                 taotong2[k-1] = "0";
+                channel2[k-1] = "0";
+                for(int q=0;q<5;q++)
+                    ch2[k-1][q] = false;
             }
             on_pushButton_14_clicked();
 
@@ -2316,6 +2552,8 @@ void Newconfiginfo::receiveDesignle(bool tmp)
                 luoxuanlist2[whichoption-1][j] = luoxuanlist[whichoption-1][j];
                 proxuanlist2[whichoption-1][j] = proxuanlist[whichoption-1][j];
                 lsnumersxuanlist2[whichoption-1][j] = lsnumersxuanlist[whichoption-1][j];
+                channelxuanlist2[whichoption-1][j] = channelxuanlist[whichoption-1][j];
+                taotongxuanlist2[whichoption-1][j] = taotongxuanlist[whichoption-1][j];
                 bxuannamelist2[whichoption-1][j] = bxuannamelist[whichoption-1][j];
                 bxuancodelist2[whichoption-1][j] = bxuancodelist[whichoption-1][j];
                 kxuannamelist2[whichoption-1][j] = kxuannamelist[whichoption-1][j];
@@ -2323,7 +2561,9 @@ void Newconfiginfo::receiveDesignle(bool tmp)
 
             }
 
-            pdmxuanlist2[whichoption-1]=  pdmxuanlist[whichoption-1];
+            PDMxuan_Name2[whichoption-1] = PDMxuan_Name[whichoption-1];
+
+            //            pdmxuanlist2[whichoption-1]=  pdmxuanlist[whichoption-1];
             // ui->pushButton_12->hide();
             ui->stackedWidget->setCurrentIndex(1);
             ui->stackedWidget_2->setCurrentIndex(4);
@@ -2334,10 +2574,10 @@ void Newconfiginfo::receiveDesignle(bool tmp)
     }
     else if(SaveWhat == "CANCEL")
     {
-        ui->label_isxuan->setText("no");
-        ui->label_carname->setText(ui->lineEdit_carname->text());
-        ui->label_G9->setText(ui->lineEdit_G9->text());
-        ui->label_VIN->setText(ui->lineEdit_VIN->text());
+        //        ui->label_isxuan->setText("no");
+        //        ui->label_carname->setText(ui->lineEdit_carname->text());
+        //        ui->label_G9->setText(ui->lineEdit_G9->text());
+        //        ui->label_VIN->setText(ui->lineEdit_VIN->text());
         if(tmp)
         {
             for(int i = 0;i< 20;i++)
@@ -2345,11 +2585,18 @@ void Newconfiginfo::receiveDesignle(bool tmp)
                 luo[i] = luo2[i];
                 pro[i] =  pro2[i];
                 lsnumers[i]  =  lsnumers2[i] ;
+                for(int q=0;q<5;q++)
+                    ch[i][q] = ch2[i][q];
             }
             SaveWhat = "saveself";
             ui->label_Lsnum->setText(luo2[0]);
             ui->label_pronum->setText(pro2[0]);
             ui->label_number->setText(lsnumers2[0]);
+            ui->checkBox_ch_1->setChecked(ch[0][0]);
+            ui->checkBox_ch_2->setChecked(ch[0][1]);
+            ui->checkBox_ch_3->setChecked(ch[0][2]);
+            ui->checkBox_ch_4->setChecked(ch[0][3]);
+            ui->checkBox_ch_5->setChecked(ch[0][4]);
             on_pushButton_14_clicked();
 
         }else
@@ -2359,12 +2606,19 @@ void Newconfiginfo::receiveDesignle(bool tmp)
                 luo2[i] = luo[i];
                 pro2[i] =  pro[i];
                 lsnumers2[i]  =  lsnumers[i] ;
+                for(int q=0;q<5;q++)
+                    ch2[i][q] = ch[i][q];
             }
             ui->stackedWidget_5->setCurrentIndex(0);
 
             ui->label_Lsnum->setText(luo[0]);
             ui->label_pronum->setText(pro[0]);
             ui->label_number->setText(lsnumers[0]);
+            ui->checkBox_ch_1->setChecked(ch[0][0]);
+            ui->checkBox_ch_2->setChecked(ch[0][1]);
+            ui->checkBox_ch_3->setChecked(ch[0][2]);
+            ui->checkBox_ch_4->setChecked(ch[0][3]);
+            ui->checkBox_ch_5->setChecked(ch[0][4]);
 
             backShow();
             SaveWhat = "";
@@ -2381,6 +2635,8 @@ void Newconfiginfo::receiveDesignle(bool tmp)
                 luoxuanlist2[whichoption-1][i]  = "0";
                 proxuanlist2[whichoption-1][i]  =  "0";
                 lsnumersxuanlist2[whichoption-1][i]=  "0";
+                channelxuanlist2[whichoption-1][i] = "1";
+                taotongxuanlist2[whichoption-1][i] = "0";
                 bxuannamelist2[whichoption-1][i] = "";
                 bxuancodelist2[whichoption-1][i] = "";
 
@@ -2388,7 +2644,10 @@ void Newconfiginfo::receiveDesignle(bool tmp)
                 kxuancodelist2[whichoption-1][i] = "";
 
             }
-            pdmxuanlist2[whichoption-1]=  "";
+
+            PDMxuan_Name2[whichoption-1] = "";
+
+            //            pdmxuanlist2[whichoption-1]=  "";
             ui->stackedWidget->setCurrentIndex(1);
             if(whichoption == 1)
             {
@@ -2419,7 +2678,8 @@ void Newconfiginfo::receiveDesignle(bool tmp)
 
         }
         SaveWhat ="";
-    }else if(SaveWhat == "OPDELALL")
+    }
+    else if(SaveWhat == "OPDELALL")
     {
         if(tmp)
         {
@@ -2440,6 +2700,8 @@ void Newconfiginfo::receiveDesignle(bool tmp)
                     luoxuanlist[j-1][i]  = "0";
                     proxuanlist[j-1][i]  =  "0";
                     lsnumersxuanlist[j-1][i]=  "0";
+                    channelxuanlist[j-1][i] = "1";
+                    taotongxuanlist[j-1][i] = "0";
 
                     bxuannamelist[j-1][i] = "";
                     bxuancodelist[j-1][i] = "";
@@ -2449,6 +2711,8 @@ void Newconfiginfo::receiveDesignle(bool tmp)
                     luoxuanlist2[j-1][i]  = "0";
                     proxuanlist2[j-1][i]  =  "0";
                     lsnumersxuanlist2[j-1][i]=  "0";
+                    channelxuanlist2[j-1][i] = "1";
+                    taotongxuanlist2[j-1][i] = "0";
 
                     bxuannamelist2[j-1][i] = "";
                     bxuancodelist2[j-1][i] = "";
@@ -2457,8 +2721,12 @@ void Newconfiginfo::receiveDesignle(bool tmp)
                     kxuancodelist2[j-1][i] = "";
 
                 }
-                pdmxuanlist[j-1]=  "";
-                pdmxuanlist2[j-1]=  "";
+
+                PDMxuan_Name[j-1]="";
+                PDMxuan_Name2[j-1]="";
+
+                //                pdmxuanlist[j-1]=  "";
+                //                pdmxuanlist2[j-1]=  "";
             }
             on_pushButton_14_clicked();
             QSettings *configIniRead = new QSettings("/config.ini", QSettings::IniFormat);
@@ -2525,7 +2793,8 @@ void Newconfiginfo::receiveDesignle(bool tmp)
         {
             savePDM();
         }
-        on_listWidget_currentRowChanged(nowcomboxnum);
+        on_pushButton_22_clicked();
+        //        this->close();
         //        SaveWhat = "";
     }
     else if(SaveWhat == "pdmoutmain")
@@ -2626,7 +2895,7 @@ void Newconfiginfo::receiveDesignle(bool tmp)
     ui->label_100->hide();
     delete e3;
     delete save;
-    //qDebug()<<"whywhy  SaveWhat"<<SaveWhat;
+    qDebug()<<"whywhy  SaveWhat"<<SaveWhat;
     if(SaveWhat == "pdmoutmain")
     {
         on_pushButton_clicked();
@@ -2895,14 +3164,14 @@ void Newconfiginfo::on_pushButton_15_clicked()
         }
         isedit = isoption;
     }
-    ui->stackedWidget_3->setCurrentIndex(0);
+    ui->stackedWidget_3->setCurrentIndex(3);
     if(isedit == 1)
     {
         ui->label_carname->setText(ui->lineEdit_carname->text());
         ui->label_VIN->setText(ui->lineEdit_VIN->text());
         ui->label_G9->setText(ui->lineEdit_G9->text());
         ui->label_isxuan->setText("yes");
-        ui->pushButton_22->hide();
+        ui->label_126->hide();
         ui->comboBox_2->hide();
 
         if(!isoptionsaved)
@@ -3025,13 +3294,18 @@ void Newconfiginfo::on_pushButton_15_clicked()
         luo2[ui->label_119->text().toInt()-1] = ui->lineEdit_Lsnumber->text();
         pro2[ui->label_119->text().toInt()-1] = ui->lineEdit_pronum->text();
         lsnumers2[ui->label_119->text().toInt()-1] = ui->lineEdit_number->text();
+        ch2[ui->label_119->text().toInt()-1][0] = ui->checkBox_ch_1->isChecked();
+        ch2[ui->label_119->text().toInt()-1][1] = ui->checkBox_ch_2->isChecked();
+        ch2[ui->label_119->text().toInt()-1][2] = ui->checkBox_ch_3->isChecked();
+        ch2[ui->label_119->text().toInt()-1][3] = ui->checkBox_ch_4->isChecked();
+        ch2[ui->label_119->text().toInt()-1][4] = ui->checkBox_ch_5->isChecked();
         //qDebug() << pro2[ui->label_119->text().toInt()-1] << ui->label_119->text();
         int i = 0 ;
         for(i = 0;i<20;i++)
         {
             //qDebug() << carStyle << ui->lineEdit_carname->text() << pro[i] << pro2[i] << i;
-            if(carStyle!=ui->lineEdit_carname->text() || Vintmp!=ui->lineEdit_VIN->text() || G9tmp!=ui->lineEdit_G9->text() ||
-                    pro[i]!=pro2[i] || lsnumers2[i]!=lsnumers[i])
+            if(carStyle!=ui->lineEdit_carname->text() || Vintmp!=ui->lineEdit_VIN->text() || G9tmp!=ui->lineEdit_G9->text() || luo[i]!=luo2[i] ||
+                    pro[i]!=pro2[i] || lsnumers2[i]!=lsnumers[i] || ch2[i][0] != ch[i][0]|| ch2[i][1] != ch[i][1]|| ch2[i][2] != ch[i][2]|| ch2[i][3] != ch[i][3]|| ch2[i][4] != ch[i][4])
             {
                 SaveWhat = "CANCEL";
                 e3 = new QGraphicsOpacityEffect(this);
@@ -3128,12 +3402,12 @@ void Newconfiginfo::on_pushButton_12_clicked()
     else if(whichcar == 2 || whichcar == 7 || whichcar == 12 || whichcar == 17)
     {
         ui->pushButton_butt1->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
-        ui->pushButton_butt2->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/9.bmp);font:14pt;color: rgb(248, 248, 255);");
+        //        ui->pushButton_butt2->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/9.bmp);font:14pt;color: rgb(248, 248, 255);");
         ui->pushButton_butt3->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
         ui->pushButton_butt4->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
         ui->pushButton_butt5->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
         ui->pushButton_butt1->setEnabled(false);
-        ui->pushButton_butt2->setEnabled(false);
+        //        ui->pushButton_butt2->setEnabled(false);
         ui->pushButton_butt4->setEnabled(false);
         ui->pushButton_butt3->setEnabled(false);
         ui->pushButton_butt5->setEnabled(false);
@@ -3143,12 +3417,12 @@ void Newconfiginfo::on_pushButton_12_clicked()
 
         ui->pushButton_butt1->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
         ui->pushButton_butt2->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
-        ui->pushButton_butt3->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/9.bmp);font:14pt;color: rgb(248, 248, 255);");
+        //        ui->pushButton_butt3->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/9.bmp);font:14pt;color: rgb(248, 248, 255);");
         ui->pushButton_butt4->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
         ui->pushButton_butt5->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
         ui->pushButton_butt1->setEnabled(false);
         ui->pushButton_butt2->setEnabled(false);
-        ui->pushButton_butt3->setEnabled(false);
+        //        ui->pushButton_butt3->setEnabled(false);
         ui->pushButton_butt4->setEnabled(false);
         ui->pushButton_butt5->setEnabled(false);
     }else if(whichcar == 4 || whichcar == 9 || whichcar == 14 || whichcar == 19)
@@ -3157,11 +3431,11 @@ void Newconfiginfo::on_pushButton_12_clicked()
         ui->pushButton_butt1->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
         ui->pushButton_butt2->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
         ui->pushButton_butt3->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
-        ui->pushButton_butt4->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/9.bmp);font:14pt;color: rgb(248, 248, 255);");
+        //        ui->pushButton_butt4->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/9.bmp);font:14pt;color: rgb(248, 248, 255);");
         ui->pushButton_butt5->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
         ui->pushButton_butt1->setEnabled(false);
         ui->pushButton_butt2->setEnabled(false);
-        ui->pushButton_butt4->setEnabled(false);
+        //        ui->pushButton_butt4->setEnabled(false);
         ui->pushButton_butt3->setEnabled(false);
         ui->pushButton_butt5->setEnabled(false);
     }else if(whichcar == 5 || whichcar == 10 || whichcar == 15 || whichcar == 20)
@@ -3170,12 +3444,12 @@ void Newconfiginfo::on_pushButton_12_clicked()
         ui->pushButton_butt2->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
         ui->pushButton_butt3->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
         ui->pushButton_butt4->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/15.bmp);");
-        ui->pushButton_butt5->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/9.bmp);font:14pt;color: rgb(248, 248, 255);");
+        //        ui->pushButton_butt5->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/9.bmp);font:14pt;color: rgb(248, 248, 255);");
         ui->pushButton_butt1->setEnabled(false);
         ui->pushButton_butt2->setEnabled(false);
         ui->pushButton_butt3->setEnabled(false);
         ui->pushButton_butt4->setEnabled(false);
-        ui->pushButton_butt5->setEnabled(false);
+        //        ui->pushButton_butt5->setEnabled(false);
     }
 
     ui->lineEdit_carname->setText(carStyle);
@@ -3187,14 +3461,39 @@ void Newconfiginfo::on_pushButton_12_clicked()
         ui->lineEdit_Lsnumber->setText(luo[0]);
         ui->lineEdit_pronum->setText(pro[0]);
         ui->lineEdit_number->setText(lsnumers[0]);
+        ui->checkBox_ch_1->setChecked(ch[0][0]);
+        ui->checkBox_ch_2->setChecked(ch[0][1]);
+        ui->checkBox_ch_3->setChecked(ch[0][2]);
+        ui->checkBox_ch_4->setChecked(ch[0][3]);
+        ui->checkBox_ch_5->setChecked(ch[0][4]);
+
         ui->label_taotongg->show();
         ui->pushButton_taotong_add->show();
         ui->pushButton_taotong_minus->show();
         ui->lineEdit_taotong->show();
+
         if(taotong[0] == "" || taotong[0] == "0")
-            ui->lineEdit_taotong->setText(tr("无"));
+            ui->lineEdit_taotong->setText("OFF");
         else
             ui->lineEdit_taotong->setText(taotong[0]);
+        ui->label_channel->show();
+        ui->pushButton_channel_add->show();
+        ui->pushButton_channel_minus->show();
+        ui->lineEdit_channel->show();
+        if(channel[0] == "" || channel[0] == "0")
+            ui->lineEdit_channel->setText("OFF");
+        else
+            ui->lineEdit_channel->setText(channel[0]);
+        //        for(int k = 0;k< ui->comboBox_2->count();k++)
+        //        {
+        //            if(PDM_Name == ui->comboBox_2->itemText(k))
+        //            {
+        //                ui->comboBox_2->setCurrentIndex(k);
+        //                break;
+        //            }
+        //        }
+        ui->comboBox_2->setCurrentIndex(ui->comboBox_2->findText(PDM_Name));
+        ui->pushButton_5->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/14.bmp);");
     }
     else
     {
@@ -3219,6 +3518,10 @@ void Newconfiginfo::on_pushButton_12_clicked()
         ui->pushButton_taotong_add->hide();
         ui->pushButton_taotong_minus->hide();
         ui->lineEdit_taotong->hide();
+        ui->label_channel->hide();
+        ui->pushButton_channel_add->hide();
+        ui->pushButton_channel_minus->hide();
+        ui->lineEdit_channel->hide();
         ui->pushButton_xuan1->setEnabled(true);
         ui->pushButton_xuan2->setEnabled(true);
         ui->pushButton_xuan3->setEnabled(true);
@@ -3354,51 +3657,17 @@ void Newconfiginfo::xuanchoux(int tmp)
     ui->comboBox_3->setCurrentIndex(0);
     ui->label_51->setText("1");
     whichoption = tmp;
-    for(int k = 0;k< 250;k++)
-    {
-        if(pdmxuanlist2[whichoption-1] == ui->comboBox_2->itemText(k))
-        {
-            ui->comboBox_3->setCurrentIndex(k);
-            break;
-        }
-
-    }
+    //    for(int k = 0;k< ui->comboBox_3->count();k++)
+    //    {
+    //        if(PDMxuan_Name2[whichoption-1] == ui->comboBox_3->itemText(k))
+    //        {
+    //            ui->comboBox_3->setCurrentIndex(k);
+    //            break;
+    //        }
+    //    }
     ui->stackedWidget->setCurrentIndex(2);
     ui->stackedWidget_9->setCurrentIndex(0);
-    if(isJS)
-    {
-        ui->stackedWidget_13->setCurrentIndex(1);
-        ui->label_75->setText(luoxuanlist2[whichoption-1][0]);
-        ui->label_76->setText(proxuanlist2[whichoption-1][0]);
-        ui->label_77->setText(lsnumersxuanlist2[whichoption-1][0]);
-        ui->label_78->setText(pdmxuanlist2[whichoption-1]);
-        ui->label_75->setText(luoxuanlist2[whichoption-1][currentpages-1]);
-        ui->label_76->setText(proxuanlist2[whichoption-1][currentpages-1]);
-        ui->label_77->setText(lsnumersxuanlist2[whichoption-1][currentpages-1]);
-        ui->pushButton_14->hide();
-        ui->pushButton_15->hide();
-        ui->pushButton_16->hide();
-        ui->pushButton_23->hide();
-        ui->pushButton_24->hide();
-        ui->pushButton_25->hide();
-        ui->label_78->setText(pdmxuanlist2[whichoption-1]);
-        ui->pushButton_bxuan1->setEnabled(false);
-        ui->pushButton_bxuan2->setEnabled(false);
-        ui->pushButton_bxuan3->setEnabled(false);
-        ui->pushButton_bxuan4->setEnabled(false);
-        ui->pushButton_bxuan5->setEnabled(false);
-
-        ui->pushButton_kxuan1->setEnabled(false);
-        ui->pushButton_kxuan2->setEnabled(false);
-        ui->pushButton_kxuan3->setEnabled(false);
-        ui->pushButton_kxuan4->setEnabled(false);
-        ui->pushButton_kxuan5->setEnabled(false);
-
-    }
-    else
-    {
-        ui->stackedWidget_13->setCurrentIndex(0);
-    }
+    ui->stackedWidget_13->setCurrentIndex(0);
 
     ui->lineEdit_xuanLsnum->setText(luoxuanlist2[whichoption-1][0]);
     if (proxuanlist2[whichoption-1][0]=="")
@@ -3407,7 +3676,14 @@ void Newconfiginfo::xuanchoux(int tmp)
     if (lsnumersxuanlist2[whichoption-1][0]=="")
         ui->lineEdit_xuannumber->setText("0");
     else ui->lineEdit_xuannumber->setText(lsnumersxuanlist2[whichoption-1][0]);
+    if (channelxuanlist2[whichoption-1][0]=="")
+        ui->lineEdit_channel_2->setText("1");
+    else ui->lineEdit_channel_2->setText(channelxuanlist2[whichoption-1][0]);
+    if (taotongxuanlist2[whichoption-1][0]==""||taotongxuanlist2[whichoption-1][0]=="0")
+        ui->lineEdit_taotong_2->setText("OFF");
+    else ui->lineEdit_taotong_2->setText(taotongxuanlist2[whichoption-1][0]);
 
+    ui->comboBox_3->setCurrentIndex(ui->comboBox_3->findText(PDMxuan_Name[whichoption-1]));
 
     if(bxuannamelist2[whichoption-1][0]!="" && bxuancodelist2[whichoption-1][0] !="")
     {
@@ -3539,8 +3815,7 @@ void Newconfiginfo::on_pushButton_xuan5_clicked()
 void Newconfiginfo::on_pushButton_20_clicked()
 {
     //选配 关闭
-    if(!isJS)
-        on_pushButton_24_clicked();
+    on_pushButton_24_clicked();
     ui->stackedWidget->setCurrentIndex(1);
     ui->stackedWidget_2->setCurrentIndex(4);
 }
@@ -3551,9 +3826,19 @@ void Newconfiginfo::on_pushButton_18_clicked()
     carStyle = ui->lineEdit_carname->text();
     G9tmp = ui->lineEdit_G9->text();
     Vintmp = ui->lineEdit_VIN->text();
+    //    Out[0]= ui->checkBox_output1->isChecked();
+    //    Out[1]= ui->checkBox_output2->isChecked();
+    //    Out[2]= ui->checkBox_output3->isChecked();
+    //    Out[3]= ui->checkBox_output4->isChecked();
     luoxuanlist2[whichoption-1][ui->label_51->text().toInt()-1] = ui->lineEdit_xuanLsnum->text();
     proxuanlist2[whichoption-1][ui->label_51->text().toInt()-1] = ui->lineEdit_xuanpronum->text();
     lsnumersxuanlist2[whichoption-1][ui->label_51->text().toInt()-1] = ui->lineEdit_xuannumber->text();
+    channelxuanlist2[whichoption-1][ui->label_51->text().toInt()-1] = ui->lineEdit_channel_2->text();
+    if(ui->lineEdit_taotong_2->text()!= "OFF")
+        taotongxuanlist2[whichoption-1][ui->label_51->text().toInt()-1] = ui->lineEdit_taotong_2->text();
+    else
+        taotongxuanlist2[whichoption-1][ui->label_51->text().toInt()-1] = "0";
+    PDMxuan_Name2[whichoption-1] = ui->comboBox_3->currentText();
     updownWriteOperate(1);
 
 }
@@ -3564,9 +3849,19 @@ void Newconfiginfo::on_pushButton_19_clicked()
     carStyle = ui->lineEdit_carname->text();
     G9tmp = ui->lineEdit_G9->text();
     Vintmp = ui->lineEdit_VIN->text();
+    //    Out[0]= ui->checkBox_output1->isChecked();
+    //    Out[1]= ui->checkBox_output2->isChecked();
+    //    Out[2]= ui->checkBox_output3->isChecked();
+    //    Out[3]= ui->checkBox_output4->isChecked();
     luoxuanlist2[whichoption-1][ui->label_51->text().toInt()-1] = ui->lineEdit_xuanLsnum->text();
     proxuanlist2[whichoption-1][ui->label_51->text().toInt()-1] = ui->lineEdit_xuanpronum->text();
     lsnumersxuanlist2[whichoption-1][ui->label_51->text().toInt()-1] = ui->lineEdit_xuannumber->text();
+    channelxuanlist2[whichoption-1][ui->label_51->text().toInt()-1] = ui->lineEdit_channel_2->text();
+    if(ui->lineEdit_taotong_2->text()!= "OFF")
+        taotongxuanlist2[whichoption-1][ui->label_51->text().toInt()-1] = ui->lineEdit_taotong_2->text();
+    else
+        taotongxuanlist2[whichoption-1][ui->label_51->text().toInt()-1] = "0";
+    PDMxuan_Name2[whichoption-1] = ui->comboBox_3->currentText();
     updownWriteOperate(0);
 }
 
@@ -3582,64 +3877,57 @@ void Newconfiginfo::on_pushButton_28_clicked()
         ui->groupBox_13->setStyleSheet("QGroupBox {font: 14pt;margin-top: 1ex;border-width:0.5px;border-style:solid;border-color: rgb(51, 153, 255);} QGroupBox::title {subcontrol-origin: margin;subcontrol-position: top left;left:15px;margin-left: 5px;margin-right: 5px;padding:1px;}");
         ui->listWidget->setCurrentRow(1);
         historyclear();
-        if(isJS)
-        {
-            //////////////////////////////////////////////////////////////////////////////////////////未写
-        }
+
+        whichButtonClick = "PDMEdit";
+        ui->comboBox->show();
+        ui->label_69->show();
+        ui->lineEdit_pdmname->hide();
+        ui->pushButton_29->hide();
+        ui->pushButton_30->hide();
+        ui->pushButton_31->hide();
+
+        if(!isbaseinfochange)
+            baseInfoIsChange();
         else
         {
+            ui->label_83->hide();
+            ui->label_84->hide();
+            ui->label_85->hide();
+            ui->label_86->show();
+            //            ui->pushButton_13->hide();
+            ui->stackedWidget_2->setCurrentIndex(5);
+            ui->stackedWidget_6->setCurrentIndex(0);
+            //ui->stackedWidget_3->setCurrentIndex(4);
+            //ui->pushButton_96->setText(tr("PDM编辑"));
+            ui->comboBox->clear();
+            QSettings *config = new QSettings("/config.ini", QSettings::IniFormat);
+            ui->comboBox->addItem("");
+            //int pdmnumber = config->value("baseinfo/pdmnumber").toInt();
 
-            whichButtonClick = "PDMEdit";
-            ui->comboBox->show();
-            ui->label_69->show();
-            ui->lineEdit_pdmname->hide();
-            ui->pushButton_29->hide();
-            ui->pushButton_30->hide();
-            ui->pushButton_31->hide();
-
-            if(!isbaseinfochange)
-                baseInfoIsChange();
-            else
+            for(int i= 0;i < 1000 ;i++)
             {
-                ui->label_83->hide();
-                ui->label_84->hide();
-                ui->label_85->hide();
-                ui->label_86->show();
-                //            ui->pushButton_13->hide();
-                ui->stackedWidget_2->setCurrentIndex(5);
-                ui->stackedWidget_6->setCurrentIndex(0);
-                //ui->stackedWidget_3->setCurrentIndex(4);
-                //ui->pushButton_96->setText(tr("PDM编辑"));
-                ui->comboBox->clear();
-                QSettings *config = new QSettings("/config.ini", QSettings::IniFormat);
-                ui->comboBox->addItem("");
-                //int pdmnumber = config->value("baseinfo/pdmnumber").toInt();
 
-                for(int i= 0;i < 1000 ;i++)
+                if(config->value(QString("pdminfo").append(QString::number(i+1)).append("/pdmname")).toString()!= "")
                 {
-
-                    if(config->value(QString("pdminfo").append(QString::number(i+1)).append("/pdmname")).toString()!= "")
-                    {
-                        ui->comboBox->addItem(config->value(QString("pdminfo").append(QString::number(i+1)).append("/pdmname")).toString());
-                    }
+                    ui->comboBox->addItem(config->value(QString("pdminfo").append(QString::number(i+1)).append("/pdmname")).toString());
                 }
-                SaveWhat = "";
-                ispdminit = 1;
-                delete config;
-                //pdminit();
             }
+            SaveWhat = "";
+            ispdminit = 1;
+            delete config;
+            //pdminit();
         }
     }
 }
 
-void Newconfiginfo::pdmSelect()
+void Newconfiginfo::pdmSelect(QListWidgetItem* item)
 {
     if(numpdm > 0)
     {
         for(int i = 0;i< numpdm;i++)
             butt1[i]->show();
     }
-    pathpdm =  ui->listWidget_2->currentItem()->text();
+    pathpdm =  item->text();
     //qDebug() <<tr( ui->listWidget_2->currentItem()->text().toAscii().data());
     ui->stackedWidget_6->setCurrentIndex(0);
     //qDebug() << tr(pathpdm.toAscii().data());
@@ -3686,7 +3974,7 @@ void Newconfiginfo::pdminit()
         configButton->setTextAlignment(Qt::AlignHCenter);
         configButton->setFlags(configButton->flags() & ~Qt::ItemIsSelectable);
     }
-    connect(ui->listWidget_2,SIGNAL(itemClicked(QListWidgetItem*)),this,SLOT(pdmSelect()));
+    connect(ui->listWidget_2,SIGNAL(itemClicked(QListWidgetItem*)),this,SLOT(pdmSelect(QListWidgetItem*)));
     ui->listWidget_2->setFlow(QListView::LeftToRight);
     ui->listWidget_2->update();
     delete dir;
@@ -3729,9 +4017,9 @@ void Newconfiginfo::on_pushButton_30_clicked()
     butt1[temppdm]->setFocusPolicy(Qt::NoFocus);
     butt1[temppdm]->setFlat(true);
 
-    butt1[temppdm]->setStyleSheet("font-size: 35px");
+    //    butt1[temppdm]->setStyleSheet("font-size: 35px");
     butt1[temppdm]->setText(QString::number(numpdm));
-    butt1[temppdm]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/g01.png);");
+    butt1[temppdm]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/g01.png);font: 14pt \"microsoft yahei\";color: rgb(248, 248, 255);");
     butt1[temppdm]->show();
 
     butt1[temppdm]->setGeometry(400,300,45,45);
@@ -3880,7 +4168,7 @@ void Newconfiginfo::on_comboBox_currentIndexChanged(int index)
                 numpdm++;
                 temppdm = numpdm -1;
                 butt1[i]->setFlat(true);
-                butt1[i]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/g01.png);");
+                butt1[i]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/g01.png);font: 14pt \"microsoft yahei\";color: rgb(248, 248, 255);");
                 butt1[i]->setText(QString::number((i+1)));
 
                 int tempx = config->value(QString("pdminfo").append(QString::number((nowpdmnum))).append("/tempx").append(QString::number((i+1)))).toInt();
@@ -3947,13 +4235,20 @@ void Newconfiginfo::on_pushButton_24_clicked()
     luoxuanlist2[whichoption-1][ui->label_51->text().toInt()-1] = ui->lineEdit_xuanLsnum->text();
     proxuanlist2[whichoption-1][ui->label_51->text().toInt()-1] = ui->lineEdit_xuanpronum->text();
     lsnumersxuanlist2[whichoption-1][ui->label_51->text().toInt()-1] = ui->lineEdit_xuannumber->text();
-    pdmxuanlist2[whichoption-1] = ui->comboBox_3->currentText();
+    channelxuanlist2[whichoption-1][ui->label_51->text().toInt()-1] = ui->lineEdit_channel_2->text();
+    if(ui->lineEdit_taotong_2->text()!= "OFF")
+        taotongxuanlist2[whichoption-1][ui->label_51->text().toInt()-1] = ui->lineEdit_taotong_2->text();
+    else
+        taotongxuanlist2[whichoption-1][ui->label_51->text().toInt()-1] = "0";
+    PDMxuan_Name2[whichoption-1] = ui->comboBox_3->currentText();
+    //    pdmxuanlist2[whichoption-1] = ui->comboBox_3->currentText();
     for(i = 0;i < 20;i++)
     {
         if(luoxuanlist2[whichoption-1][i]!=luoxuanlist[whichoption-1][i] || proxuanlist2[whichoption-1][i]!=proxuanlist[whichoption-1][i] ||
                 lsnumersxuanlist2[whichoption-1][i]!=lsnumersxuanlist[whichoption-1][i] || bxuannamelist2[whichoption-1][i]!=bxuannamelist[whichoption-1][i] ||
                 bxuancodelist2[whichoption-1][i]!=bxuancodelist[whichoption-1][i] || kxuannamelist2[whichoption-1][i]!=kxuannamelist[whichoption-1][i] ||
-                kxuancodelist2[whichoption-1][i]!=kxuancodelist[whichoption-1][i] || pdmxuanlist2[whichoption-1]!= pdmxuanlist[whichoption-1])
+                kxuancodelist2[whichoption-1][i]!=kxuancodelist[whichoption-1][i] ||
+                channelxuanlist2[whichoption-1][i]!=channelxuanlist[whichoption-1][i] || taotongxuanlist2[whichoption-1][i]!= taotongxuanlist[whichoption-1][i])
         {
             SaveWhat = "OPCANCEL";
             e3 = new QGraphicsOpacityEffect(this);
@@ -3966,7 +4261,21 @@ void Newconfiginfo::on_pushButton_24_clicked()
             save->show();
             break;
         }
-
+    }
+    if(i == 20)
+    {
+        if(PDMxuan_Name2[whichoption-1]!= PDMxuan_Name[whichoption-1])
+        {
+            SaveWhat = "OPCANCEL";
+            e3 = new QGraphicsOpacityEffect(this);
+            e3->setOpacity(0.5);
+            ui->label_100->setGraphicsEffect(e3);
+            ui->label_100->show();
+            ui->label_100->setGeometry(0,0,1366,768);
+            save = new Save(this);
+            connect(save,SIGNAL(sendDeSingle(bool)),this,SLOT(receiveDesignle(bool)));
+            save->show();
+        }
     }
     if(i == 20)
     {
@@ -3975,20 +4284,21 @@ void Newconfiginfo::on_pushButton_24_clicked()
             luoxuanlist2[whichoption-1][j] = luoxuanlist[whichoption-1][j];
             proxuanlist2[whichoption-1][j] = proxuanlist[whichoption-1][j];
             lsnumersxuanlist2[whichoption-1][j] = lsnumersxuanlist[whichoption-1][j];
+            channelxuanlist2[whichoption-1][j] = channelxuanlist[whichoption-1][j];
+            taotongxuanlist2[whichoption-1][j] = taotongxuanlist[whichoption-1][j];
             bxuannamelist2[whichoption-1][j] = bxuannamelist[whichoption-1][j];
             bxuancodelist2[whichoption-1][j] = bxuancodelist[whichoption-1][j];
             kxuannamelist2[whichoption-1][j] = kxuannamelist[whichoption-1][j];
             kxuancodelist2[whichoption-1][j] = kxuancodelist[whichoption-1][j];
 
         }
-
-        pdmxuanlist2[whichoption-1]=  pdmxuanlist[whichoption-1];
+        PDMxuan_Name2[whichoption-1] = PDMxuan_Name[whichoption-1];
+        //        pdmxuanlist2[whichoption-1]=  pdmxuanlist[whichoption-1];
         ui->pushButton_12->hide();
         ui->stackedWidget->setCurrentIndex(1);
         ui->stackedWidget_2->setCurrentIndex(4);
         ui->pushButton_15->show();
     }
-
 }
 
 void Newconfiginfo::on_pushButton_23_clicked()
@@ -4030,22 +4340,36 @@ void Newconfiginfo::on_pushButton_25_clicked()
         carStyle = ui->lineEdit_carname->text();
         G9tmp = ui->lineEdit_G9->text();
         Vintmp = ui->lineEdit_VIN->text();
+
         luoxuanlist2[whichoption-1][ui->label_51->text().toInt()-1] = ui->lineEdit_xuanLsnum->text();
         proxuanlist2[whichoption-1][ui->label_51->text().toInt()-1] = ui->lineEdit_xuanpronum->text();
         lsnumersxuanlist2[whichoption-1][ui->label_51->text().toInt()-1] = ui->lineEdit_xuannumber->text();
-        pdmxuanlist2[whichoption-1] = ui->comboBox_3->currentText();
+        channelxuanlist2[whichoption-1][ui->label_51->text().toInt()-1] = ui->lineEdit_channel_2->text();
+        if(ui->lineEdit_taotong_2->text() != "OFF")
+            taotongxuanlist2[whichoption-1][ui->label_51->text().toInt()-1] = ui->lineEdit_taotong_2->text();
+        else
+            taotongxuanlist2[whichoption-1][ui->label_51->text().toInt()-1] = "0";
+        PDMxuan_Name2[whichoption-1] = ui->comboBox_3->currentText();
+        //        pdmxuanlist2[whichoption-1] = ui->comboBox_3->currentText();
         for(int j = 0;j< 20;j++)
         {
             luoxuanlist[whichoption-1][j] = luoxuanlist2[whichoption-1][j];
             proxuanlist[whichoption-1][j] = proxuanlist2[whichoption-1][j];
             lsnumersxuanlist[whichoption-1][j] = lsnumersxuanlist2[whichoption-1][j];
+            channelxuanlist[whichoption-1][j] = channelxuanlist2[whichoption-1][j];
+            taotongxuanlist[whichoption-1][j] = taotongxuanlist2[whichoption-1][j];
             bxuannamelist[whichoption-1][j] = bxuannamelist2[whichoption-1][j];
             bxuancodelist[whichoption-1][j] = bxuancodelist2[whichoption-1][j];
             kxuannamelist[whichoption-1][j] = kxuannamelist2[whichoption-1][j];
             kxuancodelist[whichoption-1][j] = kxuancodelist2[whichoption-1][j];
 
         }
-        pdmxuanlist[whichoption-1] = pdmxuanlist2[whichoption-1];
+
+        PDMxuan_Name[whichoption-1]= PDMxuan_Name2[whichoption-1];
+        qDebug()<<PDMxuan_Name[whichoption-1];
+
+
+        //        pdmxuanlist[whichoption-1] = pdmxuanlist2[whichoption-1];
         //qDebug() << luoxuanlist[whichoption-1][ui->label_51->text().toInt()-1];
         //qDebug() <<  proxuanlist[whichoption-1][ui->label_51->text().toInt()-1];
         //qDebug() <<  lsnumersxuanlist[whichoption-1][ui->label_51->text().toInt()-1];
@@ -4123,6 +4447,12 @@ void Newconfiginfo::on_pushButton_52_clicked()
     luo[currentpages-1] = "0";
     pro[currentpages-1] = "0";
     lsnumers[currentpages-1] = "0";
+    for(int q=0;q<5;q++)
+        ch[currentpages-1][q] = false;
+
+    ui->comboBox_2->setCurrentIndex(ui->comboBox_2->findText(PDM_Name));
+    ui->lineEdit_channel->setText("OFF");
+    ui->lineEdit_taotong->setText("OFF");
     // pdmxuan = "";
 
 }
@@ -4133,11 +4463,18 @@ void Newconfiginfo::on_pushButton_17_clicked()
     ui->lineEdit_xuanLsnum->clear();
     ui->lineEdit_xuanpronum->setText("0");
     ui->lineEdit_xuannumber->setText("0");
+    ui->lineEdit_channel_2->setText("1");
+    ui->lineEdit_taotong_2->setText("OFF");
 
     int indextmp = ui->label_51->text().toInt() -1;
     luoxuanlist2[whichoption-1][indextmp] = "0";
     proxuanlist2[whichoption-1][indextmp]= "0";
     lsnumersxuanlist2[whichoption-1][indextmp] = "";
+    channelxuanlist2[whichoption-1][indextmp] = "1";
+    taotongxuanlist2[whichoption-1][indextmp] = "0";
+
+    ui->comboBox_3->setCurrentIndex(ui->comboBox_3->findText(PDMxuan_Name[whichoption-1]));
+
     // ui->comboBox_3->setCurrentIndex(0);
 
 }
@@ -4158,7 +4495,6 @@ void Newconfiginfo::on_pushButton_62_clicked()
         ui->label_87->show();
         ui->label_88->hide();
         ui->label_101->hide();
-        ui->label_98->hide();
         ui->label_99->hide();
         ui->label_162->hide();
         QSettings *configIniRead = new QSettings("/config.ini", QSettings::IniFormat);
@@ -4168,7 +4504,17 @@ void Newconfiginfo::on_pushButton_62_clicked()
         ui->lineEdit_psk->setText(configIniRead->value("baseinfo/psk").toString());
         ui->lineEdit_APssid->setText(configIniRead->value("baseinfo/APSSID").toString());
         ui->lineEdit_APpsk->setText(configIniRead->value("baseinfo/APpsk").toString());
+        ui->lineEdit_bevPass->setText(configIniRead->value("baseinfo/BevPass").toString());
+        ui->lineEdit_SetBolts->setText(configIniRead->value("baseinfo/SetBlotOk").toString());//螺栓定位方式取值
+        ui->lineEdit_ProductType->setText(configIniRead->value("baseinfo/ProductType").toString());// 产品型号
+        ui->lineEdit_TightResetOnline->setText(configIniRead->value("baseinfo/TightResetOnline").toString());//在线拧紧返修
         ui->lineEdit_tacktime->setText(configIniRead->value("baseinfo/TackTime").toString());   //节拍时间
+        if(configIniRead->value("baseinfo/connectNet").toInt()==0)
+            ui->radioButton_wireless->setChecked(true);
+        else if(configIniRead->value("baseinfo/connectNet").toInt()==1)
+            ui->radioButton_wire1->setChecked(true);
+        else if(configIniRead->value("baseinfo/connectNet").toInt()==2)
+            ui->radioButton_wire2->setChecked(true);
 
 
         if(configIniRead->value("baseinfo/Master_slave").toString()=="master")
@@ -4212,24 +4558,23 @@ void Newconfiginfo::on_pushButton_62_clicked()
         else
             ui->radioButton_1->setChecked(true);
 
-        if(isRFID == 0)
+        if(isBarCode)
         {
             ui->pushButton_26->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/52.bmp);");
-            ui->pushButton_27->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/RFID_small.bmp);");
-            ui->pushButton_queue->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/queue.bmp);");
         }
-        else if(isRFID == 1)
+        else
         {
             ui->pushButton_26->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/barcode.bmp);");
+        }
+        if(isRFID)
+        {
             ui->pushButton_27->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/53.bmp);");
-            ui->pushButton_queue->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/queue.bmp);");
         }
-        else if(isRFID == 2)
+        else
         {
-            ui->pushButton_26->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/barcode.bmp);");
             ui->pushButton_27->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/RFID_small.bmp);");
-            ui->pushButton_queue->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/queue1.bmp);");
         }
+
 
         if (Line_ID == 1)
         {
@@ -4249,28 +4594,29 @@ void Newconfiginfo::on_pushButton_62_clicked()
 void Newconfiginfo::on_pushButton_26_clicked()
 {
     //条码枪
-    ui->pushButton_26->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/52.bmp);");
-    ui->pushButton_27->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/RFID_small.bmp);");
-    ui->pushButton_queue->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/queue.bmp);");
-    isrfid = 0;
+    if(isbarcode)
+    {
+        ui->pushButton_26->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/barcode.bmp);");
+    }
+    else
+    {
+        ui->pushButton_26->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/52.bmp);");
+    }
+    isbarcode = !isbarcode;
 }
 
 void Newconfiginfo::on_pushButton_27_clicked()
 {
     //RFID
-    ui->pushButton_26->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/barcode.bmp);");
-    ui->pushButton_27->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/53.bmp);");
-    ui->pushButton_queue->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/queue.bmp);");
-    isrfid = 1;
-}
-
-void Newconfiginfo::on_pushButton_queue_clicked()
-{
-    //队列
-    ui->pushButton_26->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/barcode.bmp);");
-    ui->pushButton_27->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/RFID_small.bmp);");
-    ui->pushButton_queue->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/queue1.bmp);");
-    isrfid = 2;
+    if(isrfid)
+    {
+        ui->pushButton_27->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/RFID_small.bmp);");
+    }
+    else
+    {
+        ui->pushButton_27->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/53.bmp);");
+    }
+    isrfid = !isrfid;
 }
 
 void Newconfiginfo::receiveSaveState(bool statetmp)
@@ -4281,22 +4627,31 @@ void Newconfiginfo::receiveSaveState(bool statetmp)
         ui->label_100->hide();
         delete e3;
         delete save;
+
+        configIniRead->setValue("baseinfo/isBarCode",QString::number(isbarcode));
+        isBarCode = isbarcode;
         configIniRead->setValue("baseinfo/isRFID",QString::number(isrfid));
         isRFID = isrfid;
+        configIniRead->setValue("baseinfo/isQueue",QString::number(isqueue));
         if(ui->Line_radioButton_1->isChecked())
         {
-           configIniRead->setValue("baseinfo/Line_ID","1");
-           Line_ID = 1;
-           line_ID = 1;
+            configIniRead->setValue("baseinfo/Line_ID","1");
+            Line_ID = 1;
+            line_ID = 1;
         }
         else if(ui->Line_radioButton_2->isChecked())
         {
-           configIniRead->setValue("baseinfo/Line_ID","2");
-           Line_ID = 2;
-           line_ID = 2;
+            configIniRead->setValue("baseinfo/Line_ID","2");
+            Line_ID = 2;
+            line_ID = 2;
         }
-        configIniRead->setValue("baseinfo/gateway",ui->lineEdit_gateway->text());
         configIniRead->setValue("baseinfo/TackTime",ui->lineEdit_tacktime->text());    //节拍时间
+        if(ui->radioButton_wireless->isChecked())
+            configIniRead->setValue("baseinfo/connectNet","0");
+        else if(ui->radioButton_wire1->isChecked())
+            configIniRead->setValue("baseinfo/connectNet","1");
+        else if(ui->radioButton_wire2->isChecked())
+            configIniRead->setValue("baseinfo/connectNet","2");
 
         if (ui->year->text().toInt() != year||
                 ui->month->text().toInt() != month||
@@ -4321,25 +4676,15 @@ void Newconfiginfo::receiveSaveState(bool statetmp)
 
         }
 
-        if (ui->lineEdit_gateway->text() != configIniRead->value("baseinfo/netmask"))
+        if (ui->lineEdit_netmask->text() != configIniRead->value("baseinfo/netmask"))
         {
             configIniRead->setValue("baseinfo/netmask",ui->lineEdit_netmask->text());
-            system((QString("ifconfig wlan0 netmask ")+ui->lineEdit_netmask->text()+" &").toLatin1().data());
-            QString fileName = "/etc/profile";
-            QFile file(fileName);
-            if(!file.open(QIODevice::ReadOnly| QIODevice::Text)){
-                qDebug()   << "Cannot open profile file for Reading";
-            }
-            QString str (file.readAll());
-            if(str.contains("netmask", Qt::CaseInsensitive)){
-                str.replace(QRegExp("netmask \\S*"),QString("netmask ")+ui->lineEdit_netmask->text());
-            }
-            file.close();
-            if(!file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)){
-                qDebug()   << "Cannot open profile file for Writing";
-            }
-            file.write(str.toUtf8());
-            file.close();
+            if(ui->radioButton_wire1->isChecked())
+                system(QString("ifconfig eth0 netmask "+ui->lineEdit_netmask->text()+"  &").toLatin1().data());
+            else if(ui->radioButton_wire2->isChecked())
+                system(QString("ifconfig eth1 netmask "+ui->lineEdit_netmask->text()+"  &").toLatin1().data());
+            else if(ui->radioButton_wireless->isChecked())
+                system(QString("ifconfig wlan0 netmask "+ui->lineEdit_netmask->text()+" &").toLatin1().data());
         }
 
 
@@ -4350,11 +4695,38 @@ void Newconfiginfo::receiveSaveState(bool statetmp)
             configIniRead->setValue("baseinfo/psk",ui->lineEdit_psk->text());
             wifi_connect();
         }
+
+        configIniRead->setValue("baseinfo/gateway",ui->lineEdit_gateway->text());
+        if(ui->radioButton_wire1->isChecked())
+        {
+            system("route del default eth0");
+            system((QString("route add default gw ")+configIniRead->value("baseinfo/gateway").toString()+" eth0 &").toLatin1().data());
+        }
+        else if(ui->radioButton_wire2->isChecked())
+        {
+            system("route del default eth1");
+            system((QString("route add default gw ")+configIniRead->value("baseinfo/gateway").toString()+" eth1 &").toLatin1().data());
+        }
+        else if(ui->radioButton_wireless->isChecked())
+        {
+            system("route del default wlan0");
+            system((QString("route add default gw ")+configIniRead->value("baseinfo/gateway").toString()+" wlan0 &").toLatin1().data());
+        }
+
         if (ui->lineEdit_APssid->text() != configIniRead->value("baseinfo/APSSID")||
-                ui->lineEdit_APpsk->text() != configIniRead->value("baseinfo/APpsk"))
+                ui->lineEdit_APpsk->text() != configIniRead->value("baseinfo/APpsk")||
+                ui->lineEdit_bevPass->text() != configIniRead->value("baseinfo/BevPass")||
+                ui->lineEdit_SetBolts->text() != configIniRead->value("baseinfo/SetBlotOk") ||
+                ui->lineEdit_ProductType->text() != configIniRead->value("baseinfo/ProductType") ||
+                ui->lineEdit_TightResetOnline->text() != configIniRead->value("baseinfo/TightResetOnline")
+                )
         {
             configIniRead->setValue("baseinfo/APSSID",ui->lineEdit_APssid->text());
             configIniRead->setValue("baseinfo/APpsk",ui->lineEdit_APpsk->text());
+            configIniRead->setValue("baseinfo/BevPass",ui->lineEdit_bevPass->text());
+            configIniRead->setValue("baseinfo/SetBlotOk",ui->lineEdit_SetBolts->text());//螺栓定位方式取值
+            configIniRead->setValue("baseinfo/ProductType",ui->lineEdit_ProductType->text());// 产品型号
+            configIniRead->setValue("baseinfo/TightResetOnline",ui->lineEdit_TightResetOnline->text());
             QString fileName;
             fileName = "/etc/Wireless/RT2870AP/RT2870AP.dat";
             QFile file(fileName);
@@ -4378,6 +4750,7 @@ void Newconfiginfo::receiveSaveState(bool statetmp)
             system("ifconfig ra0 up &");
 
         }
+
         delete configIniRead;
     }else
     {
@@ -4387,8 +4760,24 @@ void Newconfiginfo::receiveSaveState(bool statetmp)
         ui->lineEdit_psk->setText(configIniRead->value("baseinfo/psk").toString());
         ui->lineEdit_APssid->setText(configIniRead->value("baseinfo/APSSID").toString());
         ui->lineEdit_APpsk->setText(configIniRead->value("baseinfo/APpsk").toString());
+        ui->lineEdit_bevPass->setText(configIniRead->value("baseinfo/BevPass").toString());
+        ui->lineEdit_SetBolts->setText(configIniRead->value("baseinfo/SetBlotOk").toString());//螺栓定位方式取值
+        ui->lineEdit_ProductType->setText(configIniRead->value("baseinfo/ProductType").toString());// 产品型号
+        ui->lineEdit_TightResetOnline->setText(configIniRead->value("baseinfo/TightResetOnline").toString());
         ui->lineEdit_tacktime->setText(configIniRead->value("baseinfo/TackTime").toString());   //节拍时间
+
+        if(configIniRead->value("baseinfo/connectNet").toInt()==0)
+            ui->radioButton_wireless->setChecked(true);
+        else if(configIniRead->value("baseinfo/connectNet").toInt()==1)
+            ui->radioButton_wire1->setChecked(true);
+        else if(configIniRead->value("baseinfo/connectNet").toInt()==2)
+            ui->radioButton_wire2->setChecked(true);
+
         delete configIniRead;
+
+
+
+        isbarcode = isBarCode;
         isrfid = isRFID;
         if(Line_ID == 1)
         {
@@ -4402,24 +4791,23 @@ void Newconfiginfo::receiveSaveState(bool statetmp)
             ui->Line_radioButton_1->setChecked(false);
             ui->Line_radioButton_2->setChecked(true);
         }
-        if (isRFID == 1)
-        {
-            ui->pushButton_27->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/53.bmp);");
-            ui->pushButton_26->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/barcode.bmp);");
-            ui->pushButton_queue->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/queue.bmp);");
-        }
-        else if(isRFID == 0)
+        if(isBarCode)
         {
             ui->pushButton_26->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/52.bmp);");
-            ui->pushButton_27->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/RFID_small.bmp);");
-            ui->pushButton_queue->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/queue.bmp);");
         }
-        else if(isRFID == 2)
+        else
+        {
+            ui->pushButton_26->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/barcode.bmp);");
+        }
+        if(isRFID)
+        {
+            ui->pushButton_27->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/53.bmp);");
+        }
+        else
         {
             ui->pushButton_27->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/RFID_small.bmp);");
-            ui->pushButton_26->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/barcode.bmp);");
-            ui->pushButton_queue->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/queue1.bmp);");
         }
+
         ui->label_100->hide();
         delete e3;
         delete save;
@@ -4437,11 +4825,6 @@ void Newconfiginfo::receiveSaveState(bool statetmp)
     else if(whichButtonClick == "testinterface")
     {
         on_pushButton_66_clicked();
-        isadvancedchange = false;
-    }
-    else if(whichButtonClick == "fisupdatecolumn")
-    {
-        on_pushButton_67_clicked();
         isadvancedchange = false;
     }
     else if(whichButtonClick == "master_slave")
@@ -4480,95 +4863,52 @@ void Newconfiginfo::on_pushButton_34_clicked()
 
 void Newconfiginfo::on_pushButton_13_clicked()
 {
-    if(SaveWhat == "pdm")
-    {
-        ui->label_69->show();
-        ui->comboBox->show();
-        e3 = new QGraphicsOpacityEffect(this);
-        e3->setOpacity(0.5);
-        ui->label_100->setGraphicsEffect(e3);
-        ui->label_100->show();
-        ui->label_100->setGeometry(0,0,1366,768);
-        SaveWhat = "pdmoutabout";
-        save = new Save(this);
-        connect(save,SIGNAL(sendDeSingle(bool)),this,SLOT(receiveDesignle(bool)));
-        save->show();
-    }
-    else
-    {
-        int tempdata = numpdm;
-        for(int i = 0;i<tempdata;i++)
-        {
-            delete butt1[i];
-            numpdm--;
-        }
-        ui->listWidget->setCurrentRow(1);
-        historyclear();
-
-        if(isJS)
-        {
-            ui->stackedWidget_2->setCurrentIndex(8);
-            ui->stackedWidget_3->setCurrentIndex(1);
-            ui->label_157->hide();
-            ui->pushButton_54->hide();
-            QSettings *configIniRead = new QSettings("/config.ini", QSettings::IniFormat);
-            ui->label_SN->setText(configIniRead->value("baseinfo/SN").toString());
-            delete configIniRead;
-        }
-        else
-        {
-            whichButtonClick = "about";
-            if(!isbaseinfochange)
-                baseInfoIsChange();
-            else
-            {
-                ui->stackedWidget_2->setCurrentIndex(8);
-                ui->stackedWidget_3->setCurrentIndex(1);
-                ui->label_157->hide();
-                ui->pushButton_54->hide();
-                QSettings *configIniRead = new QSettings("/config.ini", QSettings::IniFormat);
-                ui->label_SN->setText(configIniRead->value("baseinfo/SN").toString());
-                delete configIniRead;
-            }
-        }
-    }
+    ui->stackedWidget_2->setCurrentIndex(8);
+    ui->stackedWidget_3->setCurrentIndex(3);
+    ui->pushButton_96->setText("关于");
+    QSettings *configIniRead = new QSettings("/config.ini", QSettings::IniFormat);
+    ui->label_SN->setText(configIniRead->value("baseinfo/SN").toString());
+    delete configIniRead;
 }
 
 void Newconfiginfo::on_pushButton_2_clicked()
 {
-    if (whichButtonClick == "about")
-    {
-        if(isJS)
-            ui->stackedWidget_2->setCurrentIndex(0);
-        else
-            ui->stackedWidget_2->setCurrentIndex(2);
-        ui->listWidget->setCurrentRow(1);
-        ui->stackedWidget_3->setCurrentIndex(0);
-        ui->label_83->show();
-        ui->label_84->hide();
-        ui->label_85->hide();
-        ui->label_86->hide();
-        ui->label_157->show();
-        ui->pushButton_54->show();
-    }
-    else
-    {
-        ui->stackedWidget_3->setCurrentIndex(0);
-        ui->stackedWidget_5->setCurrentIndex(0);
-        if(isJS)
-        {
-            ui->stackedWidget_2->setCurrentIndex(0);
-            ui->label_83->show();
-            ui->label_84->hide();
-            ui->label_85->hide();
-        }
-        else
-        {
-            //ui->stackedWidget_2->setCurrentIndex(2);
-            on_pushButton_14_clicked();
-        }
+    //    if (whichButtonClick == "about")
+    //    {
+    //        this->close();
+    //        if(isJS)
+    //            ui->stackedWidget_2->setCurrentIndex(0);
+    //        else
+    //            ui->stackedWidget_2->setCurrentIndex(2);
+    //        ui->listWidget->setCurrentRow(1);
+    //        ui->stackedWidget_3->setCurrentIndex(0);
+    //        ui->label_83->show();
+    //        ui->label_84->hide();
+    //        ui->label_85->hide();
+    //        ui->label_86->hide();
+    //        ui->label_157->show();
+    //        ui->pushButton_54->show();
+    //    }
+    //    else
+    //    {
+    //        ui->stackedWidget_3->setCurrentIndex(0);
+    ui->stackedWidget_5->setCurrentIndex(0);
+    //        ui->stackedWidget_2->setCurrentIndex(4);
+    ui->stackedWidget_3->setCurrentIndex(3);
+    //        if(isJS)
+    //        {
+    //            ui->stackedWidget_2->setCurrentIndex(0);
+    //            ui->label_83->show();
+    //            ui->label_84->hide();
+    //            ui->label_85->hide();
+    //        }
+    //        else
+    //        {
+    //ui->stackedWidget_2->setCurrentIndex(2);
+    on_pushButton_14_clicked();
+    //        }
 
-    }
+    //    }
 }
 
 void Newconfiginfo::on_pushButton_3_clicked()
@@ -4582,22 +4922,17 @@ void Newconfiginfo::on_pushButton_3_clicked()
         boundIsChange();
     else
     {
-        ui->lineEdit_column->setText("");
         ui->stackedWidget_2->setCurrentIndex(2);
-        ui->stackedWidget_3->setCurrentIndex(0);
-        ui->label_83->show();
-        ui->label_84->hide();
-        ui->label_85->hide();
-        ui->label_86->hide();
-        if(isRFID == 1)   //RFID 条码抢模式的 界面初始化
-        {
-            ui->stackedWidget_4->setCurrentIndex(0);
-        }
-        else
-        {
-            ui->stackedWidget_4->setCurrentIndex(1);
-        }
-        //        ui->pushButton_13->show();
+        ui->stackedWidget_3->setCurrentIndex(3);
+
+        //        if(isRFID == 1)   //RFID 条码抢模式的 界面初始化
+        //        {
+        //            ui->stackedWidget_4->setCurrentIndex(0);
+        //        }
+        //        else
+        //        {
+        //            ui->stackedWidget_4->setCurrentIndex(1);
+        //        }
     }
 }
 
@@ -4760,13 +5095,11 @@ void Newconfiginfo::on_pushButton_58_clicked()
             boundIsChange();
         else
         {
-            ui->lineEdit_column->setText("");
             ShowTime();
             ui->stackedWidget_2->setCurrentIndex(6);
             ui->label_87->show();
             ui->label_88->hide();
             ui->label_101->hide();
-            ui->label_98->hide();
             ui->label_99->hide();
             ui->label_162->hide();
             //            if( system("ping -c 3 10.0.0.1 -i 0.1")!= 0)
@@ -4797,13 +5130,12 @@ void Newconfiginfo::on_pushButton_66_clicked()
             boundIsChange();
         else
         {
-            ui->lineEdit_column->setText("");
+            ui->lineEdit_staname_5->clear();
             ui->stackedWidget_2->setCurrentIndex(7);
 
             ui->label_87->hide();
             ui->label_101->hide();
             ui->label_88->show();
-            ui->label_98->hide();
             ui->label_99->hide();
             ui->label_162->hide();
             //        ui->stackedWidget_3->setCurrentIndex(3);
@@ -4816,39 +5148,41 @@ void Newconfiginfo::on_pushButton_66_clicked()
 
 void Newconfiginfo::on_pushButton_100_clicked()
 {
-    if(ui->stackedWidget_2->currentIndex() != 9)
-    {
-        whichButtonClick = "passwordchange";
-        if(!isadvancedchange)
-            advancedIsChange();
-        else if(!ismasterslavechange)
-            masterslaveIsChange();
-        else if(!isboundchange)
-            boundIsChange();
-        else
-        {
-            ui->lineEdit_column->setText("");
-            ui->stackedWidget_2->setCurrentIndex(9);
-            ui->label_87->hide();
-            ui->label_101->show();
-            ui->label_88->hide();
-            ui->label_98->hide();
-            ui->label_99->hide();
-            ui->label_162->hide();
-            //        ui->stackedWidget_3->setCurrentIndex(3);
-            //        ui->pushButton_96->setText(tr("更改密码"));
-            isFull = 0;
-            person = 0;
-            change = 0;
-            temp = "";
-            newpassword = "";
-            ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
-            ui->pushButton_error->setStyleSheet("border-image : url(:)");
-            ui->label_hint->setStyleSheet("border-image : url(:/re/111.bmp)");
-            ui->pushButton_98->setStyleSheet("border-image : url(:/re/93.bmp)");
-            ui->pushButton_97->setStyleSheet("border-image : url(:/re/100.png)");
-        }
-    }
+    //    if(ui->stackedWidget_2->currentIndex() != 9)
+    //    {
+    //        whichButtonClick = "passwordchange";
+    //        if(!isadvancedchange)
+    //            advancedIsChange();
+    //        else if(!ismasterslavechange)
+    //            masterslaveIsChange();
+    //        else if(!isboundchange)
+    //            boundIsChange();
+    //        else
+    //        {
+    //            ui->lineEdit_column->setText("");
+
+    ui->stackedWidget_3->setCurrentIndex(3);
+    ui->pushButton_96->setText("更改密码");
+    ui->stackedWidget_2->setCurrentIndex(9);
+    ui->label_87->hide();
+    ui->label_101->show();
+    ui->label_88->hide();
+    ui->label_99->hide();
+    ui->label_162->hide();
+    //        ui->stackedWidget_3->setCurrentIndex(3);
+    //        ui->pushButton_96->setText(tr("更改密码"));
+    isFull = 0;
+    person = 0;
+    change = 0;
+    temp = "";
+    newpassword = "";
+    ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
+    ui->pushButton_error->setStyleSheet("border-image : url(:)");
+    ui->label_hint->setStyleSheet("border-image : url(:/re/111.bmp)");
+    //    ui->pushButton_98->setStyleSheet("border-image : url(:/re/93.bmp)");
+    //    ui->pushButton_97->setStyleSheet("border-image : url(:/re/100.png)");
+    //        }
+    //    }
 }
 
 
@@ -4959,106 +5293,111 @@ void Newconfiginfo::judge()
     else if(isFull == 4)
     {
         QSettings *configIniRead = new QSettings("/config.ini", QSettings::IniFormat);
-        if (person ==0)
+        //        if (person ==0)
+        //        {
+        if (change == 0)
         {
-            if (change == 0)
+            if(temp == configIniRead->value(QString("baseinfo/GCpassword")).toString())
             {
-                if(temp == configIniRead->value(QString("baseinfo/GCpassword")).toString())
-                {
-                    ui->label_hint->setStyleSheet("border-image : url(:/re/112.bmp)");
-                    ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
-                    ui->pushButton_error->setStyleSheet("border-image : url(:)");
-                    change = 1;
-                    isFull = 0;
-                    temp = "";
-                }
-                else
-                {
-                    ui->pushButton_error->setStyleSheet("border-image : url(:/re/124.bmp)");
-                    ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
-                    isFull = 0;
-                    temp = "";
-                }
-            }
-            else if (change == 1)
-            {
-                newpassword=temp;
-                isFull = 0;
-                temp = "";
-                ui->label_hint->setStyleSheet("border-image : url(:/re/113.bmp)");
+                ui->label_hint->setStyleSheet("border-image : url(:/re/112.bmp)");
                 ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
                 ui->pushButton_error->setStyleSheet("border-image : url(:)");
-                change = 2;
-            }
-            else if (change == 2)
-            {
-                if(temp == newpassword)
-                {
-                    ui->pushButton_password->setStyleSheet("border-image : url(:/re/98.bmp)");
-                    configIniRead->setValue("baseinfo/GCpassword",newpassword);
-                    ui->stackedWidget_2->setCurrentIndex(6);
-                    ui->stackedWidget_3->setCurrentIndex(2);
-                }
-                else
-                {
-                    ui->label_hint->setStyleSheet("border-image : url(:/re/113.bmp)");
-                    ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
-                    ui->pushButton_error->setStyleSheet("border-image : url(:/re/125.bmp)");
-                    isFull = 0;
-                    temp = "";
-                }
-            }
-        }
-        else if (person ==1)
-        {
-            if (change == 0)
-            {
-                if(temp == configIniRead->value(QString("baseinfo/JSpassword")).toString())
-                {
-                    ui->label_hint->setStyleSheet("border-image : url(:/re/112.bmp)");
-                    ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
-                    ui->pushButton_error->setStyleSheet("border-image : url(:)");
-                    change = 1;
-                    isFull = 0;
-                    temp = "";
-                }
-                else
-                {
-                    ui->pushButton_error->setStyleSheet("border-image : url(:/re/124.bmp)");
-                    ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
-                    isFull = 0;
-                    temp = "";
-                }
-            }
-            else if (change == 1)
-            {
-                newpassword=temp;
+                change = 1;
                 isFull = 0;
                 temp = "";
-                ui->label_hint->setStyleSheet("border-image : url(:/re/113.bmp)");
-                ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
-                ui->pushButton_error->setStyleSheet("border-image : url(:)");
-                change = 2;
             }
-            else if (change == 2)
+            else
             {
-                if(temp == newpassword)
-                {
-                    ui->pushButton_password->setStyleSheet("border-image : url(:/re/98.bmp)");
-                    configIniRead->setValue("baseinfo/JSpassword",newpassword);
-                    ui->stackedWidget_2->setCurrentIndex(6);
-                    ui->stackedWidget_3->setCurrentIndex(2);
-                }
-                else
-                {
-                    ui->label_hint->setStyleSheet("border-image : url(:/re/113.bmp)");
-                    ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
-                    ui->pushButton_error->setStyleSheet("border-image : url(:/re/125.bmp)");
-                    isFull = 0;
-                    temp = "";
-                }
+                ui->pushButton_error->setStyleSheet("border-image : url(:/re/124.bmp)");
+                ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
+                isFull = 0;
+                temp = "";
             }
         }
+        else if (change == 1)
+        {
+            newpassword=temp;
+            isFull = 0;
+            temp = "";
+            ui->label_hint->setStyleSheet("border-image : url(:/re/113.bmp)");
+            ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
+            ui->pushButton_error->setStyleSheet("border-image : url(:)");
+            change = 2;
+        }
+        else if (change == 2)
+        {
+            if(temp == newpassword)
+            {
+                ui->pushButton_password->setStyleSheet("border-image : url(:/re/98.bmp)");
+                configIniRead->setValue("baseinfo/GCpassword",newpassword);
+                //                    ui->stackedWidget_2->setCurrentIndex(6);
+                ui->label_87->show();
+                ui->label_101->hide();
+                this->close();
+                //                    ui->stackedWidget_3->setCurrentIndex(2);
+            }
+            else
+            {
+                ui->label_hint->setStyleSheet("border-image : url(:/re/113.bmp)");
+                ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
+                ui->pushButton_error->setStyleSheet("border-image : url(:/re/125.bmp)");
+                isFull = 0;
+                temp = "";
+            }
+        }
+        //        }
+        //        else if (person ==1)
+        //        {
+        //            if (change == 0)
+        //            {
+        //                if(temp == configIniRead->value(QString("baseinfo/JSpassword")).toString())
+        //                {
+        //                    ui->label_hint->setStyleSheet("border-image : url(:/re/112.bmp)");
+        //                    ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
+        //                    ui->pushButton_error->setStyleSheet("border-image : url(:)");
+        //                    change = 1;
+        //                    isFull = 0;
+        //                    temp = "";
+        //                }
+        //                else
+        //                {
+        //                    ui->pushButton_error->setStyleSheet("border-image : url(:/re/124.bmp)");
+        //                    ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
+        //                    isFull = 0;
+        //                    temp = "";
+        //                }
+        //            }
+        //            else if (change == 1)
+        //            {
+        //                newpassword=temp;
+        //                isFull = 0;
+        //                temp = "";
+        //                ui->label_hint->setStyleSheet("border-image : url(:/re/113.bmp)");
+        //                ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
+        //                ui->pushButton_error->setStyleSheet("border-image : url(:)");
+        //                change = 2;
+        //            }
+        //            else if (change == 2)
+        //            {
+        //                if(temp == newpassword)
+        //                {
+        //                    ui->pushButton_password->setStyleSheet("border-image : url(:/re/98.bmp)");
+        //                    configIniRead->setValue("baseinfo/JSpassword",newpassword);
+        //                    ui->stackedWidget_2->setCurrentIndex(6);
+        //                    ui->label_87->show();
+        //                    ui->label_101->hide();
+        //                    //                    ui->stackedWidget_3->setCurrentIndex(2);
+        //                }
+        //                else
+        //                {
+        //                    ui->label_hint->setStyleSheet("border-image : url(:/re/113.bmp)");
+        //                    ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
+        //                    ui->pushButton_error->setStyleSheet("border-image : url(:/re/125.bmp)");
+        //                    isFull = 0;
+        //                    temp = "";
+        //                }
+        //            }
+        //        }
         delete configIniRead;
     }
 }
@@ -5066,36 +5405,36 @@ void Newconfiginfo::judge()
 
 void Newconfiginfo::on_pushButton_98_clicked()
 {
-    if(person != 0)
-    {
-        ui->pushButton_98->setStyleSheet("border-image : url(:/re/93.bmp)");
-        ui->pushButton_97->setStyleSheet("border-image: url(:/re/100.png)");
-        ui->label_hint->setStyleSheet("border-image : url(:/re/111.bmp)");
-        ui->pushButton_error->setStyleSheet("border-image : url(:)");
-        ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
-        isFull = 0;
-        temp = "";
-        person = 0;
-        change = 0;
-        newpassword = "";
-    }
+    //    if(person != 0)
+    //    {
+    //        ui->pushButton_98->setStyleSheet("border-image : url(:/re/93.bmp)");
+    //        ui->pushButton_97->setStyleSheet("border-image: url(:/re/100.png)");
+    //        ui->label_hint->setStyleSheet("border-image : url(:/re/111.bmp)");
+    //        ui->pushButton_error->setStyleSheet("border-image : url(:)");
+    //        ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
+    //        isFull = 0;
+    //        temp = "";
+    //        person = 0;
+    //        change = 0;
+    //        newpassword = "";
+    //    }
 }
 
 void Newconfiginfo::on_pushButton_97_clicked()
 {
-    if(person != 1)
-    {
-        ui->pushButton_97->setStyleSheet("border-image : url(:/re/92.bmp)");
-        ui->pushButton_98->setStyleSheet("border-image: url(:/re/99.png)");
-        ui->label_hint->setStyleSheet("border-image : url(:/re/111.bmp)");
-        ui->pushButton_error->setStyleSheet("border-image : url(:)");
-        ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
-        isFull = 0;
-        temp = "";
-        person = 1;
-        change = 0;
-        newpassword = "";
-    }
+    //    if(person != 1)
+    //    {
+    //        ui->pushButton_97->setStyleSheet("border-image : url(:/re/92.bmp)");
+    //        ui->pushButton_98->setStyleSheet("border-image: url(:/re/99.png)");
+    //        ui->label_hint->setStyleSheet("border-image : url(:/re/111.bmp)");
+    //        ui->pushButton_error->setStyleSheet("border-image : url(:)");
+    //        ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
+    //        isFull = 0;
+    //        temp = "";
+    //        person = 1;
+    //        change = 0;
+    //        newpassword = "";
+    //    }
 }
 //! [密码更改]
 
@@ -5307,6 +5646,13 @@ void Newconfiginfo::on_pushButton_90_clicked()
 void Newconfiginfo::advancedIsChange()
 {
     // 监听
+    int connectNet = 0;
+    if(ui->radioButton_wireless->isChecked())
+        connectNet = 0;
+    else if(ui->radioButton_wire1->isChecked())
+        connectNet = 1;
+    else if(ui->radioButton_wire2->isChecked())
+        connectNet = 2;
     QSettings *configIniRead = new QSettings("/config.ini", QSettings::IniFormat);
     if (   ui->lineEdit_netmask->text() != configIniRead->value("baseinfo/netmask")||
            ui->lineEdit_gateway->text() != configIniRead->value("baseinfo/gateway")||
@@ -5314,17 +5660,22 @@ void Newconfiginfo::advancedIsChange()
            ui->lineEdit_psk->text() != configIniRead->value("baseinfo/psk")||
            ui->lineEdit_APssid->text() != configIniRead->value("baseinfo/APSSID")||
            ui->lineEdit_APpsk->text() != configIniRead->value("baseinfo/APpsk")||
+           ui->lineEdit_bevPass->text() != configIniRead->value("baseinfo/BevPass")||
+           ui->lineEdit_SetBolts->text() != configIniRead->value("baseinfo/SetBlotOk") ||//螺栓定位方式取值
+           ui->lineEdit_ProductType->text() != configIniRead->value("baseinfo/ProductType") ||//产品型号
+           ui->lineEdit_TightResetOnline->text() != configIniRead->value("baseinfo/TightResetOnline") ||
            ui->lineEdit_tacktime->text() != configIniRead->value("baseinfo/TackTime")||    //节拍时间
-           isRFID != isrfid||
+           isBarCode != isbarcode||isRFID != isrfid||
            ui->year->text().toInt() != year||
            ui->month->text().toInt() != month||
            ui->date->text().toInt() != date||
            ui->hour->text().toInt() != hour||
            ui->minute->text().toInt() != minute||
            ui->second->text().toInt() != second||
-           line_ID != Line_ID)
+           line_ID != Line_ID||
+           connectNet != configIniRead->value("baseinfo/connectNet"))
     {
-        qDebug()<<"??????????????????????????????????????????????????????";
+        //        qDebug()<<"??????????????????????????????????????????????????????";
         e3 = new QGraphicsOpacityEffect(this);
         e3->setOpacity(0.5);
         ui->label_100->setGraphicsEffect(e3);
@@ -5339,7 +5690,7 @@ void Newconfiginfo::advancedIsChange()
     }
     else
     {
-         delete configIniRead;
+        delete configIniRead;
         isadvancedchange = true;
         if (whichButtonClick == "advancedback")
         {
@@ -5354,11 +5705,6 @@ void Newconfiginfo::advancedIsChange()
         else if (whichButtonClick == "testinterface")
         {
             on_pushButton_66_clicked();
-            isadvancedchange = false;
-        }
-        else if (whichButtonClick == "fisupdatecolumn")
-        {
-            on_pushButton_67_clicked();
             isadvancedchange = false;
         }
         else if (whichButtonClick == "master_slave")
@@ -5435,7 +5781,7 @@ void Newconfiginfo::wifi_connect()
 void Newconfiginfo::pagechange()
 {
     thepages =QString::number((thepage-1)*10);
-    aff = "select IDCode,ScrewID,Program,Torque,Angle,DATE_FORMAT(TighteningTime,'%Y-%m-%d %H:%i:%s'),TighteningStatus,UploadMark,Cycle from TighteningDatas WHERE "+condition+" order by RecordID DESC limit "+thepages +", 10";
+    aff = "select IDCode,ScrewID,Program,Torque,Angle,DATE_FORMAT(TighteningTime,'%Y-%m-%d %H:%i:%s'),TighteningStatus,UploadMark,Cycle from "+Localtable+condition+" order by RecordID DESC limit "+thepages +", 10";
     //    aff = "select top(10) IDCode,ScrewID,Torque,Angle,DATE_FORMAT(TighteningTime,'%Y-%m-%d %H:%i:%s'),TighteningStatus,UploadMark,Cycle from TighteningDatas WHERE "+condition+" and RecordID not in (select top(("+ thepages +"-1)*10) RecordID from TighteningDatas WHERE "+condition+")";
     //qDebug()<< "aff="<< aff;
     model->setQuery(aff);
@@ -5448,6 +5794,7 @@ void Newconfiginfo::pagechange()
 
 void Newconfiginfo::on_pushButton_search_clicked()
 {
+    //    ui->tabWidget->setCurrentIndex(0);
     if(!db.isOpen())
     {
         if(!db.open())
@@ -5457,58 +5804,141 @@ void Newconfiginfo::on_pushButton_search_clicked()
     }
     query = new QSqlQuery(db);
     //    query->("SELECT * FROM TighteningDatas");
-    VIN = ui->lineEdit_VIN_2->text();
-    ScrewID = ui->lineEdit_ScrewID->text();
-
-    if(VIN != "" && ScrewID != "")
-        condition = "IDCode COLLATE gb2312_bin LIKE \'%"+VIN+"%\' and ScrewID LIKE \'%"+ScrewID+"%\' and RecordID in (SELECT t.RecordID from (SELECT RecordID FROM TighteningDatas ORDER BY RecordID DESC LIMIT 1000)as t)";
-    else if(VIN != "" && ScrewID == "")
-        condition = "IDCode COLLATE gb2312_bin LIKE \'%"+VIN+"%\' and RecordID in (SELECT t.RecordID from (SELECT RecordID FROM TighteningDatas ORDER BY RecordID DESC LIMIT 1000)as t)";
-    else if(VIN == "" && ScrewID != "")
-        condition = "ScrewID LIKE \'%"+ScrewID+"%\' and RecordID in (SELECT t.RecordID from (SELECT RecordID FROM TighteningDatas ORDER BY RecordID DESC LIMIT 1000)as t)";
-    else if(VIN == "" && ScrewID == "")
-        condition = "RecordID in (SELECT t.RecordID from (SELECT RecordID FROM TighteningDatas ORDER BY RecordID DESC LIMIT 1000)as t)";
-    //    affall = "SELECT * FROM Data.TighteningDatas";
-    affall = "SELECT RecordId FROM TighteningDatas WHERE "+condition;
-    //qDebug()<< "affall="<< affall;
-    query->exec(affall);
-
-    query->last();
-    int numRows = query->at() + 1;
-    //qDebug() << "row number: " << numRows;
-    ui->label_num->setText(QString::number(numRows));
-    if (numRows%10 != 0)
+    if(ui->tabWidget->currentIndex()==0)
     {
-        pages = numRows/10+1;
+        VIN = ui->lineEdit_VIN_2->text();
+        ScrewID = ui->lineEdit_ScrewID->text();
+
+        //        if(VIN != "" && ScrewID != "")
+        //            condition = "IDCode COLLATE gb2312_bin LIKE \'%"+VIN+"%\' and ScrewID LIKE \'%"+ScrewID+"%\' and RecordID in (SELECT t.RecordID from (SELECT RecordID FROM "+Localtable+" ORDER BY RecordID DESC LIMIT 1000)as t)";
+        //        else if(VIN != "" && ScrewID == "")
+        //            condition = "IDCode COLLATE gb2312_bin LIKE \'%"+VIN+"%\' and RecordID in (SELECT t.RecordID from (SELECT RecordID FROM "+Localtable+" ORDER BY RecordID DESC LIMIT 1000)as t)";
+        //        else if(VIN == "" && ScrewID != "")
+        //            condition = "ScrewID LIKE \'%"+ScrewID+"%\' and RecordID in (SELECT t.RecordID from (SELECT RecordID FROM "+Localtable+" ORDER BY RecordID DESC LIMIT 1000)as t)";
+        //        else if(VIN == "" && ScrewID == "")
+        //            condition = "RecordID in (SELECT t.RecordID from (SELECT RecordID FROM "+Localtable+" ORDER BY RecordID DESC LIMIT 1000)as t)";
+        if(VIN != "" && ScrewID != "")
+            condition = " WHERE IDCode COLLATE gb2312_bin LIKE \'%"+VIN+"%\' and ScrewID LIKE \'%"+ScrewID+"%\'";
+        else if(VIN != "" && ScrewID == "")
+            condition = " WHERE IDCode COLLATE gb2312_bin LIKE \'%"+VIN+"%\'";
+        else if(VIN == "" && ScrewID != "")
+            condition = " WHERE ScrewID LIKE \'%"+ScrewID+"%\'";
+        else if(VIN == "" && ScrewID == "")
+            condition = "";
+        //    affall = "SELECT * FROM Data.TighteningDatas";
+        if(ui->stackedWidget_dateSelect->currentIndex() == 0)
+        {
+            QString date = "";
+            if(ui->pushButton_threeDays->isChecked())
+                date = "DATE_SUB(CURDATE(),INTERVAL 3 DAY) <= TighteningTime";
+            else if(ui->pushButton_oneWeek->isChecked())
+                date = "DATE_SUB(CURDATE(),INTERVAL 7 DAY) <= TighteningTime";
+            else if(ui->pushButton_oneMonth->isChecked())
+                date = "DATE_SUB(CURDATE(),INTERVAL 30 DAY) <= TighteningTime";
+
+            if(condition != "" && date != "")
+                condition = condition + " and " + date;
+            else if(condition == "" && date != "")
+                condition = " WHERE "+date;
+        }
+        else if(ui->stackedWidget_dateSelect->currentIndex() == 1)
+        {
+            if(ui->dateEdit_max->text()<ui->dateEdit_min->text())
+            {
+                ui->label_dateWrong->show();
+                ui->dateEdit_max->setStyleSheet("QDateEdit {font: 14pt \"Arial\";border-width:1px; border-style:solid; border-color:rgb(250, 0, 0); }QDateEdit::drop-down { width:30px; border-width:1px; border-style:solid; border-color:rgb(51, 153, 255); }QDateEdit::down-arrow {image: url(:/LCD_CS351/LCD_CS351/logo/arrow.png);}");
+                ui->dateEdit_min->setStyleSheet("QDateEdit {font: 14pt \"Arial\";border-width:1px; border-style:solid; border-color:rgb(250, 0, 0); }QDateEdit::drop-down { width:30px; border-width:1px; border-style:solid; border-color:rgb(51, 153, 255); }QDateEdit::down-arrow {image: url(:/LCD_CS351/LCD_CS351/logo/arrow.png);}");
+                return;
+            }
+            else
+            {
+                ui->dateEdit_max->setStyleSheet("QDateEdit {font: 14pt \"Arial\";border-width:1px; border-style:solid; border-color:rgb(51, 153, 255); }QDateEdit::drop-down { width:30px; border-width:1px; border-style:solid; border-color:rgb(51, 153, 255); }QDateEdit::down-arrow {image: url(:/LCD_CS351/LCD_CS351/logo/arrow.png);}");
+                ui->dateEdit_min->setStyleSheet("QDateEdit {font: 14pt \"Arial\";border-width:1px; border-style:solid; border-color:rgb(51, 153, 255); }QDateEdit::drop-down { width:30px; border-width:1px; border-style:solid; border-color:rgb(51, 153, 255); }QDateEdit::down-arrow {image: url(:/LCD_CS351/LCD_CS351/logo/arrow.png);}");
+                ui->label_dateWrong->hide();
+                QString date = "TighteningTime>='"+ui->dateEdit_min->text()+"' and TighteningTime<= DATE_ADD('"+ui->dateEdit_max->text()+"',INTERVAL 1 DAY)";
+                if(condition != "")
+                    condition = condition + " and " + date;
+                else
+                    condition = " WHERE " + date;
+            }
+        }
+        affall = "SELECT count(*) FROM "+Localtable+condition;
+        qDebug()<< "affall="<< affall;
+        if(!query->exec(affall))
+            qDebug()<<query->lastError();
+        else
+        {
+            query->next();
+            int numRows = query->value(0).toInt();
+            qDebug() << "row number: " << numRows;
+            ui->label_num->setText(QString::number(numRows));
+            if (numRows%10 != 0)
+            {
+                pages = numRows/10+1;
+            }
+            else
+            {
+                pages = numRows/10;
+            }
+            // qDebug() << "pages: " << pages;
+            ui->label_M->setText(QString::number(pages));
+            //thepage = 1;
+            if (numRows==0)
+            {
+                ui->label_N->setText("0");
+                thepage = 0;
+            }
+            else
+            {
+                thepage = 1;
+                ui->label_N->setText(QString::number(thepage));
+            }
+            //thepages =QString::number((thepage-1)*10);
+            thepages = "0";
+            aff = "select IDCode,ScrewID,Program,Torque,Angle,DATE_FORMAT(TighteningTime,'%Y-%m-%d %H:%i:%s'),TighteningStatus,UploadMark,Cycle from "+Localtable+condition+" order by RecordID DESC limit "+thepages +", 10";
+            //    aff = "select top(10) IDCode,ScrewID,Torque,Angle,TighteningTime,TighteningStatus,UploadMark,Cycle from TighteningDatas WHERE "+condition+" and RecordID not in (select top(("+ thepages +"-1)*10) RecordID from TighteningDatas WHERE "+condition+")";
+            //qDebug()<< "aff="<< aff;
+            model->setQuery(aff);
+            // qDebug()<< db.lastError().text();
+            int i;
+            for(i=0;i<10;i++)
+            {
+                ui->tableView->setRowHeight(i,43);
+            }
+        }
     }
     else
     {
-        pages = numRows/10;
-    }
-    // qDebug() << "pages: " << pages;
-    ui->label_M->setText(QString::number(pages));
-    //thepage = 1;
-    if (numRows==0)
-    {
-        ui->label_N->setText("0");
-        thepage = 0;
-    }
-    else
-    {
-        thepage = 1;
-        ui->label_N->setText(QString::number(thepage));
-    }
-    //thepages =QString::number((thepage-1)*10);
-    thepages = "0";
-    aff = "select IDCode,ScrewID,Program,Torque,Angle,DATE_FORMAT(TighteningTime,'%Y-%m-%d %H:%i:%s'),TighteningStatus,UploadMark,Cycle from TighteningDatas WHERE "+condition+" order by RecordID DESC limit "+thepages +", 10";
-    //    aff = "select top(10) IDCode,ScrewID,Torque,Angle,TighteningTime,TighteningStatus,UploadMark,Cycle from TighteningDatas WHERE "+condition+" and RecordID not in (select top(("+ thepages +"-1)*10) RecordID from TighteningDatas WHERE "+condition+")";
-    //qDebug()<< "aff="<< aff;
-    model->setQuery(aff);
-    // qDebug()<< db.lastError().text();
-    int i;
-    for(i=0;i<10;i++)
-    {
-        ui->tableView->setRowHeight(i,43);
+        condition = "";
+        if(ui->stackedWidget_dateSelect->currentIndex()==1)
+        {
+            if(ui->dateEdit_max->text()<ui->dateEdit_min->text())
+            {
+                ui->label_dateWrong->show();
+                ui->dateEdit_max->setStyleSheet("QDateEdit {font: 14pt \"Arial\";border-width:1px; border-style:solid; border-color:rgb(250, 0, 0); }QDateEdit::drop-down { width:30px; border-width:1px; border-style:solid; border-color:rgb(51, 153, 255); }QDateEdit::down-arrow {image: url(:/LCD_CS351/LCD_CS351/logo/arrow.png);}");
+                ui->dateEdit_min->setStyleSheet("QDateEdit {font: 14pt \"Arial\";border-width:1px; border-style:solid; border-color:rgb(250, 0, 0); }QDateEdit::drop-down { width:30px; border-width:1px; border-style:solid; border-color:rgb(51, 153, 255); }QDateEdit::down-arrow {image: url(:/LCD_CS351/LCD_CS351/logo/arrow.png);}");
+                return;
+            }
+            else
+            {
+                ui->dateEdit_max->setStyleSheet("QDateEdit {font: 14pt \"Arial\";border-width:1px; border-style:solid; border-color:rgb(51, 153, 255); }QDateEdit::drop-down { width:30px; border-width:1px; border-style:solid; border-color:rgb(51, 153, 255); }QDateEdit::down-arrow {image: url(:/LCD_CS351/LCD_CS351/logo/arrow.png);}");
+                ui->dateEdit_min->setStyleSheet("QDateEdit {font: 14pt \"Arial\";border-width:1px; border-style:solid; border-color:rgb(51, 153, 255); }QDateEdit::drop-down { width:30px; border-width:1px; border-style:solid; border-color:rgb(51, 153, 255); }QDateEdit::down-arrow {image: url(:/LCD_CS351/LCD_CS351/logo/arrow.png);}");
+                ui->label_dateWrong->hide();
+                condition = " WHERE TighteningTime>='"+ui->dateEdit_min->text()+"' and TighteningTime<= DATE_ADD('"+ui->dateEdit_max->text()+"',INTERVAL 1 DAY) and Torque !=-1 and Program = "+ui->lineEdit_pronum_history->text();
+            }
+        }
+        else
+        {
+            if(ui->pushButton_threeDays->isChecked())
+                condition = " WHERE DATE_SUB(CURDATE(),INTERVAL 3 DAY) <= TighteningTime and Torque !=-1 and Program = "+ui->lineEdit_pronum_history->text();
+            else if(ui->pushButton_oneWeek->isChecked())
+                condition = " WHERE DATE_SUB(CURDATE(),INTERVAL 7 DAY) <= TighteningTime and Torque !=-1 and Program = "+ui->lineEdit_pronum_history->text();
+            else if(ui->pushButton_oneMonth->isChecked())
+                condition = " WHERE DATE_SUB(CURDATE(),INTERVAL 30 DAY) <= TighteningTime and Torque !=-1 and Program = "+ui->lineEdit_pronum_history->text();
+            else
+                condition = " WHERE Torque !=-1 and Program = "+ui->lineEdit_pronum_history->text();
+        }
+        queryResult(condition);
     }
 }
 
@@ -5569,18 +5999,41 @@ void Newconfiginfo::connect_localMySQL()
         qDebug()<< "newconfig database ok";
     }
 
+    query_number = QSqlQuery(db);
+    query_datas = QSqlQuery(db);
+    query_bound = QSqlQuery(db);
 
     model = new QSqlQueryModel(this);
-    model->setQuery("select IDCode,ScrewID,Program,Torque,Angle,TighteningTime,TighteningStatus,UploadMark,Cycle from TighteningDatas WHERE RecordId <0");
-    model->setHeaderData(0, Qt::Horizontal, tr("VIN码"));
-    model->setHeaderData(1, Qt::Horizontal, tr("螺栓编号"));
-    model->setHeaderData(2, Qt::Horizontal, tr("程序号"));
-    model->setHeaderData(3, Qt::Horizontal, tr("扭矩"));
-    model->setHeaderData(4, Qt::Horizontal, tr("角度"));
-    model->setHeaderData(5, Qt::Horizontal, tr("拧紧时间"));
-    model->setHeaderData(6, Qt::Horizontal, tr("拧紧状态"));
-    model->setHeaderData(7, Qt::Horizontal, tr("上传标志"));
-    model->setHeaderData(8, Qt::Horizontal, tr("循环号"));
+    model->setQuery("select IDCode,ScrewID,Program,Torque,Angle,TighteningTime,TighteningStatus,UploadMark,Cycle from "+Localtable+" WHERE RecordID <0");
+
+    model->setHeaderData(0, Qt::Horizontal, tr("ID"));
+    qDebug()<<"this is Gvariable2"<<Gvariable2;
+    if(Gvariable2 == "XL")
+    {
+        qDebug()<<"xl station";
+        model->setHeaderData(1, Qt::Horizontal, tr("CODE"));
+        model->setHeaderData(2, Qt::Horizontal, tr("PP"));
+        model->setHeaderData(3, Qt::Horizontal, tr("VL"));
+        model->setHeaderData(4, Qt::Horizontal, tr("PM"));
+        model->setHeaderData(5, Qt::Horizontal, tr("TIME"));
+        model->setHeaderData(6, Qt::Horizontal, tr("STATUS"));
+        model->setHeaderData(7, Qt::Horizontal, tr("FLAG"));
+        model->setHeaderData(8, Qt::Horizontal, tr("CYCLE"));
+    }
+    else
+    {
+        qDebug()<<"noxl station";
+        model->setHeaderData(1, Qt::Horizontal, tr("螺栓编号"));
+        model->setHeaderData(2, Qt::Horizontal, tr("程序号"));
+        model->setHeaderData(3, Qt::Horizontal, tr("扭矩"));
+        model->setHeaderData(4, Qt::Horizontal, tr("角度"));
+        model->setHeaderData(5, Qt::Horizontal, tr("拧紧时间"));
+        model->setHeaderData(6, Qt::Horizontal, tr("拧紧状态"));
+        model->setHeaderData(7, Qt::Horizontal, tr("上传标志"));
+        model->setHeaderData(8, Qt::Horizontal, tr("循环号"));
+    }
+//    model->setHeaderData(3, Qt::Horizontal, tr("扭矩"));
+//    model->setHeaderData(4, Qt::Horizontal, tr("角度"));
 
 
     ui->tableView->horizontalHeader()->setResizeMode(QHeaderView::Fixed);
@@ -5605,7 +6058,6 @@ void Newconfiginfo::connect_localMySQL()
     ui->tableView->setColumnWidth(7,100);
     ui->tableView->setColumnWidth(8,80);
 
-
     int i;
     for(i=0;i<10;i++)
     {
@@ -5614,6 +6066,7 @@ void Newconfiginfo::connect_localMySQL()
     ui->tableView->horizontalHeader()->setStyleSheet("QHeaderView::section {background-color: rgb(51, 153, 255);"
                                                      "color: rgb(248, 248, 255);border: 0px; font:14pt}");
     ui->tableView->horizontalHeader()->setFixedHeight(51);
+    ui->tableView->horizontalHeader()->setDefaultAlignment(Qt::AlignLeft);
 
     ui->tableView->verticalHeader()->setVisible(false);   //隐藏列表头
     ui->tableView->horizontalHeader()->setVisible(true); //隐藏行表头
@@ -5621,6 +6074,39 @@ void Newconfiginfo::connect_localMySQL()
     ui->label_N->setText("0");
 
     thepages = "";
+}
+
+void Newconfiginfo::mysqlopen()
+{
+    if(QSqlDatabase::contains("QMYSQL")){
+        db = QSqlDatabase::database("QMYSQL");
+    }else{
+        db=QSqlDatabase::addDatabase("QMYSQL","QMYSQL");
+        db.setHostName("localhost");
+        db.setDatabaseName("Tighten");
+        db.setUserName("root");
+        db.setPassword("123456");
+        query_number = QSqlQuery(db);
+        query_datas = QSqlQuery(db);
+        query_bound = QSqlQuery(db);
+    }
+
+    if(!db.open())
+    {
+        if(!db.open())
+        {
+            qDebug()<< "newconfiginfo localmysql "<< db.lastError().text();
+            //**************打不开重启mysql********************
+            //            emit send_mysqlerror();
+
+        }else
+        {
+            qDebug()<< "newconfiginfo localmysql ok 2";
+        }
+    }else
+    {
+        qDebug()<< "newconfiginfo localmysql ok 1";
+    }
 }
 
 void Newconfiginfo::on_pushButton_pronum_add_clicked()
@@ -5686,131 +6172,32 @@ void Newconfiginfo::on_pushButton_xuannumber_minus_clicked()
 
 void Newconfiginfo::historyclear()
 {
-    pages = 0;
-    thepage = 0;
-    ui->label_M->setText("0");
-    ui->label_N->setText("0");
-    ui->label_num->setText("________");
-    ui->lineEdit_VIN_2->setText("");
-    ui->lineEdit_ScrewID->setText("");
-    model->setQuery("select IDCode,ScrewID,Program,Torque,Angle,TighteningTime,TighteningStatus,UploadMark,Cycle from TighteningDatas WHERE RecordId <0");
-}
-
-//Fis更新列
-void Newconfiginfo::on_pushButton_67_clicked()
-{
-    qDebug()<<"isboundchang"<<isboundchange;
-    if(ui->stackedWidget_2-> currentIndex() != 10)
+    if(ui->tabWidget->currentIndex() == 0)
     {
-        whichButtonClick = "fisupdatecolumn";
-        if(!isadvancedchange)
-            advancedIsChange();
-        else if(!ismasterslavechange)
-            masterslaveIsChange();
-        else if(!isboundchange)
-            boundIsChange();
-        else
-        {
-            ui->stackedWidget_2->setCurrentIndex(10);
-            ui->label_87->hide();
-            ui->label_101->hide();
-            ui->label_88->hide();
-            ui->label_98->show();
-            ui->label_99->hide();
-            ui->label_162->hide();
-
-            query = new QSqlQuery(db);
-            query->exec("select column_name from information_schema.columns where table_name='FisPreview'");
-            for(int i=0;i<6;i++)
-               query->next();
-            QString columns = "";
-            if(query->next())
-               columns = query->value(0).toString();
-            while(query->next())
-            {
-                columns = columns + ", "+query->value(0).toString();
-                //qDebug()<<query->value(0).toString();
-            }
-            //qDebug()<< "columns" << columns;
-            ui->textBrowser->setText(columns);
-            ui->lineEdit_column->clear();
-            ui->lineEdit_column_2->clear();
-            //ui->label_39->setText(columns);
-        }
+        pages = 0;
+        thepage = 0;
+        ui->label_M->setText("0");
+        ui->label_N->setText("0");
+        ui->label_num->setText("________");
+        ui->lineEdit_VIN_2->setText("");
+        ui->lineEdit_ScrewID->setText("");
+        model->setQuery("select IDCode,ScrewID,Program,Torque,Angle,TighteningTime,TighteningStatus,UploadMark,Cycle from "+Localtable+" WHERE RecordID <0");
+    }
+    else if(ui->tabWidget->currentIndex() == 1)
+    {
+        ui->label_dateWrong->hide();
+        ui->dateEdit_max->setStyleSheet("QDateEdit {font: 14pt \"Arial\";border-width:1px; border-style:solid; border-color:rgb(51, 153, 255); }QDateEdit::drop-down { width:30px; border-width:1px; border-style:solid; border-color:rgb(51, 153, 255); }QDateEdit::down-arrow {image: url(:/LCD_CS351/LCD_CS351/logo/arrow.png);}");
+        ui->dateEdit_min->setStyleSheet("QDateEdit {font: 14pt \"Arial\";border-width:1px; border-style:solid; border-color:rgb(51, 153, 255); }QDateEdit::drop-down { width:30px; border-width:1px; border-style:solid; border-color:rgb(51, 153, 255); }QDateEdit::down-arrow {image: url(:/LCD_CS351/LCD_CS351/logo/arrow.png);}");
+        QString conditon = " WHERE Program = -2";
+        queryResult(conditon);
+        ui->label_num_2->setText("________");
+        ui->lineEdit_pronum_history->setText("0");
+        QDate date = QDate::currentDate();//获取系统现在的时间
+        ui->dateEdit_min->setDate(date);
+        ui->dateEdit_max->setDate(date);
     }
 }
 
-//添加列
-void Newconfiginfo::on_pushButton_4_clicked()
-{
-    bool isColumnName=false;
-    query = new QSqlQuery(db);
-    query->exec("select column_name from information_schema.columns where table_name='FisPreview'");
-    while(query->next())
-    {
-        if(ui->lineEdit_column->text()==query->value(0).toString())
-            isColumnName=true;
-    }
-    if(!isColumnName)
-    {
-        if(!ui->lineEdit_column->text().isEmpty())
-        {
-            QString column =ui->lineEdit_column->text();
-            query->exec("alter table FisPreview add " + column + " char(3) null");
-            qDebug()<<"FisPreview add column "<<column;
-            query->exec("select column_name from information_schema.columns where table_name='FisPreview'");
-            for(int i=0;i<6;i++)
-               query->next();
-            QString columns = "";
-            if(query->next())
-               columns = query->value(0).toString();
-            while(query->next())
-            {
-               columns = columns + ", "+query->value(0).toString();
-                //qDebug()<<query->value(0).toString();
-            }
-            //qDebug()<< "columns" << columns;
-            //ui->label_39->setText(columns);
-            ui->textBrowser->setText(columns);
-            emit column_update(column);
-            ui->lineEdit_column->clear();
-        }
-    }
-}
-
-//删除列
-void Newconfiginfo::on_pushButton_51_clicked()
-{
-    query = new QSqlQuery(db);
-    query1 = new QSqlQuery(db);
-    query1->exec("select column_name from information_schema.columns where table_name='FisPreview'");
-    for(int i=0;i<6;i++)
-        query1->next();
-    while(query1->next())
-    {
-        if(ui->lineEdit_column_2->text() == query1->value(0).toString())
-        {
-            query->exec("alter table FisPreview drop " + ui->lineEdit_column_2->text());
-            qDebug()<<"FisPreview drop column "<<ui->lineEdit_column_2->text();
-            query->exec("select column_name from information_schema.columns where table_name='FisPreview'");
-            for(int i=0;i<6;i++)
-               query->next();
-            QString columns = "";
-            if(query->next())
-               columns = query->value(0).toString();
-            while(query->next())
-            {
-                columns = columns + ", "+query->value(0).toString();
-                //qDebug()<<query->value(0).toString();
-            }
-            //qDebug()<< "columns" << columns;
-            //ui->label_39->setText(columns);
-            ui->textBrowser->setText(columns);
-            ui->lineEdit_column_2->clear();
-        }
-        //qDebug()<<query->value(0).toString();
-    }
-}
 
 void Newconfiginfo::on_pushButton_36_clicked()
 {
@@ -5854,7 +6241,6 @@ void Newconfiginfo::on_pushButton_86_clicked()
             ui->label_87->hide();
             ui->label_101->hide();
             ui->label_88->hide();
-            ui->label_98->hide();
             ui->label_99->show();
             ui->label_162->hide();
         }
@@ -5948,7 +6334,7 @@ void Newconfiginfo::receiveMasterSlaveState(bool statetmp)
             }
             system("killall -9 client &");
             system("echo 0 > /sys/class/graphics/fb2/blank &");
-            system("/etc/data2/client -qws -display \"LinuxFb:/dev/fb2:mmWidth500:mmHeight300:0\" &");
+            system("/etc/data2Child/client -qws -display \"LinuxFb:/dev/fb2:mmWidth500:mmHeight300:0\" &");
         }
         else if(getModeSelect.checkedId()==2)
         {
@@ -6026,11 +6412,6 @@ void Newconfiginfo::receiveMasterSlaveState(bool statetmp)
     else if(whichButtonClick == "testinterface")
     {
         on_pushButton_66_clicked();
-        //ismasterslavechange = false;
-    }
-    else if(whichButtonClick == "fisupdatecolumn")
-    {
-        on_pushButton_67_clicked();
         //ismasterslavechange = false;
     }
     else if(whichButtonClick == "advanceset")
@@ -6126,11 +6507,6 @@ void Newconfiginfo::masterslaveIsChange()
             on_pushButton_66_clicked();
             //ismasterslavechange = false;
         }
-        else if (whichButtonClick == "fisupdatecolumn")
-        {
-            on_pushButton_67_clicked();
-            //ismasterslavechange = false;
-        }
         else if (whichButtonClick == "advanceset")
         {
             on_pushButton_58_clicked();
@@ -6155,10 +6531,7 @@ void Newconfiginfo::receivetime(QString  datetime)
     ui->minute->setText(datetime.mid(14,2));
     ui->second->setText(datetime.mid(17,2));
 }
-void Newconfiginfo::on_pushButton_38_clicked()
-{
-    emit sendGetTime();
-}
+
 
 void Newconfiginfo::on_pushButton_49_clicked()
 {
@@ -6173,11 +6546,15 @@ void Newconfiginfo::on_pushButton_49_clicked()
 //***********************套筒按钮加减**********************************
 void Newconfiginfo::on_pushButton_taotong_add_clicked()
 {
-    if(ui->lineEdit_taotong->text().toInt()!=1 && ui->lineEdit_taotong->text().toInt()!=2 && ui->lineEdit_taotong->text().toInt()!=3 && ui->lineEdit_taotong->text().toInt()!=4)
+    bool condition=false;
+
+    condition = (ui->lineEdit_taotong->text().toInt()>8) || (ui->lineEdit_taotong->text().toInt()<1);
+
+    if( condition )
         ui->lineEdit_taotong->setText("0");
 
-    if((ui->lineEdit_taotong->text().toInt()+1) == 5)
-        ui->lineEdit_taotong->setText("4");
+    if((ui->lineEdit_taotong->text().toInt()+1) == 9)
+        ui->lineEdit_taotong->setText("8");
     else
         ui->lineEdit_taotong->setText(QString::number(ui->lineEdit_taotong->text().toInt()+1));
 
@@ -6185,11 +6562,15 @@ void Newconfiginfo::on_pushButton_taotong_add_clicked()
 
 void Newconfiginfo::on_pushButton_taotong_minus_clicked()
 {
-    if(ui->lineEdit_taotong->text().toInt()!=1&&ui->lineEdit_taotong->text().toInt()!=2&&ui->lineEdit_taotong->text().toInt()!=3&&ui->lineEdit_taotong->text().toInt()!=4)
+    bool condition=false;
+
+    condition = (ui->lineEdit_taotong->text().toInt()>8) || (ui->lineEdit_taotong->text().toInt()<1) ;
+
+    if(condition)
         ui->lineEdit_taotong->setText("1");
 
     if((ui->lineEdit_taotong->text().toInt()-1) <= 0)
-        ui->lineEdit_taotong->setText(tr("无"));
+        ui->lineEdit_taotong->setText("OFF");
     else
     {
         ui->lineEdit_taotong->setText(QString::number(ui->lineEdit_taotong->text().toInt()-1));
@@ -6235,7 +6616,6 @@ void Newconfiginfo::on_pushButton_55_clicked()
             ui->label_87->hide();
             ui->label_101->hide();
             ui->label_88->hide();
-            ui->label_98->hide();
             ui->label_99->hide();
             ui->label_162->show();
 
@@ -6526,26 +6906,27 @@ void Newconfiginfo::receiveBound(bool isSave)
     {
         if(whichButtonClick == "advancedback")
         {
+            isboundchange = true;
             on_pushButton_3_clicked();
         }
         else if (whichButtonClick == "advanceset")
         {
+            isboundchange = true;
             on_pushButton_58_clicked();
         }
         else if(whichButtonClick == "passwordchange")
         {
+            isboundchange = true;
             on_pushButton_100_clicked();
         }
         else if(whichButtonClick == "testinterface")
         {
+            isboundchange = true;
             on_pushButton_66_clicked();
-        }
-        else if(whichButtonClick == "fisupdatecolumn")
-        {
-            on_pushButton_67_clicked();
         }
         else if(whichButtonClick == "master_slave")
         {
+            isboundchange = true;
             on_pushButton_86_clicked();
         }
         else if(whichButtonClick == "bound_save")
@@ -6583,7 +6964,7 @@ void Newconfiginfo::boundIsChange()
         save = new Save(this);
         connect(save,SIGNAL(sendSaveBound(bool)),this,SLOT(receiveBound(bool)));
         save->show();
-//        isboundchange = true;
+        //        isboundchange = true;
     }
     else
     {
@@ -6603,10 +6984,6 @@ void Newconfiginfo::boundIsChange()
         else if (whichButtonClick == "testinterface")
         {
             on_pushButton_66_clicked();
-        }
-        else if (whichButtonClick == "fisupdatecolumn")
-        {
-            on_pushButton_67_clicked();
         }
         else if (whichButtonClick == "advanceset")
         {
@@ -6648,7 +7025,7 @@ void Newconfiginfo::show_bound()
         {
             tableWidgetItem[i][j]->setText("");
         }
-//        header_vertical[i]="";
+        //        header_vertical[i]="";
     }
 
     if(bound_pages != 0)
@@ -6657,7 +7034,7 @@ void Newconfiginfo::show_bound()
         for(iter=list.begin()+10*(bound_current_page-1); iter!=list.end() && iter!=list.begin()+10*(bound_current_page); iter++)
         {
             tableWidgetItem[current][0]->setText("P"+QString::number(*iter));
-//            header_vertical[current]="P"+QString::number(*iter);
+            //            header_vertical[current]="P"+QString::number(*iter);
             for(int j=1;j<5;j++)
             {
                 tableWidgetItem[current][j]->setText(bound_temp[*iter][j-1]);
@@ -6665,7 +7042,7 @@ void Newconfiginfo::show_bound()
             current++;
         }
     }
-//    ui->tableWidget->setVerticalHeaderLabels(header_vertical);
+    //    ui->tableWidget->setVerticalHeaderLabels(header_vertical);
 }
 
 void Newconfiginfo::bound_init()
@@ -6692,47 +7069,47 @@ void Newconfiginfo::bound_init()
     ui->tableWidget->verticalHeader()->setVisible(false);
 
     ui->tableWidget->horizontalHeader()->setStyleSheet("QHeaderView::section {background-color: rgb(51, 153, 255);"
-                                                     "color: rgb(248, 248, 255);border: 0px; font:14pt}");
-//    ui->tableWidget->verticalHeader()->setStyleSheet("QHeaderView::section {background-color: rgb(248, 248, 255);"
-//                                                     "color:black; border: 0px; font:14pt}");
+                                                       "color: rgb(248, 248, 255);border: 0px; font:14pt}");
+    //    ui->tableWidget->verticalHeader()->setStyleSheet("QHeaderView::section {background-color: rgb(248, 248, 255);"
+    //                                                     "color:black; border: 0px; font:14pt}");
     ui->tableWidget->horizontalHeader()->setFixedHeight(51);
-//    ui->tableWidget->verticalHeader()->setFixedWidth(49);
+    //    ui->tableWidget->verticalHeader()->setFixedWidth(49);
 
-//    ui->tableWidget->verticalHeader()->setMovable(false);
+    //    ui->tableWidget->verticalHeader()->setMovable(false);
     ui->tableWidget->horizontalHeader()->setMovable(false);
 
-//    ui->tableWidget->verticalHeader()->setDefaultAlignment(Qt::AlignCenter);
+    //    ui->tableWidget->verticalHeader()->setDefaultAlignment(Qt::AlignCenter);
 
     ui->tableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);//去掉水平滚动条
     ui->tableWidget->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);//去掉水平滚动条
     ui->tableWidget->setAutoScroll(false);//去掉自动滚动
 
     ui->tableWidget->horizontalHeader()->setResizeMode(QHeaderView::Fixed);
-//    ui->tableWidget->verticalHeader()->setResizeMode(QHeaderView::Fixed);
+    //    ui->tableWidget->verticalHeader()->setResizeMode(QHeaderView::Fixed);
 
-//    table->setStyleSheet("QTableCornerButton::section{background-color:red;}");
+    //    table->setStyleSheet("QTableCornerButton::section{background-color:red;}");
 
-//    tableWidget->setTextAlignment.
+    //    tableWidget->setTextAlignment.
     // 创建表格项目，并插入到指定单元
-//    QTableWidgetItem *tableWidgetItem = new QTableWidgetItem("qt");
-//    tableWidget->setItem(1, 1, tableWidgetItem);
+    //    QTableWidgetItem *tableWidgetItem = new QTableWidgetItem("qt");
+    //    tableWidget->setItem(1, 1, tableWidgetItem);
     // 创建表格项目，并将它们作为标头
-//    QTableWidgetItem *headerV = new QTableWidgetItem("P1");
-//    tableWidget->setVerticalHeaderItem(0,headerV);
-//    QTableWidgetItem *headerH0 = new QTableWidgetItem(tr("扭矩上限"));
-//    QTableWidgetItem *headerH1 = new QTableWidgetItem(tr("扭矩下限"));
-//    QTableWidgetItem *headerH2 = new QTableWidgetItem(tr("角度上限"));
-//    QTableWidgetItem *headerH3 = new QTableWidgetItem(tr("角度上限"));
-//    tableWidget->setHorizontalHeaderItem(0,headerH0);
-//    tableWidget->setHorizontalHeaderItem(1,headerH1);
-//    tableWidget->setHorizontalHeaderItem(2,headerH2);
-//    tableWidget->setHorizontalHeaderItem(3,headerH3);
+    //    QTableWidgetItem *headerV = new QTableWidgetItem("P1");
+    //    tableWidget->setVerticalHeaderItem(0,headerV);
+    //    QTableWidgetItem *headerH0 = new QTableWidgetItem(tr("扭矩上限"));
+    //    QTableWidgetItem *headerH1 = new QTableWidgetItem(tr("扭矩下限"));
+    //    QTableWidgetItem *headerH2 = new QTableWidgetItem(tr("角度上限"));
+    //    QTableWidgetItem *headerH3 = new QTableWidgetItem(tr("角度上限"));
+    //    tableWidget->setHorizontalHeaderItem(0,headerH0);
+    //    tableWidget->setHorizontalHeaderItem(1,headerH1);
+    //    tableWidget->setHorizontalHeaderItem(2,headerH2);
+    //    tableWidget->setHorizontalHeaderItem(3,headerH3);
 
     for(int i=0;i<10;++i)
         for(int j=0;j<5;++j)
         {
-//            ui->tableWidget->item(i,j)->setText("");
-//            ui->tableWidget->item(i,j)->setTextAlignment(Qt::AlignCenter);
+            //            ui->tableWidget->item(i,j)->setText("");
+            //            ui->tableWidget->item(i,j)->setTextAlignment(Qt::AlignCenter);
             tableWidgetItem[i][j] = new QTableWidgetItem("");
             ui->tableWidget->setItem(i,j,tableWidgetItem[i][j]);
             ui->tableWidget->item(i,j)->setTextAlignment(Qt::AlignCenter);
@@ -6743,8 +7120,8 @@ void Newconfiginfo::bound_init()
     header<<"P"<<tr("扭矩上限(Nm)")<<tr("扭矩下限(Nm)")<<tr("角度上限(Deg)")<<tr("角度下限(Deg)");
     ui->tableWidget->setHorizontalHeaderLabels(header);
 
-//    header_vertical<<""<<""<<""<<""<<""<<""<<""<<""<<""<<"";
-//    ui->tableWidget->setVerticalHeaderLabels(header_vertical);
+    //    header_vertical<<""<<""<<""<<""<<""<<""<<""<<""<<""<<"";
+    //    ui->tableWidget->setVerticalHeaderLabels(header_vertical);
 }
 
 void Newconfiginfo::bound_update()
@@ -6773,13 +7150,80 @@ void Newconfiginfo::bound_update()
     }
     ui->label_bound_current_page->setText(QString::number(bound_current_page));
     ui->label_bound_pages->setText(QString::number(bound_pages));
-//    qDebug()<<bound_pages<<bound_current_page;
+    //    qDebug()<<bound_pages<<bound_current_page;
     show_bound();
+}
+
+void Newconfiginfo::history()
+{
+    ui->tabWidget->setCurrentIndex(1);
+    historyclear();
+    ui->label_166->show();
+    ui->tabWidget->setCurrentIndex(0);
+    historyclear();
+    ui->stackedWidget_dateSelect->setCurrentIndex(0);
+    ui->stackedWidget_2->setCurrentIndex(3);
+    ui->stackedWidget_3->setCurrentIndex(3);
+    ui->pushButton_96->setText("历史结果");
+}
+
+void Newconfiginfo::PDMEdit()
+{
+    ui->stackedWidget_2->setCurrentIndex(5);
+    ui->stackedWidget_3->setCurrentIndex(3);
+    ui->pushButton_96->setText("作业指导");
+
+
+    ispdminit = 0;
+    ui->groupBox_13->setTitle(tr("图片"));
+    ui->groupBox_13->setStyleSheet("QGroupBox {font: 14pt;margin-top: 1ex;border-width:0.5px;border-style:solid;border-color: rgb(51, 153, 255);} QGroupBox::title {subcontrol-origin: margin;subcontrol-position: top left;left:15px;margin-left: 5px;margin-right: 5px;padding:1px;}");
+    //    ui->listWidget->setCurrentRow(1);
+    //    historyclear();
+
+
+    whichButtonClick = "PDMEdit";
+    ui->comboBox->show();
+    ui->label_69->show();
+    ui->lineEdit_pdmname->hide();
+    ui->pushButton_29->hide();
+    ui->pushButton_30->hide();
+    ui->pushButton_31->hide();
+
+
+    ui->comboBox->clear();
+    QSettings *config = new QSettings("/config.ini", QSettings::IniFormat);
+    ui->comboBox->addItem("");
+
+    for(int i= 0;i < 1000 ;i++)
+    {
+        if(config->value(QString("pdminfo").append(QString::number(i+1)).append("/pdmname")).toString()!= "")
+        {
+            ui->comboBox->addItem(config->value(QString("pdminfo").append(QString::number(i+1)).append("/pdmname")).toString());
+        }
+    }
+    SaveWhat = "";
+    ispdminit = 1;
+    delete config;
+}
+
+void Newconfiginfo::configList()
+{
+    ui->stackedWidget_2->setCurrentIndex(4);
+    ui->stackedWidget_3->setCurrentIndex(3);
+    ui->stackedWidget_5->setCurrentIndex(0);
+    ui->pushButton_96->setText("配置列表");
+}
+
+void Newconfiginfo::systemConfigure()
+{
+    ui->stackedWidget_2->setCurrentIndex(2);
+    ui->stackedWidget_3->setCurrentIndex(3);
+    ui->pushButton_96->setText("基本信息");
 }
 
 void Newconfiginfo::on_pushButton_bound_clicked()
 {
-//    qDebug()<<"bound_enabled_temp:"<<bound_enabled_temp;
+    //    qDebug()<<"bound_enabled_temp:"<<bound_enabled_temp;
     if(bound_enabled_temp)
     {
         bound_enabled_temp=false;
@@ -6804,3 +7248,343 @@ void Newconfiginfo::on_pushButton_56_clicked()
     ui->lineEdit_angle_min->setStyleSheet("font: 14pt \"黑体\";border-width:1px; border-style:solid;border-color:rgb(51, 153, 255);");
 }
 
+
+//test red led
+void Newconfiginfo::on_Led_red_clicked()
+{
+    IOput->writeIOOutput("r_led",true);
+    IOput->writeIOOutput("Output1",true);
+    IOput->writeIOOutput("Output2",true);
+    usleep(30000);                                              //about 30ms
+    IOput->readIOInput("input1") ;
+    if(IOput->readIOInput("input1"))
+    {
+        ui->INA0->setStyleSheet("background-color: rgb(255, 0, 0);color: rgb(248, 248, 248);font: 14pt \"黑体\";");
+    }
+    if(IOput->readIOInput("input2"))
+    {
+        ui->INA1->setStyleSheet("background-color: rgb(255, 0, 0);color: rgb(248, 248, 248);font: 14pt \"黑体\";");
+    }
+    if(IOput->readIOInput("input3"))
+    {
+        ui->INA2->setStyleSheet("background-color: rgb(255, 0, 0);color: rgb(248, 248, 248);font: 14pt \"黑体\";");
+    }
+    if(IOput->readIOInput("input4"))
+    {
+        ui->INA3->setStyleSheet("background-color: rgb(255, 0, 0);color: rgb(248, 248, 248);font: 14pt \"黑体\";");
+    }
+    if(IOput->readIOInput("input5"))
+    {
+        ui->INA4->setStyleSheet("background-color: rgb(255, 0, 0);color: rgb(248, 248, 248);font: 14pt \"黑体\";");
+    }
+    if(IOput->readIOInput("input6"))
+    {
+        ui->INA5->setStyleSheet("background-color: rgb(255, 0, 0);color: rgb(248, 248, 248);font: 14pt \"黑体\";");
+    }
+    if(IOput->readIOInput("input7"))
+    {
+        ui->INA6->setStyleSheet("background-color: rgb(255, 0, 0);color: rgb(248, 248, 248);font: 14pt \"黑体\";");
+    }
+    if(IOput->readIOInput("input8"))
+    {
+        ui->INA7->setStyleSheet("background-color: rgb(255, 0, 0);color: rgb(248, 248, 248);font: 14pt \"黑体\";");
+    }
+}
+//test green led
+void Newconfiginfo::on_Led_green_clicked()
+{
+    IOput->writeIOOutput("g_led",true);
+    IOput->writeIOOutput("Output3",true);
+    //IOput->writeIOOutput("Output4",true);
+}
+//test yellow led
+void Newconfiginfo::on_Led_yellow_clicked()
+{
+    IOput->writeIOOutput("y_led",true);
+    IOput->writeIOOutput("Output5",true);
+    IOput->writeIOOutput("Output6",true);
+}
+//test white led
+void Newconfiginfo::on_Led_white_clicked()
+{
+    IOput->writeIOOutput("w_led",true);
+    IOput->writeIOOutput("Output7",true);
+}
+//test nok led
+void Newconfiginfo::on_Led_nok_clicked()
+{
+    IOput->writeIOOutput("n_led",true);
+}
+//reset all led
+void Newconfiginfo::on_IO_Reset_clicked()
+{
+    IOput->writeIOOutput("r_led",false);
+    IOput->writeIOOutput("g_led",false);
+    IOput->writeIOOutput("y_led",false);
+    IOput->writeIOOutput("w_led",false);
+    IOput->writeIOOutput("n_led",false);
+    IOput->writeIOOutput("Output1",false);
+    IOput->writeIOOutput("Output2",false);
+    IOput->writeIOOutput("Output3",false);
+    IOput->writeIOOutput("Output4",false);
+    IOput->writeIOOutput("Output5",false);
+    IOput->writeIOOutput("Output6",false);
+    IOput->writeIOOutput("Output7",false);
+    usleep(30000);                                              //about 30ms
+    ui->INA0->setStyleSheet("background-color: rgb(100, 100, 100);color: rgb(248, 248, 248);font: 14pt \"黑体\";");
+    ui->INA1->setStyleSheet("background-color: rgb(100, 100, 100);color: rgb(248, 248, 248);font: 14pt \"黑体\";");
+    ui->INA2->setStyleSheet("background-color: rgb(100, 100, 100);color: rgb(248, 248, 248);font: 14pt \"黑体\";");
+    ui->INA3->setStyleSheet("background-color: rgb(100, 100, 100);color: rgb(248, 248, 248);font: 14pt \"黑体\";");
+    ui->INA4->setStyleSheet("background-color: rgb(100, 100, 100);color: rgb(248, 248, 248);font: 14pt \"黑体\";");
+    ui->INA5->setStyleSheet("background-color: rgb(100, 100, 100);color: rgb(248, 248, 248);font: 14pt \"黑体\";");
+    ui->INA6->setStyleSheet("background-color: rgb(100, 100, 100);color: rgb(248, 248, 248);font: 14pt \"黑体\";");
+    ui->INA7->setStyleSheet("background-color: rgb(100, 100, 100);color: rgb(248, 248, 248);font: 14pt \"黑体\";");
+}
+
+
+void Newconfiginfo::on_pushButton_channel_add_clicked()
+{
+    bool condition=false;
+    condition = (ui->lineEdit_channel->text().toInt()>5) || (ui->lineEdit_channel->text().toInt()<1);
+    if( condition )
+        ui->lineEdit_channel->setText("OFF");
+
+    if((ui->lineEdit_channel->text().toInt()+1) == 6)
+        ui->lineEdit_channel->setText("5");
+    else
+        ui->lineEdit_channel->setText(QString::number(ui->lineEdit_channel->text().toInt()+1));
+}
+
+void Newconfiginfo::on_pushButton_channel_minus_clicked()
+{
+    bool condition=false;
+    condition = (ui->lineEdit_channel->text().toInt()>5) || (ui->lineEdit_channel->text().toInt()<1) ;
+    if(condition)
+        ui->lineEdit_channel->setText("OFF");
+
+    if((ui->lineEdit_channel->text().toInt()-1) <= 0)
+        ui->lineEdit_channel->setText("OFF");
+    else
+        ui->lineEdit_channel->setText(QString::number(ui->lineEdit_channel->text().toInt()-1));
+}
+
+void Newconfiginfo::on_pushButton_22_clicked()
+{
+    if(ui->stackedWidget_2->currentIndex()==2)
+    {
+        whichButtonClick = "baseback";
+        if(!isbaseinfochange)
+        {
+            baseInfoIsChange();
+        }
+        else
+        {
+            DebugMode = false;
+            system("cp /config.ini /config1.ini &");
+            this->close();
+            emit closeconfig();
+        }
+    }
+    else if(SaveWhat == "pdm")
+    {
+        e3 = new QGraphicsOpacityEffect(this);
+        e3->setOpacity(0.5);
+        ui->label_100->setGraphicsEffect(e3);
+        ui->label_100->show();
+        ui->label_100->setGeometry(0,0,1366,768);
+        SaveWhat = "pdmout";
+        save = new Save(this);
+        connect(save,SIGNAL(sendDeSingle(bool)),this,SLOT(receiveDesignle(bool)));
+        save->show();
+    }
+    else if(ui->stackedWidget_2->currentIndex()==5|| SaveWhat == "pdmout")
+    {
+        int tempdata = numpdm;
+        for(int i = 0;i<tempdata;i++)
+        {
+            delete butt1[i];
+            numpdm--;
+        }
+        ui->stackedWidget_6->setCurrentIndex(0);
+        system("cp /config.ini /config1.ini &");
+        this->close();
+        SaveWhat = "";
+    }
+    else
+    {
+        ui->label_166->show();
+        system("cp /config.ini /config1.ini &");
+        this->close();
+        SaveWhat = "";
+    }
+}
+
+void Newconfiginfo::on_pushButton_channel_add_2_clicked()
+{
+    bool condition=false;
+    condition = (ui->lineEdit_channel_2->text().toInt()>4) || (ui->lineEdit_channel_2->text().toInt()<1);
+    if( condition )
+        ui->lineEdit_channel_2->setText("1");
+
+    if((ui->lineEdit_channel_2->text().toInt()+1) == 5)
+        ui->lineEdit_channel_2->setText("4");
+    else
+        ui->lineEdit_channel_2->setText(QString::number(ui->lineEdit_channel_2->text().toInt()+1));
+}
+
+void Newconfiginfo::on_pushButton_channel_minus_2_clicked()
+{
+    bool condition=false;
+    condition = (ui->lineEdit_channel_2->text().toInt()>4) || (ui->lineEdit_channel_2->text().toInt()<1) ;
+    if(condition)
+        ui->lineEdit_channel_2->setText("1");
+
+    if((ui->lineEdit_channel_2->text().toInt()-1) <= 0)
+        ui->lineEdit_channel_2->setText(tr("1"));
+    else
+        ui->lineEdit_channel_2->setText(QString::number(ui->lineEdit_channel_2->text().toInt()-1));
+}
+
+void Newconfiginfo::on_pushButton_taotong_add_2_clicked()
+{
+    bool condition=false;
+
+    condition = (ui->lineEdit_taotong_2->text().toInt()>8) || (ui->lineEdit_taotong_2->text().toInt()<1);
+
+    if( condition )
+        ui->lineEdit_taotong_2->setText("OFF");
+
+    if((ui->lineEdit_taotong_2->text().toInt()+1) == 9)
+        ui->lineEdit_taotong_2->setText("8");
+    else
+        ui->lineEdit_taotong_2->setText(QString::number(ui->lineEdit_taotong_2->text().toInt()+1));
+}
+
+void Newconfiginfo::on_pushButton_taotong_minus_2_clicked()
+{
+    bool condition=false;
+
+    condition = (ui->lineEdit_taotong_2->text().toInt()>4) || (ui->lineEdit_taotong_2->text().toInt()<1) ;
+
+
+    if(condition)
+        ui->lineEdit_taotong_2->setText("OFF");
+
+    if((ui->lineEdit_taotong_2->text().toInt()-1) <= 0)
+        ui->lineEdit_taotong_2->setText("OFF");
+    else
+    {
+        ui->lineEdit_taotong_2->setText(QString::number(ui->lineEdit_taotong_2->text().toInt()-1));
+    }
+}
+
+void Newconfiginfo::on_pushButton_pronum_add_history_clicked()
+{
+    new_pronum = ui->lineEdit_pronum_history->text().toInt()+1;
+    ui->lineEdit_pronum_history->setText(QString::number(new_pronum));
+}
+
+void Newconfiginfo::on_pushButton_pronum_minus_history_clicked()
+{
+    if (ui->lineEdit_pronum_history->text().toInt()>0)
+    {
+        new_pronum=ui->lineEdit_pronum_history->text().toInt()-1;
+        ui->lineEdit_pronum_history->setText(QString::number(new_pronum));
+    }
+}
+
+void Newconfiginfo::queryResult(QString condition)
+{
+    if(!db.isOpen() || !QSqlDatabase::contains("QMYSQL"))
+        mysqlopen();
+    if(db.isOpen() && QSqlDatabase::contains("QMYSQL"))
+    {
+        if(!query_number.exec("SELECT count(Torque) FROM "+Localtable+condition))
+            qDebug()<< "search three days fail "<<query_number.lastError();
+        else
+        {
+            query_number.next();
+            int n = query_number.value(0).toInt();//n为数据个数
+            ui->label_num_2->setText(QString::number(n));
+            qDebug()<<"SELECT Torque FROM " + Localtable + condition;
+            query_datas.exec("SELECT Torque FROM " + Localtable + condition);
+
+            //            qDebug()<<"SELECT `MaxValue`, MinValue From " + Localtable + condition+" ORDER BY RecordID DESC LIMIT 1";
+            if(!query_bound.exec("SELECT `MaxValue`, MinValue From " + Localtable + condition+" ORDER BY RecordID DESC LIMIT 1"))
+                qDebug()<<"query_bound.lastError() "<<query_bound.lastError();
+            area->setQuery(query_number,query_datas,query_bound);
+        }
+    }
+}
+
+
+void Newconfiginfo::on_pushButton_down_clicked()
+{
+    ui->stackedWidget_dateSelect->setCurrentIndex(1);
+    ui->pushButton_threeDays->setChecked(false);
+    ui->pushButton_oneWeek->setChecked(false);
+    ui->pushButton_oneMonth->setChecked(false);
+}
+
+void Newconfiginfo::on_pushButton_up_clicked()
+{
+    ui->stackedWidget_dateSelect->setCurrentIndex(0);
+    ui->label_dateWrong->hide();
+    ui->dateEdit_max->setStyleSheet("QDateEdit {font: 14pt \"Arial\";border-width:1px; border-style:solid; border-color:rgb(51, 153, 255); }QDateEdit::drop-down { width:30px; border-width:1px; border-style:solid; border-color:rgb(51, 153, 255); }QDateEdit::down-arrow {image: url(:/LCD_CS351/LCD_CS351/logo/arrow.png);}");
+    ui->dateEdit_min->setStyleSheet("QDateEdit {font: 14pt \"Arial\";border-width:1px; border-style:solid; border-color:rgb(51, 153, 255); }QDateEdit::drop-down { width:30px; border-width:1px; border-style:solid; border-color:rgb(51, 153, 255); }QDateEdit::down-arrow {image: url(:/LCD_CS351/LCD_CS351/logo/arrow.png);}");
+    QDate date = QDate::currentDate();//获取系统现在的时间
+    ui->dateEdit_min->setDate(date);
+    ui->dateEdit_max->setDate(date);
+}
+
+void Newconfiginfo::on_pushButton_threeDays_clicked()
+{
+    if(ui->pushButton_threeDays->isChecked())
+    {
+        ui->pushButton_oneWeek->setChecked(false);
+        ui->pushButton_oneMonth->setChecked(false);
+    }
+}
+
+void Newconfiginfo::on_pushButton_oneWeek_clicked()
+{
+    if(ui->pushButton_oneWeek->isChecked())
+    {
+        ui->pushButton_threeDays->setChecked(false);
+        ui->pushButton_oneMonth->setChecked(false);
+    }
+}
+
+void Newconfiginfo::on_pushButton_oneMonth_clicked()
+{
+    if(ui->pushButton_oneMonth->isChecked())
+    {
+        ui->pushButton_oneWeek->setChecked(false);
+        ui->pushButton_threeDays->setChecked(false);
+    }
+}
+
+void Newconfiginfo::on_tabWidget_currentChanged(int currentTab)
+{
+    historyclear();
+    if(currentTab == 0)
+        ui->stackedWidget_condition->setCurrentIndex(0);
+    else if(currentTab ==1)
+        ui->stackedWidget_condition->setCurrentIndex(1);
+}
+
+
+
+//当前模组绑定bypass
+void Newconfiginfo::on_pushButton_taryContinue_clicked()
+{
+    ui->pushButton_taryContinue->hide();
+    emit sendTrayCntinue(true);
+}
+
+void Newconfiginfo::onShowPushButon()
+{
+    qDebug()<<"$$$$$$$$$$$$$$$$$$$";
+    ui->pushButton_taryContinue->show();
+    qDebug()<<"12323245423124623";
+}

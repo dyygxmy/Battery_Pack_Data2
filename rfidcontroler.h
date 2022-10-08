@@ -6,16 +6,27 @@
 #include <QtNetwork>
 #include "GlobalVarible.h"
 #include <QSettings>
+#include <QSqlDatabase>
+#include <QSqlQuery>
+#include <QSqlError>
+#include <QDomDocument>
+
 class RfidControler : public QObject
 {
     Q_OBJECT
 public:
     explicit RfidControler(QObject *parent = 0);
+    QString rfidip;
+    int rfidport;
 
 signals:
+    void sendPinToMasterTcp(bool,QByteArray); //wz add
     void sendPinToUi(QString,bool,QString); //发送条码给UI
-    void sendGetCar();
     void rfidConnected(bool);
+    void RFIDSuccess(QString,QByteArray);
+    void RFIDDataToPLC(QString,QByteArray);
+    void sendRequest();
+
 public slots:
     void rfidInit();
     void pingTimers();
@@ -25,21 +36,26 @@ public slots:
     void connectedDo();
     void disconnectedDo();
     void rfidDisconnectDo(bool);
-    void pinIsEqual();
+    void write_data(QByteArray,QByteArray);
+    void read_data(QByteArray,QByteArray);
+    void sendReset();
+
 private:
     QThread m_thread;
     QTcpSocket *m_pTcpSocket;
-    QList<QString> seriallist;//条码链表 存储10个条码以内不能重复
-    QList<QString> pinqueuelist;
-    int whichindex;
-    bool isequeal;
+
     QTimer pingTimer;
-    QString rfidip;
     QString tempPin;
     QString tempG9;
-    int rfidport;
-    bool RFIDISConnect;
+    QByteArray dataTemp;
+    bool RFIDIsConnect;
 
+    bool readRFIDFlag;
+    int count1;
+
+    QXmlStreamReader reader;
+    void parseReplyElement(const QDomElement &element);
+    void parseReadElement(const QDomElement &element);
 };
 
 #endif // RFIDCONTROLER_H

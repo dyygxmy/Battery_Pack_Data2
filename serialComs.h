@@ -9,6 +9,7 @@
 #include <getopt.h>
 #include <string.h>
 #include <termios.h>
+#include <qstringlist.h>
 #include "GlobalVarible.h"
 class SerialComs : public QObject
 {
@@ -16,9 +17,13 @@ class SerialComs : public QObject
 public:
     explicit SerialComs(QObject *parent = 0);
 
+
 signals:
-    void serialCom(QString,bool,QString);//发给UI线程
-    //void sendSerial(QString);
+    void sendPartCode(QString);
+    void sendCmdToStep(int ,QString,int);
+    void sendDebug(QString);
+    void sendStationFinishToMaindow(QString,QString);
+
 public slots:
     void comInit();                      //初始化条码枪串口
 private:
@@ -26,8 +31,10 @@ private:
     QList<QString> seriallist;//条码链表 存储10个条码以内不能重复
     char buff[20];
     int dev_fd;               //串口文件描述符
-    bool isequeal;            //条码是否重复
-    int whichindex;           //当前条码索引
+    bool isEqual;            //条码是否重复
+
+    int vinLen;
+    QByteArray vinHead;
 };
 
 #endif // SERIALCOMS_H
