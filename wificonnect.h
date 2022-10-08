@@ -9,6 +9,7 @@
 #include "GlobalVarible.h"
 #include <QTextStream>
 #include <QFile>
+
 class Wificonnect : public QObject
 {
     Q_OBJECT
@@ -19,6 +20,8 @@ signals:
     void wifi_connect(bool);
     void data_connect(bool);
     void rfidconnect(bool);
+	void sb356connect(bool);
+//    void sendPlusFlag(bool);
     //void send_unconnect(bool);
     
 public slots:
@@ -31,6 +34,7 @@ private:
     bool DataConnected;
     bool ApConnected;
     bool RfidConnected;
+    bool PlusConnected;
     int gateway;
     int dataserver;
     int rfidserver;

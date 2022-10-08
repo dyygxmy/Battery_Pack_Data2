@@ -1,0 +1,8 @@
+2016/08/08
+一.增加BYD的PMM控制器功能，
+1.扫条码5个螺栓一起闪烁；
+2.nok确认为确认全部；
+3.更改函数 
+fromsecondthreaddata(QString MI,QString WI,QString IsOk,int channel)；
+PdmFlicker()；
+on_pushButton_17_clicked()；

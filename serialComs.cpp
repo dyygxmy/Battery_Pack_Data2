@@ -1,9 +1,9 @@
 #include "serialComs.h"
+#include "qsettings.h"
 
 SerialComs::SerialComs(QObject *parent) :
     QObject(parent)
 {
-    whichindex = 0;
     bzero(&buff,sizeof(buff));
     this->moveToThread(&m_thread);
     m_thread.start();
@@ -12,31 +12,45 @@ SerialComs::SerialComs(QObject *parent) :
 void SerialComs::comInit()
 {
     seriallist.clear();
-    if(isRFID != 1)
+    if(isBarCode)
     {
         const char *dev_name;
-        dev_name = "/dev/ttymxc3";
+        dev_name = "/dev/ttymxc0";
+//                dev_name = "/dev/ttyUSB0";
         struct termios tty_attr;
         int baudrate;
         int byte_bits ;
-        baudrate = B9600;
+        baudrate = B9600;//B115200;//;
         byte_bits = CS8;
         fd_set rset;
         dev_fd = open(dev_name, O_RDWR, 0);
         if (dev_fd < 0)
         {
-            qDebug() << "serial open fail";
+            qDebug() << "vin serial open fail "+QString(dev_name);
+            return;
+        }
+        else
+        {
+            qDebug() <<"vin open serial success "+QString(dev_name);
         }
         if (fcntl(dev_fd, F_SETFL, O_NONBLOCK) < 0)
+        {
             qDebug() << "unable to set serial port";
+            return;
+        }
         memset(&tty_attr, 0, sizeof(struct termios));
         tty_attr.c_iflag = IGNPAR;
         tty_attr.c_cflag = baudrate | HUPCL | byte_bits | CREAD | CLOCAL;
         tty_attr.c_cc[VTIME] = 0;
         tty_attr.c_cc[VMIN] = 1;
         tcsetattr(dev_fd, TCSANOW, &tty_attr);
-        char buff[20];
+        QByteArray buff;//[20];
         int select_fd ;
+
+
+        vinLen = 12;
+        vinHead = "1";
+
         while(1)
         {
             FD_ZERO(&rset);
@@ -49,82 +63,77 @@ void SerialComs::comInit()
             }
             if (FD_ISSET(dev_fd, &rset))
             {
+                int  i=0;
                 int  nread = 0;
                 char data1[1];
                 while ((nread = (read(dev_fd, &data1,sizeof(data1)))) > 0)
                 {
-                    if(((data1[0] >='a') && (data1[0]  <= 'z')) ||((data1[0]  >='A') && (data1[0]  <= 'Z'))||((data1[0]  >='0')&&(data1[0] <= '9')))
+                    if(((data1[0] >='a') && (data1[0]  <= 'z')) ||((data1[0]  >='A') && (data1[0]  <= 'Z'))||((data1[0]  >='0')&&(data1[0] <= '9'))||((char)data1[0] == 0x0d)||((char)data1[0] == 0x20))
                     {
-                        strcat(buff,data1);
+                        buff.append(data1[0]);
                     }
                 }
-                if(strlen(buff) == 17)
+//                while( (!buff.isEmpty())&&(!buff.startsWith(vinHead)) )
+//                {
+//                    qDebug()<<"not Start with "<<vinHead<<buff;
+//                    buff.replace(0,1,"");
+//                }
+//                if((buff.size() >= vinLen)&&(buff[0]==vinHead[0]))
+                for(i=0;i<buff.size();i++)
                 {
-                    buff[17] = '\0';
-                    qDebug() << "tiaoma qiang";
-                    QString serialNums = QString(QLatin1String(buff));
-                    if(SaveWhat == "delete_car")
+                    if((unsigned char)buff[i] == 0x0d)
                     {
-                        emit serialCom(serialNums,false,"queue");
-                    }
-                    else if(isRFID == 2)
-                    {
-//                        if(SYSS == "ING")
-                            emit  serialCom(serialNums,false,"queue");
-//                        else
-//                        {
-//                            emit serialCom(serialNums,false,"ready");
-//                        }
-                    }
-                    else if(CsIsConnect && !ISmaintenance  && SYSS!="ING")
-                    {
-                        if(SerialGunMode)
+                        if(i == vinLen)
                         {
-                            system("echo 1 > /sys/class/leds/control_uart2/brightness");
-                        }
-
-                        isequeal = false;
-                        if(seriallist.isEmpty())
-                        {
-                            seriallist.push_back(serialNums);
-                            whichindex++;
-                        }
-                        else
-                        {
-                            QList<QString>::iterator i;
-                            for (i = seriallist.begin(); i != seriallist.end(); ++i)
+                            QString serialNums = QString(buff.mid(0,i));
+                            qDebug() << "tiaoma qiang"<< serialNums;
+                            if(GscanRegExp == "Null")
                             {
-                                if(!(QString::compare(serialNums, *i, Qt::CaseSensitive)))
+                                if(DebugMode) //test interface display serialnum
                                 {
-                                    isequeal = true;
-                                    break;
-                                }
-                            }
-                            if(!isequeal)
-                            {
-                                if(seriallist.size() == 10)
-                                {
-                                    seriallist[whichindex] = serialNums;
+                                    emit sendDebug(serialNums);
                                 }
                                 else
                                 {
-                                    seriallist.push_back(serialNums);
+                                    emit sendCmdToStep(1,serialNums,2);
                                 }
-                                whichindex++;
-                                if(whichindex == 10)
-                                    whichindex = 0;
                             }
+                            else if(GscanRegExp == serialNums.mid(0,GscanRegExp.size()))
+                            {
+                                if(DebugMode) //test interface display serialnum
+                                {
+                                    emit sendDebug(serialNums);
+                                }
+                                else
+                                {
+                                    emit sendCmdToStep(1,serialNums,2);
+                                }
+                            }
+                            else
+                            {
+                                emit sendStationFinishToMaindow("huhuhu","301");
+                            }
+//                            if(DebugMode) //test interface display serialnum
+//                            {
+//                                emit sendDebug(serialNums);
+//                            }
+//                            else
+//                            {
+//                                emit sendCmdToStep(1,serialNums,2);
+//                            }
                         }
-                        emit serialCom(serialNums,isequeal," ");
-                    }
-
-                    if(strlen(buff) == 17)
-                    {
-                        bzero(buff,sizeof(buff));
+                        buff.clear();
                         bzero(data1,sizeof(data1));
                     }
+                }
+                if(i > vinLen)
+                {
+                    buff.clear();
+                    bzero(data1,sizeof(data1));
                 }
             }
         }
     }
 }
+
+

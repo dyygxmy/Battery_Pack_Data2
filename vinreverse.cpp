@@ -30,7 +30,7 @@ void VinReverse::newConnect()
     isNexoConnect = false;
     m_pTcpSocket->abort(); //取消已有的连接
     qDebug() << "waiting for connecting 4545 port";
-    m_pTcpSocket->connectToHost(CS351Ip,4545);
+    m_pTcpSocket->connectToHost(ControllerIp_1,4545);
 }
 
 void VinReverse::connectTimer()
@@ -38,7 +38,7 @@ void VinReverse::connectTimer()
     qDebug() << "4545 connectState:";
     if(m_pTcpSocket->state() == QAbstractSocket::ConnectedState)
     {
-        qDebug() << "4545 connected";
+        qDebug() << "4545 connect success";
         connect_Timer.stop();
     }
     else if(m_pTcpSocket->state() == QAbstractSocket::ConnectingState)
@@ -48,7 +48,7 @@ void VinReverse::connectTimer()
     }
     else
     {
-        qDebug() << "m_pTcpSocket->state():" << m_pTcpSocket->state();
+        qDebug() << "4545 m_pTcpSocket->state():" << m_pTcpSocket->state();
         newConnect();
     }
 }

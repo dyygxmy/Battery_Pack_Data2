@@ -50,30 +50,33 @@ void InputEvents::mtimerarrve3()
 
                         if(t.value == 1)
                         {
-                            numcount++;
-                            if(numcount == 20)
+                            if(DebugMode)
                             {
-                                emit sendconfigwarning(false);
-                                numcount = 0;
+                                system("echo 1 > /sys/class/leds/OUTC4/brightness");
                             }
-
+                            else
+                            {
+                                numcount++;
+                                if(numcount == 20)
+                                {
+                                    numcount = 0;
+                                    emit sendconfigwarning(false);//nok all bolt
+                                }
+                            }
                         }
                         else if(t.value == 0)
                         {
-                            numcount = 0;
-                            emit sendconfigwarning(true);
+                            if(DebugMode)
+                            {
+                                system("echo 0 > /sys/class/leds/OUTC4/brightness");
+                            }
+                            else
+                            {
+                                numcount = 0;
+                                emit sendconfigwarning(true);//nok one bolt
+                            }
                         }
                         break;
-
-                    case 115:   //电池
-                        if(!battery)
-                        {
-                            if(t.value == 0)
-                                emit sendbatterysta(true);
-                            else
-                                emit sendbatterysta(false);
-                            break;
-                        }
                     case 116:
                         break;
                     default:
@@ -88,8 +91,7 @@ void InputEvents::mtimerarrve3()
                 numcount++;
                 if(numcount == 20)
                 {
-                    if(SYSS == "ING")
-                        emit sendconfigwarning(false);
+                    emit sendconfigwarning(false);//nok all bolt
                     numcount = 0;
                     keyvalue = 0;
                 }
