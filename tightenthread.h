@@ -8,31 +8,42 @@
 #include <QMutexLocker>
 #include "GlobalVarible.h"
 #include <QtNetwork>
+#include "./json/parser.h"
 #include <QTime> //10:23 179m
 class TightenThread : public QObject
 {
     Q_OBJECT
 public:
     explicit TightenThread(QObject *parent = 0);
-    
+    QString ctrlType;
+    QString ctrlIP;
+    QString testPro;
+
 signals:
     void IsTigntenReady(bool);
+    void sendEncoderToWindow(qint64,qint64,QByteArray);
     void ReconnectSendOperate();
-    void GunNotReady();
+    void disconnectTellPortB();
+    void sendStates(QString);
 public slots:
+    void receiveNewCoordinates(int);
     void tightenStart();
     void newConnect(); //连接服务器
-    void sendMessage();  //发送数据
-    void sendheart();
     void displayError(QAbstractSocket::SocketError);
     void recsocket();
-    void getfile(unsigned short type);//打开xml文件
     void receivehavedconnect(bool);
     void receivedisconnect();
-    void cs351_header_func(unsigned short mid,unsigned short size,unsigned  short type, char *buf);
-    void number_change_ascii(unsigned int  num,unsigned char count,unsigned int div, char *ascii_buf);
-    void sendReadOperate();
+    void sendReadOperate(bool,int);
+    void receiveA050ErrorChannel(bool,QString);
+    void handlENCODER();
+    QString getHeaderFunc(int,int,int);
+
+    void sendCmdMessage(int);  //发送数据
+    void sendCmdToCs351(int);
+    void portBSendPortA();
+    QString sendGroupEnable(QString);
 private:
+    void coordinatesFunc(QByteArray);//处理坐标数据
     QThread m_thread;
     QTcpSocket *tcpSocket;
     QTimer *sendheartt;
@@ -42,16 +53,43 @@ private:
     QString enableTemp;
     QString aliveTemp;
     QString resetTemp;
-    QByteArray Data_Xml_Tx;
-    int flag;  //复位
+    QString resetTemp_timewrong;
+    QString disableTemp;
+    int sendCysleID;
     int cycleId;  //循环号
-    int isreset;
-    int isSendHeart;
     int config351count;
-    bool log351In;
-    bool log351out;
-    bool isconnected;
-    bool isdisconnect;
+    bool port4700LinkFlag; //cs351 4700 port connect flag
+    bool port4700DisconnectFlag;
+    bool cs351InitFlag;
+    int  timerCount;
+    int  timerCount1;
+    bool sendEnableFlag;
+    bool enableFlag;
+    bool last_staus;
+    qint64 YENCODER;
+    qint64 AENCODER;
+    qint64 OENCODER;
+    QString IOPOSITION;
+    qint64 YENTol;
+    qint64 AENTol;
+    qint64 OENTol;
+    qint64 TOLERANEC;
+    qint64 YENCODERTemp;
+    qint64 AENCODERRemp;
+    QByteArray IOPOSITIONTemp;
+
+    QVariantList checkList;
+    QString xml_Grs;
+    QString xml_Grs_KNR;
+    QString xml_TOL;
+    QString xml_STR;
+    QString KNR_Temp;
+    QString strChannel;
+    QString funcSwitchChannel(QString);
+//    bool handleRecvStatusMess(QByteArray,QString,int);
+    void handINIMessage(int);
+    bool handleEnableFlag();
+    qint64 matchHandle(QByteArray);
 
 };
 

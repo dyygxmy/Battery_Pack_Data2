@@ -26,7 +26,7 @@
     <string notr="true">background-color: rgb(248, 248, 255);</string>
    </property>
    <property name="currentIndex">
-    <number>3</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="page">
     <widget class="QLabel" name="label">
@@ -48,9 +48,9 @@
     <widget class="QLabel" name="label_2">
      <property name="geometry">
       <rect>
-       <x>220</x>
-       <y>51</y>
-       <width>251</width>
+       <x>280</x>
+       <y>10</y>
+       <width>171</width>
        <height>41</height>
       </rect>
      </property>
@@ -58,15 +58,15 @@
       <string notr="true">font: 14pt &quot;黑体&quot;;</string>
      </property>
      <property name="text">
-      <string>BOSCH Rexroth CS351设置</string>
+      <string>Controller设置</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_3">
      <property name="geometry">
       <rect>
-       <x>221</x>
-       <y>111</y>
-       <width>31</width>
+       <x>190</x>
+       <y>57</y>
+       <width>81</width>
        <height>41</height>
       </rect>
      </property>
@@ -74,46 +74,14 @@
       <string notr="true">font: 14pt &quot;黑体&quot;;</string>
      </property>
      <property name="text">
-      <string>IP：</string>
+      <string>CH1 IP：</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_4">
+    <widget class="QLineEdit" name="lineEdit_controllerIp_ch1">
      <property name="geometry">
       <rect>
-       <x>181</x>
-       <y>169</y>
-       <width>71</width>
-       <height>41</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">font: 14pt &quot;黑体&quot;;</string>
-     </property>
-     <property name="text">
-      <string>端口 A：</string>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_5">
-     <property name="geometry">
-      <rect>
-       <x>181</x>
-       <y>227</y>
-       <width>71</width>
-       <height>41</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">font: 14pt &quot;黑体&quot;;</string>
-     </property>
-     <property name="text">
-      <string>端口 B：</string>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="lineEdit_cs351Ip">
-     <property name="geometry">
-      <rect>
-       <x>260</x>
-       <y>114</y>
+       <x>279</x>
+       <y>60</y>
        <width>181</width>
        <height>35</height>
       </rect>
@@ -128,13 +96,13 @@ border-color:rgb(51, 153, 255); </string>
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
      </property>
     </widget>
-    <widget class="QLineEdit" name="lineEdit_PortA">
+    <widget class="QLineEdit" name="lineEdit_controllerIp_ch2">
      <property name="geometry">
       <rect>
-       <x>260</x>
-       <y>173</y>
-       <width>111</width>
-       <height>34</height>
+       <x>279</x>
+       <y>110</y>
+       <width>181</width>
+       <height>35</height>
       </rect>
      </property>
      <property name="styleSheet">
@@ -147,13 +115,159 @@ border-color:rgb(51, 153, 255); </string>
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
      </property>
     </widget>
-    <widget class="QLineEdit" name="lineEdit_PortB">
+    <widget class="QLabel" name="label_7">
      <property name="geometry">
       <rect>
-       <x>260</x>
-       <y>231</y>
-       <width>111</width>
-       <height>34</height>
+       <x>190</x>
+       <y>107</y>
+       <width>81</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font: 14pt &quot;黑体&quot;;</string>
+     </property>
+     <property name="text">
+      <string>CH2 IP：</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>262</y>
+       <width>80</width>
+       <height>81</height>
+      </rect>
+     </property>
+     <property name="focusPolicy">
+      <enum>Qt::NoFocus</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">border-style: solid;
+background-color: rgb(51, 153, 255);</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="autoDefault">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_12">
+     <property name="geometry">
+      <rect>
+       <x>190</x>
+       <y>270</y>
+       <width>121</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font: 14pt &quot;黑体&quot;;</string>
+     </property>
+     <property name="text">
+      <string>批头剩余次数:</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="lineEdit_newcount">
+     <property name="geometry">
+      <rect>
+       <x>320</x>
+       <y>170</y>
+       <width>91</width>
+       <height>35</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font: 14pt &quot;黑体&quot;;
+border-width:1px; 
+border-style:solid; 
+border-color:rgb(51, 153, 255); </string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_13">
+     <property name="geometry">
+      <rect>
+       <x>190</x>
+       <y>167</y>
+       <width>121</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font: 14pt &quot;黑体&quot;;</string>
+     </property>
+     <property name="text">
+      <string>设置批头次数</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_new">
+     <property name="geometry">
+      <rect>
+       <x>430</x>
+       <y>170</y>
+       <width>51</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="focusPolicy">
+      <enum>Qt::NoFocus</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">border-image: url(:/LCD_CS351/LCD_CS351/35_all/67.bmp);
+font: 14pt &quot;黑体&quot;;
+color: rgb(248, 248, 255);</string>
+     </property>
+     <property name="text">
+      <string>更新</string>
+     </property>
+     <property name="flat">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_count">
+     <property name="geometry">
+      <rect>
+       <x>320</x>
+       <y>270</y>
+       <width>81</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font: 14pt &quot;黑体&quot;;</string>
+     </property>
+     <property name="text">
+      <string>99999</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_14">
+     <property name="geometry">
+      <rect>
+       <x>190</x>
+       <y>217</y>
+       <width>121</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font: 14pt &quot;黑体&quot;;</string>
+     </property>
+     <property name="text">
+      <string>设置报警阀值</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="lineEdit_lowCount">
+     <property name="geometry">
+      <rect>
+       <x>320</x>
+       <y>220</y>
+       <width>91</width>
+       <height>35</height>
       </rect>
      </property>
      <property name="styleSheet">
@@ -178,17 +292,57 @@ border-color:rgb(51, 153, 255); </string>
       </rect>
      </property>
      <property name="styleSheet">
-      <string notr="true">border-image: url(:/LCD_CS351/LCD_CS351/logo/RFID set.png);</string>
+      <string notr="true">border-style: solid;
+background-color: rgb(51, 153, 255);</string>
      </property>
      <property name="text">
       <string/>
      </property>
     </widget>
-    <widget class="QLabel" name="label_24">
+    <widget class="QComboBox" name="comboBox">
      <property name="geometry">
       <rect>
-       <x>190</x>
-       <y>174</y>
+       <x>270</x>
+       <y>64</y>
+       <width>211</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QComboBox {
+font: 14pt &quot;Arial&quot;;
+border-width:1px; 
+border-style:solid; 
+border-color:rgb(51, 153, 255); 
+margin-top: 0ex;
+}
+QComboBox::drop-down {
+width:30px; 
+border-width:1px; 
+border-style:solid; 
+border-color:rgb(51, 153, 255); 
+}
+QComboBox::down-arrow {
+image: url(:/LCD_CS351/LCD_CS351/logo/arrow.png);
+}
+QComboBox  QAbstractItemView{
+height:80px;
+border: 1px solid rgb(51, 153, 255); 
+selection-background-color: rgb(51, 153, 255); 
+}
+QScrollBar:vertical{
+width:30px;
+}
+QComboBox QAbstractItemView::item{
+height:20px;
+}</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_8">
+     <property name="geometry">
+      <rect>
+       <x>170</x>
+       <y>123</y>
        <width>81</width>
        <height>41</height>
       </rect>
@@ -197,14 +351,14 @@ border-color:rgb(51, 153, 255); </string>
       <string notr="true">font: 14pt &quot;黑体&quot;;</string>
      </property>
      <property name="text">
-      <string>端口号 ：</string>
+      <string>CH2：</string>
      </property>
     </widget>
-    <widget class="QLabel" name="label_25">
+    <widget class="QLabel" name="label_4">
      <property name="geometry">
       <rect>
-       <x>292</x>
-       <y>56</y>
+       <x>170</x>
+       <y>60</y>
        <width>81</width>
        <height>41</height>
       </rect>
@@ -213,61 +367,139 @@ border-color:rgb(51, 153, 255); </string>
       <string notr="true">font: 14pt &quot;黑体&quot;;</string>
      </property>
      <property name="text">
-      <string>RFID设置</string>
+      <string>CH1：</string>
      </property>
     </widget>
-    <widget class="QLineEdit" name="lineEdit_RfidPort">
+    <widget class="QComboBox" name="comboBox_2">
      <property name="geometry">
       <rect>
-       <x>279</x>
-       <y>178</y>
+       <x>270</x>
+       <y>130</y>
+       <width>211</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QComboBox {
+font: 14pt &quot;Arial&quot;;
+border-width:1px; 
+border-style:solid; 
+border-color:rgb(51, 153, 255); 
+margin-top: 0ex;
+}
+QComboBox::drop-down {
+width:30px; 
+border-width:1px; 
+border-style:solid; 
+border-color:rgb(51, 153, 255); 
+}
+QComboBox::down-arrow {
+image: url(:/LCD_CS351/LCD_CS351/logo/arrow.png);
+}
+QComboBox QAbstractItemView{
+height:50px;
+border: 1px solid rgb(51, 153, 255); 
+selection-background-color: rgb(51, 153, 255); 
+}
+QScrollBar:vertical{
+width:30px;
+}</string>
+     </property>
+    </widget>
+    <widget class="QComboBox" name="comboBox_3">
+     <property name="geometry">
+      <rect>
+       <x>270</x>
+       <y>200</y>
+       <width>211</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QComboBox {
+font: 14pt &quot;Arial&quot;;
+border-width:1px; 
+border-style:solid; 
+border-color:rgb(51, 153, 255); 
+margin-top: 0ex;
+}
+QComboBox::drop-down {
+width:30px; 
+border-width:1px; 
+border-style:solid; 
+border-color:rgb(51, 153, 255); 
+}
+QComboBox::down-arrow {
+image: url(:/LCD_CS351/LCD_CS351/logo/arrow.png);
+}
+QComboBox QAbstractItemView{
+height:50px;
+border: 1px solid rgb(51, 153, 255); 
+selection-background-color: rgb(51, 153, 255); 
+}
+QScrollBar:vertical{
+width:30px;
+}</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_11">
+     <property name="geometry">
+      <rect>
+       <x>170</x>
+       <y>193</y>
+       <width>81</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font: 14pt &quot;黑体&quot;;</string>
+     </property>
+     <property name="text">
+      <string>工厂：</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_2">
+     <property name="geometry">
+      <rect>
+       <x>170</x>
+       <y>270</y>
        <width>111</width>
-       <height>34</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">font: 14pt &quot;黑体&quot;;
-border-width:1px; 
-border-style:solid; 
-border-color:rgb(51, 153, 255); </string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="lineEdit_RfidIp">
-     <property name="geometry">
-      <rect>
-       <x>279</x>
-       <y>119</y>
-       <width>181</width>
-       <height>35</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">font: 14pt &quot;黑体&quot;;
-border-width:1px; 
-border-style:solid; 
-border-color:rgb(51, 153, 255); </string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_26">
-     <property name="geometry">
-      <rect>
-       <x>240</x>
-       <y>116</y>
-       <width>31</width>
        <height>41</height>
+      </rect>
+     </property>
+     <property name="focusPolicy">
+      <enum>Qt::NoFocus</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font: 14pt &quot;黑体&quot;;
+color: rgb(248, 248, 255);
+border-style: solid;
+background-color: rgb(51, 153, 255);</string>
+     </property>
+     <property name="text">
+      <string>清空数据库</string>
+     </property>
+     <property name="autoDefault">
+      <bool>true</bool>
+     </property>
+     <property name="flat">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_5">
+     <property name="geometry">
+      <rect>
+       <x>300</x>
+       <y>275</y>
+       <width>121</width>
+       <height>31</height>
       </rect>
      </property>
      <property name="styleSheet">
       <string notr="true">font: 14pt &quot;黑体&quot;;</string>
      </property>
      <property name="text">
-      <string>IP：</string>
+      <string/>
      </property>
     </widget>
    </widget>
@@ -291,9 +523,9 @@ border-color:rgb(51, 153, 255); </string>
     <widget class="QLabel" name="label_21">
      <property name="geometry">
       <rect>
-       <x>191</x>
+       <x>157</x>
        <y>166</y>
-       <width>111</width>
+       <width>141</width>
        <height>41</height>
       </rect>
      </property>
@@ -302,6 +534,9 @@ border-color:rgb(51, 153, 255); </string>
      </property>
      <property name="text">
       <string>曲线服务器：</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
      </property>
     </widget>
     <widget class="QLineEdit" name="lineEdit_DataServerIp">
@@ -326,9 +561,9 @@ border-color:rgb(51, 153, 255); </string>
     <widget class="QLabel" name="label_22">
      <property name="geometry">
       <rect>
-       <x>191</x>
+       <x>157</x>
        <y>108</y>
-       <width>106</width>
+       <width>141</width>
        <height>41</height>
       </rect>
      </property>
@@ -338,12 +573,15 @@ border-color:rgb(51, 153, 255); </string>
      <property name="text">
       <string>数据服务器：</string>
      </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
     </widget>
     <widget class="QLabel" name="label_23">
      <property name="geometry">
       <rect>
-       <x>283</x>
-       <y>48</y>
+       <x>280</x>
+       <y>30</y>
        <width>101</width>
        <height>41</height>
       </rect>
@@ -396,9 +634,9 @@ border-color:rgb(51, 153, 255); </string>
     <widget class="QLabel" name="label_29">
      <property name="geometry">
       <rect>
-       <x>171</x>
+       <x>157</x>
        <y>226</y>
-       <width>123</width>
+       <width>141</width>
        <height>41</height>
       </rect>
      </property>
@@ -407,6 +645,47 @@ border-color:rgb(51, 153, 255); </string>
      </property>
      <property name="text">
       <string>Andon服务器：</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_31">
+     <property name="geometry">
+      <rect>
+       <x>157</x>
+       <y>290</y>
+       <width>141</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font: 14pt &quot;黑体&quot;;</string>
+     </property>
+     <property name="text">
+      <string>端口：</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="lineEdit_port">
+     <property name="geometry">
+      <rect>
+       <x>301</x>
+       <y>294</y>
+       <width>161</width>
+       <height>34</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font: 14pt &quot;黑体&quot;;
+border-width:1px; 
+border-style:solid; 
+border-color:rgb(51, 153, 255); </string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
      </property>
     </widget>
    </widget>
@@ -421,7 +700,8 @@ border-color:rgb(51, 153, 255); </string>
       </rect>
      </property>
      <property name="styleSheet">
-      <string notr="true">border-image: url(:/LCD_CS351/LCD_CS351/logo/barcode_set.png);</string>
+      <string notr="true">border-style: solid;
+background-color: rgb(51,153,255);</string>
      </property>
      <property name="text">
       <string/>
@@ -430,8 +710,8 @@ border-color:rgb(51, 153, 255); </string>
     <widget class="QLineEdit" name="lineEdit_BarcodeGun">
      <property name="geometry">
       <rect>
-       <x>271</x>
-       <y>127</y>
+       <x>310</x>
+       <y>196</y>
        <width>161</width>
        <height>35</height>
       </rect>
@@ -449,8 +729,8 @@ border-color:rgb(51, 153, 255); </string>
     <widget class="QLabel" name="label_27">
      <property name="geometry">
       <rect>
-       <x>260</x>
-       <y>60</y>
+       <x>280</x>
+       <y>30</y>
        <width>141</width>
        <height>41</height>
       </rect>
@@ -459,31 +739,40 @@ border-color:rgb(51, 153, 255); </string>
       <string notr="true">font: 14pt &quot;黑体&quot;;</string>
      </property>
      <property name="text">
-      <string>   条码枪设置</string>
+      <string>条码来源设置</string>
      </property>
     </widget>
     <widget class="QLabel" name="label_28">
      <property name="geometry">
       <rect>
-       <x>192</x>
-       <y>124</y>
-       <width>71</width>
+       <x>149</x>
+       <y>193</y>
+       <width>151</width>
        <height>41</height>
       </rect>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
      </property>
      <property name="styleSheet">
       <string notr="true">font: 14pt &quot;黑体&quot;;</string>
      </property>
      <property name="text">
-      <string>波特率：</string>
+      <string>条码枪波特率：</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="buddy">
+      <cstring>lineEdit_BarcodeGun</cstring>
      </property>
     </widget>
     <widget class="QWidget" name="layoutWidget">
      <property name="geometry">
       <rect>
-       <x>200</x>
-       <y>200</y>
-       <width>241</width>
+       <x>310</x>
+       <y>253</y>
+       <width>181</width>
        <height>31</height>
       </rect>
      </property>
@@ -541,6 +830,133 @@ image: url(:/LCD_CS351/LCD_CS351/logo/Radio_check.png);
        </widget>
       </item>
      </layout>
+    </widget>
+    <widget class="QLineEdit" name="lineEdit_RfidIp">
+     <property name="geometry">
+      <rect>
+       <x>310</x>
+       <y>90</y>
+       <width>181</width>
+       <height>35</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font: 14pt &quot;黑体&quot;;
+border-width:1px; 
+border-style:solid; 
+border-color:rgb(51, 153, 255); </string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="lineEdit_RfidPort">
+     <property name="geometry">
+      <rect>
+       <x>310</x>
+       <y>143</y>
+       <width>111</width>
+       <height>35</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font: 14pt &quot;黑体&quot;;
+border-width:1px; 
+border-style:solid; 
+border-color:rgb(51, 153, 255); </string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_24">
+     <property name="geometry">
+      <rect>
+       <x>180</x>
+       <y>140</y>
+       <width>120</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font: 14pt &quot;黑体&quot;;</string>
+     </property>
+     <property name="text">
+      <string>RFID端口号：</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="buddy">
+      <cstring>lineEdit_RfidPort</cstring>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_26">
+     <property name="geometry">
+      <rect>
+       <x>180</x>
+       <y>87</y>
+       <width>120</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font: 14pt &quot;黑体&quot;;</string>
+     </property>
+     <property name="text">
+      <string>RFID IP：</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+     <property name="buddy">
+      <cstring>lineEdit_RfidIp</cstring>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_30">
+     <property name="geometry">
+      <rect>
+       <x>180</x>
+       <y>246</y>
+       <width>120</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font: 14pt &quot;黑体&quot;;</string>
+     </property>
+     <property name="text">
+      <string>条码枪模式：</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_142">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>100</y>
+       <width>151</width>
+       <height>121</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">border-image: url(:/LCD_CS351/LCD_CS351/logo/Barcode.png);
+background:transparent;</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
     </widget>
    </widget>
   </widget>

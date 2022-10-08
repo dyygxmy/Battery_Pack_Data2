@@ -15,7 +15,11 @@
 #include "vinreverse.h"
 #include <QTextCodec>
 //#include "datamodel.h"
-#include "deletecarsql.h"
+//#include <QSharedMemory>
+//#include <QBuffer>
+
+#include "./json/parser.h"
+#include "inoutput.h"
 
 namespace Ui {
 class MainWindow;
@@ -28,95 +32,183 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-    void closeEvent(QCloseEvent *event);
+    QString vari1;
+    QString vari2;
+    QString stationName;
+    QString stationWork;
+    int vinAttributeBit;
+    int Tacktime;
+    bool isGostRun;
+
 public:
     void searchVinNum();                          //匹配vin
     void searchG9Num();                           //匹配G9
-    void judge();
     int VIN_VerifyFunc(char *buf);                //vin码校验
     bool pinCodeVerify(QByteArray ,int);          //pin码校验
     bool pinCodeRightVerify(QString ,int);
     void VinPinCodeView(bool flags,int whichcars);//vin or pin匹配函数
-    void Start(int interval, int maxValue);
-    void Stop();
-    void red_led(int);
-    void green_led(int);
-    void yellow_led(int);
-    void white_led(int);
-    void nok_led(int);
+    void progressBarStart(int interval, int maxValue);
+    void progressBarStop();
     void mysqlopen();
     void mysqlclose();
-    void sendWebValue(int states,QString namepdm);
+    void showhome();
+
+    void newconfigInit(Newconfiginfo *newconfiginfo);
+    void searchJob(QString);
 
 public slots:
-
-    void fromsecondthreaddata(QString,QString,QString);
+    void fromsecondthreaddataAirTest(QString,QString,QString,int);
+    void fromsecondthreaddataSB356(QString,QString,QString,int,int);
+    void fromsecondthreaddata(QString,QString,QString,int,int);
     void getSerialNum(QString,bool,QString);
     void connectMysql();
-    void init();
+    void mainWindowInit();
+    void initBack();
     void wifishow(bool);
     void datashow(bool);
     void batteryshow1(QString);
-    void batteryshow2(bool);
-    void time_warning(bool);
-    void ReceGunNotReady();
-    void battery15();
+    void closeSave();
+    void VinPinCodeViewSB356(QString,int,int);
+    void EKSStausChange(int);
+    void onShowState(QString);
+    void onGetSuspend();
+    void onLEDFlash_r();//红闪
+    void onLEDFlash_g();//绿闪
+    void onLEDFlash_y();//黄闪
+    void onLEDFlashAllOFF(int ,QString,bool);
+    void revM020FromStep();
+    void displayDailyProduction();
+    void showWarningSpearhead();
 
-public :
+//    void tighteningResultDisplay();
 signals:
-    void clo();
-    void clo1();
-    void sendoperate();
-    void sendfromsecondthread(QString ,QString,QString);
+    void sendNewCoordinates(int);//更新坐标
+    void closeThread();
+//    void sendoperate();
+    void sendOperate1(bool,int);
+    void sendOperate2(bool,int);
+    void sendOperate3(bool,int);
+    void sendOperate4(bool,int);
+    void sendToPlcReadyClicked();
+    void sendOneGroupNok(QString,QString *,QString *);
+    void sendfromsecondthread(QString,QString,QString,int);
     void sendConfigureAll(int isoption,int whicharis,int whichpro,int whichoptionis);
+    void sendNokAll(int);
     void sendnexo(QString);
-    void sendDeleteCar_VIN(QString);
-    void SQL_deleteCar(QString,QString);
+
+    void sendInfo(bool,bool,int,int);
+	void killProcess();
+
+    void sendCmdToStep(int ,QString,int);
+    void sendM020ToPost(QString);
+
+    void send_TT_IO_value(int,int,int);
+    void send_IO_Reset();
+    void sendChangeEmergencyStop();
+//    void requestJob(QString);
+
+    void sendToInter(QString);
+    void sendMoveButtonToStep();
+    void sendCS351StatusToStep(bool);
+    void sendStepResetEmergencyStop(bool);
+
+    void sendErrorGo(int);
+    void sendErrorContinue();
+    void sendEKSStatusEvent(int);
+    void sendRFIDRead();
+    void sendDrectGo();
+    void sendRollLable(QString);
+    void sendpackMesToSql(QString,QString,QDateTime,QDateTime,QString,double);
+    void sendPackMesToInterface(QString,QString,QString,QString,double,int);
+    void sendTrayNUMTest(QString,QByteArray);
+    void sendCodeTest(QByteArray);
+
+#if DYTEST3
+    void saveEKSStatus();
+#endif
 
 public slots:
     void TightenIsReady(bool);
+    void recEncoderFromTight(qint64,qint64);
+    void PLCIsReady(bool);
     void receiveOperate();
     void timerDelay();
-    //void on_pushButton_11_clicked();
-    void on_pushButton_12_clicked();
-    void on_pushButton_1_clicked();
-    void on_pushButton_2_clicked();
-    void on_pushButton_3_clicked();
-    void on_pushButton_4_clicked();
-    void on_pushButton_5_clicked();
-    void on_pushButton_6_clicked();
-    void on_pushButton_7_clicked();
-    void on_pushButton_8_clicked();
-    void on_pushButton_9_clicked();
-    void on_pushButton_delete_clicked();
-    void on_pushButton_13_clicked();
-    void on_pushButton_14_clicked();
-    void on_pushButton_15_clicked();
-    void on_pushButton_0_clicked();
+    void revStartNewPack();
+    void revEndNewPack(QString,QString,QString,QString,QString,QDateTime,QDateTime,QDateTime);
+    void revPackNumberSum();
+    void revm020FromInterface(QString,QString,QString,QString);
     void ShowTime();
     void UpdateSlot();
+    void packTimeStart();
     void PdmFlicker();//pdm flicker
-    void on_pushButton_18_clicked();
+//    void on_pushButton_18_clicked();
     void on_pushButton_reset_clicked();
     void receiveCloseInput(bool);
     void configwarning(bool);
     void taotong_main(int);
-    void shutdown(int);
-    void clocked();
+//    void shutdown(int);
     void setRfidState(bool);
-    void delete_car(bool);
+    void showEmergencyStop(bool);
+    void resetEmergencyStop(bool);
+    void directShowHome();
+
+
 
 private slots:
-    void on_pushButton_17_clicked();
     void signal_mysqlerror_do();
-    void on_pushButton_shutdown_clicked();
-    void ReceFisSerial(QString);
-    void FisTimerDo(); //当前条码打完 延时
-    void UpdateSqlFlag();
-    void receiveGetCar();
+//    void on_pushButton_shutdown_clicked();
+
     void resetUiDo();//RFID模式 ING 状态确认
+    void closeTishu();
+
+    void send_Info();
+
+
+    void on_pushButton_18_clicked();
+
+    void gunPower(bool);   //条码枪通电断电
+
+    void displayScanBarcode(QString,QString);
+
 
     void on_pushButton_16_clicked();
+
+
+    void on_pushButton_errorGo_clicked();
+
+    void on_pushButton_errorContinue_clicked();
+
+    void on_pushButton_errorContinue_2_clicked();
+
+    void on_pushButton_deep1_clicked();
+
+    void on_pushButton_deep2_clicked();
+
+    void on_pushButton_deepUp_clicked();
+
+    void on_pushButton_deepDown_clicked();
+
+    void on_pushButton_readRFID_clicked();
+
+    void on_pushButton_Go_clicked();
+
+    void on_pushButton_M020SendPost_clicked();
+
+    void on_pushButton_clicked();
+
+    void on_but_bd2_clicked();
+
+    void on_but_bd3_clicked();
+
+    void on_but_bd4_1_clicked();
+
+    void on_but_bd4_2_clicked();
+
+    void on_but_bd4_3_clicked();
+
+    void on_but_bd4_4_clicked();
+
+    void on_but_ac1_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -131,11 +223,10 @@ private:
     int person;
     int optionOrNot;  //是否选配
     int whichar;  //匹配出来的是哪个车型
-    int enableLsnumber;
-    int whichpronumis;//当前程序号
     int whichoption;
     QSqlDatabase db;
     QSqlQuery query;
+    QSqlQuery query1;
     QSqlRecord record;
     QSqlField field;
     int  equeloptionbnum;
@@ -149,31 +240,79 @@ private:
     int m_MaxValue;             //最大值
     QTimer m_Timer;
     QTimer timerpdm;
+    QTimer LEDTime;
+    QTimer FlashTime_r;//红闪
+    QTimer FlashTime_g;//绿闪
+    QTimer FlashTime_y;//黄闪
+    QTimer packTime;
+    int packCount;
+    int packNumber;//记录当前小车合格数（计入产量）
     //QTimer timerdelay;
-    QTimer shutdown_timer;
-    QTimer timer_showdown;
+//    QTimer timer_showdown;
     QTimer FisTimer;
-    int numpdm;
+    QTimer timer_Info;
     QPushButton *butt[50];
     QLabel *label1[50];
     QLabel *label2[50];
+    int huCh1,huCh2,huCh3,OKCount,recCount;
+    bool isTestOverFlag;
+
     int tempnumdpm; //螺丝个数
     bool pdmflicker; //闪烁状态
     int whichpdmnumnow; //当前第几个闪烁
-    int Tacktime;
     int ScrewWhichExit;
     int battry_num;
+    int bolt_index;//一组螺栓的最后一个
+    QTimer queue_timer;
+    bool controlMode;   //false 自动  true 手动
 
+    QString VINhead;
+
+
+    int PDMBoltNum;
+    int currentBoltSum;
+    int currentBoltNum;
+    int currentFirstBolt;
+
+    int groupAllBoltNumCh;
+    int systemStatus;
+    int preSystemStatus;
+
+    QString vinAttributeCode;
+    int linkCount;
+    bool isRFIDConnected;
+	int pdmflickerNum;
+    bool nokBoltFlag;
+    bool ttChangeFlag;
+    bool isFirst;   //是否第一次连上
+//    QSharedMemory sharedMemory;
+
+    bool isSaveShow;
+    bool enTaotongFlag;
+    bool enBarcodeFlag;
+    bool enIOCtlFlag;
+
+    int  taotong_Value;
+    int  IO_value;
+    bool barcode_Value;
+    int  taotongEnValue;
+
+    int airTestStatus;
+    int airButtonNum;
+    QString packSN;
+    bool isEmergencyStop;
+    bool LEDIsON_r;
+    bool LEDIsON_g;
+    bool LEDIsON_y;
+    int testAdd;
 
 public:
     Newconfiginfo * newconfiginfo;
     VinReverse * vinreverse;
-    DeleteCarSQL * deletecarsql;
     QGraphicsOpacityEffect *e3;
     Save * save;
+    InOutput *In_Output;
     bool ConfigOneOrAll;
-
-
 
 };
 

@@ -17,6 +17,9 @@
 #include <QTableWidget>
 #include <QHeaderView>
 #include <QList>
+#include "paintarea.h"
+#include "inoutput.h"
+
 //#include <QSqlQuery>
 
 namespace Ui {
@@ -45,7 +48,10 @@ public:
     void wifi_connect();
     void backShow(); //取消之后的效果
     void pagechange();//历史查询翻页
+    void pagechange1();
     void connect_localMySQL();
+    void connect_localMySQLPack();
+    void mysqlopen();
     void historyclear();
     void savePDM();
     void clearCache();
@@ -55,31 +61,40 @@ public:
     void show_bound();
     void bound_init();
     void bound_update();
+    void history();
+    void PDMEdit();
+    void configList();
+    void systemConfigure();
+    void restartShow(bool);
+    void queryResult(QString);
+    QString vari2_XL;
 signals:
     void closeconfig();
     void sendGetTime();
     void xmlcreate();
+    void sendTrayCntinue(bool);
     void column_update(QString);
+    void sendTruncateResult(bool);
+    void sendTimeToSql(QString,QString);
 
 public slots:
     void receivetime(QString);
     void receiveoptioninfo(QString,QString,bool);
     void on_pushButton_clicked();
     void receiveSaveState(bool);
+    void revResultFromSql(int);
     void on_listWidget_currentRowChanged(int currentRow);
     void receivecancelpdm();
     void receivebaseinfocancel();
-    void receiveBaseinfo(QString,QString,QString);
+    void receiveBaseinfo(QString,QString,QString,QString);
     void receiveBaseinfoSave(bool);
-    void pdmSelect();
+    void pdmSelect(QListWidgetItem*);
     void pdminit();
     void receiveMasterSlaveState(bool);
     void receiveDebug(QString);
-
+    void onShowPushButon();//显示当前模组绑定bypass图标
 
     void on_pushButton_59_clicked();
-
-    void on_pushButton_60_clicked();
 
     void on_pushButton_63_clicked();
 
@@ -313,10 +328,6 @@ public slots:
     void on_pushButton_xuannumber_minus_clicked();
 
 
-    void on_pushButton_67_clicked();
-
-    void on_pushButton_4_clicked();
-
     void on_pushButton_36_clicked();
 
     void on_pushButton_21_clicked();
@@ -329,9 +340,9 @@ public slots:
 
     void on_pushButton_37_clicked();
 
-    void on_pushButton_38_clicked();
-
     void receiveBound(bool);
+
+    void mysqlTruncate();
 
 private slots:
     void on_pushButton_49_clicked();
@@ -345,8 +356,6 @@ private slots:
     void on_Line_radioButton_1_clicked();
 
     void on_Line_radioButton_2_clicked();
-
-    void on_pushButton_51_clicked();
 
     void on_pushButton_104_clicked();
 
@@ -372,12 +381,69 @@ private slots:
 
     void on_pushButton_56_clicked();
 
-    void on_pushButton_queue_clicked();
+    void on_Led_red_clicked();
+
+    void on_Led_green_clicked();
+
+    void on_Led_yellow_clicked();
+
+    void on_Led_white_clicked();
+
+
+    void on_IO_Reset_clicked();
+
+    void on_Led_nok_clicked();
+	
+
+    void on_pushButton_channel_add_clicked();
+
+    void on_pushButton_channel_minus_clicked();
+
+    void on_pushButton_22_clicked();
+
+
+    void on_pushButton_channel_add_2_clicked();
+
+    void on_pushButton_channel_minus_2_clicked();
+
+    void on_pushButton_taotong_add_2_clicked();
+
+    void on_pushButton_taotong_minus_2_clicked();
+
+    void on_pushButton_pronum_add_history_clicked();
+
+    void on_pushButton_pronum_minus_history_clicked();
+
+    void on_pushButton_down_clicked();
+
+    void on_pushButton_up_clicked();
+
+    void on_pushButton_threeDays_clicked();
+
+    void on_pushButton_oneWeek_clicked();
+
+    void on_pushButton_oneMonth_clicked();
+
+    void on_tabWidget_currentChanged(int index);
+
+
+    void on_pushButton_taryContinue_clicked();
+
+    void on_pushButton_first_2_clicked();
+
+    void on_pushButton_last_2_clicked();
+
+    void on_pushButton_previous_2_clicked();
+
+    void on_pushButton_next_2_clicked();
 
 private:
     Ui::Newconfiginfo *ui;
+    InOutput *IOput;
     // Ui::OptionDialog * uioption;
-    int isrfid;
+    bool isbarcode;
+    bool isrfid;
+    bool isqueue;
     int line_ID;
     int pagenum;
     int whichcar; //哪个车型被选中
@@ -417,6 +483,8 @@ private:
     QString lsnumersxuanlist[20][20];//数量
     QString luoxuanlist[20][20];//暂存螺栓编号
     QString proxuanlist[20][20];//程序号
+    QString channelxuanlist[20][20];
+    QString taotongxuanlist[20][20];
 
     QString bxuannamelist2[20][20];
     QString bxuancodelist2[20][20];
@@ -425,21 +493,32 @@ private:
     QString lsnumersxuanlist2[20][20];//数量
     QString luoxuanlist2[20][20];//暂存螺栓编号
     QString proxuanlist2[20][20];
+    QString channelxuanlist2[20][20];
+    QString taotongxuanlist2[20][20];
+    QString PDMxuan_Name[20];
+    QString PDMxuan_Name2[20];
     QPushButton  *buttonbox[5];
 
     QString carStyle;
     QString G9tmp;
     QString Vintmp;
+//    bool Out[4];
+    QString PDM_Name;
+    QString PDM_Name2;
     QString luo[20];//暂存螺栓编号
     QString pro[20];//程序号
     QString lsnumers[20];//数量
+    bool ch[20][5];   //channel
     QString luo2[20];//暂存螺栓编号
     QString pro2[20];//程序号
     QString lsnumers2[20];//数量
+    bool ch2[20][5];   //channel
     QString taotong[20];
     QString taotong2[20];
-    QString pdmxuanlist[20];
-    QString pdmxuanlist2[20];
+    QString channel[20];
+    QString channel2[20];
+//    QString pdmxuanlist[20];
+//    QString pdmxuanlist2[20];
     QString pdmxuan;
 
     int isFull;
@@ -457,7 +536,8 @@ private:
     int minute;
     int second;
 
-    QString cs351Ip;
+    QString controllerIp_01;
+    QString controllerIp_02;
     QString PortA;
     QString PortB;
     QString RfidIp;
@@ -465,6 +545,7 @@ private:
     QString DataServerIp;
     QString CurveServerIp;
     QString AndonServerIp;
+    QString ServerPort;
     QString BarcodeGun;
     bool isbaseinfochange;
     bool isadvancedchange;
@@ -477,6 +558,7 @@ private:
     QString affall;
     QString aff;
     QSqlQueryModel *model;
+    QSqlQueryModel *model1;
     QString MysqlMin;
     QSqlDatabase db;
     QSqlQuery *query;
@@ -501,6 +583,12 @@ private:
     QStringList header_vertical;
     QTableWidgetItem *tableWidgetItem[10][5];
     bool bound_enabled_temp;
+    bool restart_enabled_temp;
+
+    PaintArea *area;
+    QSqlQuery query_number;
+    QSqlQuery query_datas;
+    QSqlQuery query_bound;
 };
 
 #endif // NEWCONFIGINFO_H

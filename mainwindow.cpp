@@ -1,8 +1,8 @@
-﻿#include "mainwindow.h"
+#include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include <QDateTime>
 #include <QTimer>
-
+#include "RollSubtitleLable.h"
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -11,113 +11,250 @@ MainWindow::MainWindow(QWidget *parent) :
     this->setWindowFlags(Qt::FramelessWindowHint);//去掉标题栏
     this->setGeometry(QRect(0, 0, 1366, 768));
 
-    //    QTextCodec *codec = QTextCodec::codecForName("UTF-8");
-    //    QTextCodec::setCodecForTr(codec);
-    //    QTextCodec::setCodecForLocale(QTextCodec::codecForLocale());
-    //    QTextCodec::setCodecForCStrings(QTextCodec::codecForLocale());
-    //this->setCursor(Qt::BlankCursor); //去掉光标
+#if DYTEST1^1
+       ui->lineEdit->hide();
+       ui->pushButton->hide();
+       ui->but_ac1->hide();
+       ui->but_bd2->hide();
+       ui->but_bd3->hide();
+       ui->but_bd4_1->hide();
+       ui->but_bd4_2->hide();
+       ui->but_bd4_3->hide();
+       ui->but_bd4_4->hide();
+#endif
 
-    init();
+#if DYTEST3
+       ui->pushButton->show();
+       ui->but_bd2->show();
+#endif
+
+
+    //    sharedMemory.setKey("QSharedMemoryIDCode");
+
+    ui->stackedWidget_2->setCurrentIndex(0);
+    ui->stackedWidget_6->setCurrentIndex(0);
+
+    controlMode = false;
+    workmode = false;
+
+    //    mainWindowInit();
+    showhome();
     this->setFixedSize(1366,768);
     //    this->setWindowTitle("B.I.W @Data2.1.0");
     connectMysql();
     ui->stackedWidget->setCurrentIndex(0);
     optionOrNot = 0;
     whichar = 0;
-    whichpronumis = 1;
     equeloptionbnum= 0;
     equeloptionknum= 0;
     pdmnowromisOk = true;
-    numpdm = 0;
-    tempnumdpm = 0;
     pdmflicker = true;
-    whichpdmnumnow = 0;
     battry_num= 0;
+    huCh1 = 0;
+    huCh2 = 0;
+    huCh3 = 0;
+    OKCount = 0;
+    recCount = 0;
+    packCount = 0;
+    packNumber = 0;//记录当前小车合格数（计入产量）
+    isTestOverFlag = false;
+    isGostRun = false;
     ui->label_black->hide();
     ui->pushButton_reset->hide();
     ui->pushButton_17->hide();
-    QTimer *timer=new QTimer(this);
-    connect(timer,SIGNAL(timeout()),this,SLOT(ShowTime()));
-    if(SerialGunMode)
-    {
-        system("echo 0 > /sys/class/leds/control_uart2/brightness &");
-    }
-    timer->start(1000);
+    ui->pushButton_errorGo->hide();
+    ui->pushButton_errorContinue->hide();
+    ui->pushButton_errorContinue_2->hide();
+    ui->pushButton_deep1->hide();
+    ui->pushButton_readRFID->hide();
+    ui->pushButton_deep2->hide();
+    ui->pushButton_deepUp->hide();
+    ui->pushButton_deepDown->hide();
+    ui->pushButton_Go->hide();
+    ui->label_6->hide();
+    ui->label_13->hide();
+    ui->label_14->hide();
+    ui->label_15->hide();
+    ui->label_AEN->hide();
+    ui->label_YEN->hide();
+    ui->label_tishu->hide();
+    ui->label_m020Pack1Sn->hide();
+    ui->label_m020Pqck2SN->hide();
+    ui->label_m020Result->hide();
+    ui->lineEdit_M020LineEdit->hide();
+    ui->pushButton_M020SendPost->hide();
+    testAdd = 10;
+
+    gunPower(true);
+
     ScrewWhichExit = 0;
     ui->progressBar->setValue(0);
     // ui->label_9->hide();
     // ui->label_ss2->hide();
     ui->label_wifi->hide();
-    if(!battery)
-    {
-        //        ui->label_battery->hide();
-        ui->label_battery->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/battery2.png);background:transparent;");
-    }
+    connect(this,SIGNAL(sendRollLable(QString)),ui->label_showState,SLOT(getText(QString)));
     m_CurrentValue = m_MaxValue = m_UpdateInterval = 0;
     connect(&m_Timer, SIGNAL(timeout()), this, SLOT(UpdateSlot()));
     connect(&timerpdm, SIGNAL(timeout()), this, SLOT(PdmFlicker()));
-    connect(&shutdown_timer,SIGNAL(timeout()),this,SLOT(clocked()));
-    connect(&timer_showdown,SIGNAL(timeout()),this,SLOT(battery15()));
-    connect(&FisTimer,SIGNAL(timeout()),this,SLOT(FisTimerDo()));
-    yellow_led(1);
-    red_led(0);
-    green_led(0);
-    white_led(0);
+    connect(&packTime, SIGNAL(timeout()), this, SLOT(packTimeStart()));
 
-    newconfiginfo = new Newconfiginfo;
-    connect(newconfiginfo,SIGNAL(closeconfig()),this,SLOT(init()));
-    vinreverse = new VinReverse;
-    QTimer::singleShot(0,vinreverse,SLOT(newconnects()));
-    connect(this,SIGNAL(sendnexo(QString)),vinreverse,SLOT(receiveVin(QString)));
-    newconfiginfo->pdminit();
+    connect(&timer_Info,SIGNAL(timeout()),this,SLOT(send_Info()));
+    timer_Info.start(1000);
+
+    In_Output = new InOutput;
+    In_Output->writeIOOutput("all_led",false);
+    //In_Output->writeIOOutput("y_led",true);
+    connect(&FlashTime_r,SIGNAL(timeout()),this,SLOT(onLEDFlash_r()));
+    connect(&FlashTime_g,SIGNAL(timeout()),this,SLOT(onLEDFlash_g()));
+    connect(&FlashTime_y,SIGNAL(timeout()),this,SLOT(onLEDFlash_y()));
+    //FlashTime_y.start(500);//开机黄闪
+    LEDIsON_r = false;
+    LEDIsON_g = false;
+    LEDIsON_y = false;
+    vinAttributeCode = "";
+    VINhead="LSV";
+    vinAttributeBit = 3;
+    ui->stackedWidget_4->setCurrentIndex(0);
+    PDMBoltNum = 0;
+    currentBoltSum = 0;
+    currentFirstBolt = 0;
+    pdmflickerNum=0;
+    nokBoltFlag = false;
+    ttChangeFlag = false;
+
+    groupAllBoltNumCh=0;
+    tempnumdpm = 0;
+    whichpdmnumnow = 0;
+    PDMCurrentState ="OK";
+
+    systemStatus = 1;
+    preSystemStatus = -1;
+
+    linkCount = 0;
+
+    isRFIDConnected = false;
+    isFirst = true;
+    isSaveShow = false;
+    enTaotongFlag = false;
+    enBarcodeFlag = false;
+    enIOCtlFlag = false;
+    taotong_Value = 0;
+    IO_value = 0;
+    barcode_Value = false;
+    taotongEnValue = 0;
+    airTestStatus = 0;
+    airButtonNum = 0;
+    packSN = "";
+    isEmergencyStop = false;
+    if(ControlType_1 == "CS351")
+    {
+        ui->label_tighten->setText(ControlType_1);
+        vinreverse = new VinReverse;
+        QTimer::singleShot(0,vinreverse,SLOT(newconnects()));
+        connect(this,SIGNAL(sendnexo(QString)),vinreverse,SLOT(receiveVin(QString)));
+    }
+    else
+    {
+        ui->label_tighten->setText("OFF");
+        TightenIsReady(true);
+    }
+}
+
+void MainWindow::newconfigInit(Newconfiginfo *newconfig)
+{
+    newconfiginfo = newconfig;
 }
 
 /*****************断开重新连接*******************/
 void MainWindow::receiveOperate()
-{
+{   
     TightenIsReady(true);
     if(SYSS == "ING")
     {
-        fromsecondthreaddata("","","Reconnect");
+        if(carInfor.boltNum[groupNumCh]>0)
+        {
+            emit sendnexo(serialNums);
+//            emit sendOperate1(true,groupNumCh);   //之前的通道号会发0
+            emit sendOperate1(true,channelNum.toInt());
+        }
     }
 }
 /*****************拧紧枪是否准备*******************/
 void MainWindow::TightenIsReady(bool isready)
 {
+    qDebug() << "&&&&&&&&&&&&&&&& TightenIsReady &&&&&&&&&&&&&&&&" << isready;
+    emit sendCS351StatusToStep(isready);
     if(isready)
     {
+        GTightStatus = 1;
+        linkCount = 1;
         ui->label_ss1->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/68.bmp);");
         if(SYSS == "Ready")
         {
+            lock.lockForWrite();
+            StationStatus = 2;
+            lock.unlock();
             ui->pushButton_16->setText("Ready");
             ui->pushButton_16->setStyleSheet("font: 30pt ; background-color: rgb(51, 153, 255); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
         }
         else if(SYSS == "ING")
         {
+            lock.lockForWrite();
+            StationStatus = 2;
+            lock.unlock();
             ui->pushButton_16->setText("ING");
             ui->pushButton_16->setStyleSheet("font: 50pt ; background-color: rgb(250, 225, 0); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
         }
         else if(SYSS == "OK")
         {
+            lock.lockForWrite();
+            StationStatus = 2;
+            lock.unlock();
             ui->pushButton_16->setText("OK");
             ui->pushButton_16->setStyleSheet("font: 60pt ; background-color: rgb(25, 125, 44); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
         }
         else if(SYSS == "NOK")
         {
+            lock.lockForWrite();
+            StationStatus = 1;
+            lock.unlock();
             ui->pushButton_16->setText("NOK");
             ui->pushButton_16->setStyleSheet("font: 40pt ; background-color: rgb(255, 0, 0); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
         }
-        yellow_led(0);
-        ui->label_tiaomastate->setText("");
-
+        In_Output->writeIOOutput("y_led",false);
+        //        ui->label_tiaomastate->setText("");
+        systemStatus = 0;
     }
     else
     {
-        yellow_led(1);
-        ui->label_tiaomastate->setText(tr("拧紧控制器断开连接"));
+        GTightStatus = 2;
+        linkCount = 0;
+        lock.lockForWrite();
+        StationStatus = 0;
+        lock.unlock();
+        In_Output->writeIOOutput("y_led",true);
+        //        ui->label_tiaomastate->setText(tr("拧紧控制器断开连接"));
+        systemStatus = 1;
         ui->label_ss1->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/69.bmp);");
         ui->pushButton_16->setText("Not Ready");
         ui->pushButton_16->setStyleSheet("font: 19pt ; background-color: rgb(250, 0, 0); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
+    }
+}
+/************************************/
+//PLC connect
+//
+/************************************/
+void MainWindow::PLCIsReady(bool isready)
+{
+    if(isready)
+    {
+        qDebug()<<"this is white";
+        ui->label_ss3->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/68.bmp);");
+    }
+    else
+    {
+        qDebug()<<"this is black";
+        ui->label_ss3->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/69.bmp);");
     }
 }
 
@@ -136,7 +273,17 @@ void ::MainWindow::connectMysql()
         qDebug()<< "mainwindow open mysql ok";
     }
     query = QSqlQuery(db);
+    query1 =QSqlQuery(db);
 
+    if(!query.exec("select count(*) from "+Localtable))
+    {
+        qDebug()<<"Mysql start error";
+        system(QString("/usr/local/mysql/bin/myisamchk -c -r -o -f /usr/local/mysql/var/Tighten/"+Localtable+".MYI").toLocal8Bit().data());
+        //        signal_mysqlerror_do();
+        qDebug()<<"repair Mysql";
+    }
+    else
+        qDebug()<<"mysql normal";
 }
 
 void MainWindow::mysqlopen()
@@ -150,6 +297,7 @@ void MainWindow::mysqlopen()
         db.setUserName("root");
         db.setPassword("123456");
         query = QSqlQuery(db);
+        query1 =QSqlQuery(db);
     }
 
     if(!db.open())
@@ -172,557 +320,605 @@ void MainWindow::mysqlclose()
     if(db.isOpen())
         db.close();
 }
-void MainWindow::sendWebValue(int states,QString namepdm)
-{
-    //##############################################
-    //传给web端螺丝数据状态
 
-    if(states == 1)
-    {
-        ScrewWhichExit = 0;
-        lock.lockForWrite();
-        status[ScrewWhichExit][0] = "3";  //螺栓状态
-        status[ScrewWhichExit][1] = "";//螺栓扭矩
-        status[ScrewWhichExit][2] = "";// 螺栓角度
-
-        info[0] = "1";
-        info[1] = RFIDISConnect?"1":"0";
-        info[2] = QString::number(TimeLeft);
-        info[3] = namepdm;
-
-
-        for(int j = 1;j < tempnumdpm;j++)
-        {
-            status[j][0] = "4";
-            status[j][1] = "";//螺栓扭矩
-            status[j][2] = "";// 螺栓角度
-        }
-        lock.unlock();
-    }
-
-    //##############################################
-}
-
+/****************************/
+//flags: =1 code valide
+//       =0 code invalide
+//whichtmp:choose car number
+/****************************/
 void MainWindow::VinPinCodeView(bool flags, int whichtmp)
 {
     if(flags)
     {
-        emit sendnexo(serialNums);
+        int channel;
+        int kxuannumtmp = 0;
+        QString outBuf[4];
+        for(int i=0;i<4;i++)  //clear car buff information
+        {
+            outBuf[i] = "0";
+        }
+        qDebug()<<"112222222222222222222";
+        tempnumdpm = 0;
+        groupNumCh = 0;
+        groupAllBoltNumCh = 0;
+        carInfor.pdmName = "";
+        for(int j=0;j<20;j++)
+        {
+            carInfor.proNo[j] = "";
+            carInfor.boltNum[j] = 0;
+            carInfor.ttNum[j] = 0;
+            carInfor.IONum[j] = 0;
+            carInfor.barcodeEnable[j] = false;
+        }
+
+        BoltOrder[0] = 1;
+        BoltOrder[1] = 1;
         whichar = whichtmp;
+        currentFirstBolt = 0;
+        VIN_PIN_SQL = serialNums;
         QSettings *config = new QSettings("/config.ini", QSettings::IniFormat);
         optionOrNot = config->value(QString("carinfo").append(QString::number(whichar)).append("/IsOptionalStation")).toInt();
+        Type = config->value(QString("carinfo").append(QString::number(whichar)).append("/carcx")).toString();//car name
         //匹配成功,再判断是否选配
         if(optionOrNot)
         {
-            //选配
-            //匹配 数据库中的vin码
-            bxuannumtmp= 0;
-            int k =1;
-            for(k = 1;k<6;k++)
+            //选配匹配 数据库中的vin码
+            //取出选配，查询FIS 数据库，比对 必选fis信息
+            QString  tmpserial;
+
+            if(serialNums.length()==14)
             {
-                int tt = 0;
-                for(int n = 1;n < 21;n++)
-                {
-                    tt = config->value(QString("carinfo").append(QString::number(whichar)).append("/OPLSNumber").append(QString::number(k)).append(QString::number(n))).toInt();
-                    if(tt)
-                        break;
+
+                selectVin = "select FisMatch from "+tablePreview+" where KNR ='";
+                tmpserial = serialNums.right(8);
+            }
+            else if(serialNums.length()==17)
+            {
+
+                selectVin = "select FisMatch from "+tablePreview+" where VIN ='";
+
+                tmpserial = serialNums;
+            }
+
+            query.exec(selectVin+tmpserial.append("'"));
+            if(query.next())  //查到了匹配
+            {
+                qDebug() << "****select KNR******" << selectVin + tmpserial;
+                QString Style ="";
+                QByteArray jsonData;
+                QJson::Parser parser;
+                bool ok = false;
+                QVariantMap FisMatch;
+
+                jsonData = query.value(0).toByteArray();
+                qDebug()<< "jsonData" <<jsonData;
+                FisMatch = parser.parse(jsonData, &ok).toMap();
+                if (!ok) {
+                    qDebug()<<"An error occurred during parsing"<<jsonData;
                 }
-                whichoption = k;
-                if(tt)
+
+                record = query.record();
+                int k =1;
+                for(k=1;k<6;k++)//optional NO (1~5)    选配
                 {
-                    for(int t = 1;t < 6;t++)
+                    equeloptionbnum = 0;
+                    equeloptionknum = 0;
+                    bxuannumtmp = 0;
+                    int boltNumber = 0; //bolt number
+                    for(int n = 1;n < 21;n++) //optional program NO and bolt number
                     {
-                        QString bxname = config->value(QString("carinfo").append(QString::number(whichar)).append("/bxuanname").append(QString::number(whichoption)).append(QString::number(t))).toString();
-                        QString bxcode = config->value(QString("carinfo").append(QString::number(whichar)).append("/bxuancode").append(QString::number(whichoption)).append(QString::number(t))).toString();
-                        if(bxname!="" && bxcode!="")
+                        boltNumber = config->value(QString("carinfo").append(QString::number(whichar)).append("/OPLSNumber").append(QString::number(k)).append(QString::number(n))).toInt();
+                        if(boltNumber)
                         {
-                            bxuannumtmp++;
+                            break;
                         }
                     }
-                    if(!bxuannumtmp)
-                        continue;
-                    //取出选配，查询FIS 数据库，比对 必选fis信息
-                    QString  tmpserial;
-//                     qDebug() << selectVin+tmpserial;
-                    if(isRFID == 1)
+                    whichoption = k;
+                    qDebug() << "****optiongal para******" << k << boltNumber ;
+                    if(boltNumber) //bolt number > 0
                     {
-                        selectVin = "select * from FisPreview where KNR ='";
-                        tmpserial = serialNums.right(8);
-                    }
-                    else
-                    {
-                        selectVin = "select * from FisPreview where VIN ='";
-                        tmpserial = serialNums;
-                    }
-                    query.exec(selectVin+tmpserial.append("'"));
-                    query.next();
-                    if(query.isValid())
-                    {
-                        //查到了匹配
-                        record = query.record();
-                        for(int j = 1;j < 6;j++)
+                        for(int t = 1;t < 6;t++)//optional       必选
                         {
-                            QString bxname = config->value(QString("carinfo").append(QString::number(whichar)).append("/bxuanname").append(QString::number(whichoption)).append(QString::number(j))).toString();
-                            QString bxcode = config->value(QString("carinfo").append(QString::number(whichar)).append("/bxuancode").append(QString::number(whichoption)).append(QString::number(j))).toString();
-
-                            if(bxname == "" || bxcode == "")
+                            QString bxname = config->value(QString("carinfo").append(QString::number(whichar)).append("/bxuanname").append(QString::number(whichoption)).append(QString::number(t))).toString();
+                            QString bxcode = config->value(QString("carinfo").append(QString::number(whichar)).append("/bxuancode").append(QString::number(whichoption)).append(QString::number(t))).toString();
+                            if(bxname!="" && bxcode!="")
                             {
-                                continue;
-                            }
-                            for(int m = 0;m< record.count();m++)
-                            {
-                                field = record.field(m);
-                                //  qDebug() << "IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII field.name" << field.name();
-                                if(field.name() == bxname)
+                                qDebug()<<"bxname"<<bxname<<"bxcode"<<bxcode;
+                                bxuannumtmp++;
+                                if(ok)
                                 {
-                                    if(field.value().toString() == bxcode)
+                                    if(FisMatch[bxname].toString() == bxcode)
                                     {
                                         equeloptionbnum++;
-                                        //   qDebug() << "必选匹配成功+1" << equeloptionbnum ;
-                                    }else
+                                    }
+                                    else
                                     {
-                                        //没有跟它匹配的 选配值
-                                        equeloptionbnum = 0;
                                         qDebug() << "bixuan match fail" ;
+                                    }
+                                }
+
+                            }
+                            else //parameter name NULL
+                            {}
+                        }
+                        equeloptionknum = 0;
+                        kxuannumtmp = 0;
+                        if(bxuannumtmp == equeloptionbnum)//bixuan parameter equal
+                        {
+                            qDebug()<<"bixuan equal";
+                            for(int j = 1;j < 6;j++)     // 可选
+                            {
+                                QString kxname = config->value(QString("carinfo").append(QString::number(whichar)).append("/kxuanname").append(QString::number(whichoption)).append(QString::number(j))).toString();
+                                QString kxcode = config->value(QString("carinfo").append(QString::number(whichar)).append("/kxuancode").append(QString::number(whichoption)).append(QString::number(j))).toString();
+                                if(kxname != "" && kxcode != "")
+                                {
+                                    qDebug()<<"kxname"<<kxname<<"kxcode"<<kxcode;
+                                    kxuannumtmp ++;
+
+                                    if(ok)
+                                    {
+                                        if(FisMatch[kxname].toString() == kxcode)
+                                        {
+                                            qDebug()<<"kexuan success";
+                                            equeloptionknum = 5;
+                                        }
+                                        else
+                                        {
+                                            qDebug() << "kexuan match fail" ;
+                                            equeloptionknum = 0;
+                                        }
+                                    }
+
+
+                                    for(int m = 0;m< record.count();m++)
+                                    {
+                                        field = record.field(m);
+                                        if(field.name() == kxname)
+                                        {
+                                            if(field.value().toString() == kxcode)
+                                            {
+                                                equeloptionknum = 5;
+                                                break;
+                                            }
+                                            else
+                                            {
+                                                qDebug() << "kexuan match fail" ;
+                                                equeloptionknum = 0;
+                                            }
+                                        }
+                                        else
+                                        {}
+                                    }
+
+                                    if(equeloptionknum == 5)//kexuan success jump out for(int j = 1;j < 6;j++)
+                                    {
                                         break;
                                     }
-                                }else
-                                {
-                                    continue;
                                 }
-                                if(equeloptionbnum == bxuannumtmp)
+                                else
                                 {
-                                    break;
+                                    equeloptionknum ++;
                                 }
                             }
-                            if(equeloptionbnum == bxuannumtmp)
+                            if( (bxuannumtmp == 0)&&(kxuannumtmp == 0) ) //bixuan and kexuan name all name NULL
                             {
-                                break;
+                                equeloptionknum = 0;
+                                qDebug() << "bixuan and kexuan name all name NULL";
+                            }
+                            else if(equeloptionknum==5)
+                            {
+                                break; //jump out optional NO (1~5)
                             }
                         }
-
-                    }else
-                    {
-                        //查不着 快速请求
-                        continue;
+                        else //bixuan parameter optional error
+                        {}
                     }
+                    else
+                    {}  //bolt number = 0  next optional
                 }
-                else
+                if( (equeloptionbnum == bxuannumtmp) && (equeloptionknum == 5))
                 {
-                    continue;
-                }
-                //取出选配，查询FIS 数据库，比对 可选fis信息
-                QString  tmpserial;
-                 if(isRFID == 1)
-                 {
-                     selectVin = "select * from FisPreview where KNR ='";
-                     tmpserial = serialNums.right(8);
-                 }
-                 else
-                 {
-                     selectVin = "select * from FisPreview where VIN ='";
-                     tmpserial = serialNums;
-                 }
-                query.exec(selectVin+tmpserial.append("'"));
-                query.next();
-                if(query.isValid())
-                {
+                    qDebug() << "optional success" << whichar << whichoption<<equeloptionbnum;
 
-                    //查到了匹配
-                    record = query.record();
-                    for(int j = 1;j < 6;j++)
-                    {
-                        QString kxname = config->value(QString("carinfo").append(QString::number(whichar)).append("/kxuanname").append(QString::number(whichoption)).append(QString::number(j))).toString();
-                        QString kxcode = config->value(QString("carinfo").append(QString::number(whichar)).append("/kxuancode").append(QString::number(whichoption)).append(QString::number(j))).toString();
-                        if(kxname == "" || kxcode == "")
-                        {
-                            equeloptionknum++;
-                            continue;
-                        }
-                        for(int m = 0;m< record.count();m++)
-                        {
-                            field = record.field(m);
-                            if(field.name() == kxname)
-                            {
-                                if(field.value().toString() == kxcode)
-                                {
-                                    equeloptionknum = 5;
-                                    //  qDebug() << "可选匹配成功" ;
-                                    break;
-                                }else
-                                {
-                                    // //没有跟它匹配的 选配值
-                                    equeloptionknum = 0;
-                                }
-                            }else
-                            {
-                                continue;
-                            }
-                        }
-                        if(equeloptionknum == 5)
-                        {
-                            break;
-                        }else
-                        {
-                            continue;
-                        }
-                    }
-                }else
-                {
-                    //查不着 快速请求
-                }
-                qDebug() << equeloptionbnum <<bxuannumtmp << equeloptionknum ;
-                if(equeloptionbnum == bxuannumtmp && equeloptionknum == 5)
-                {
-                    whichpronumis = 1;
-                    int statusop = 0;
+                    carInfor.pdmName =  config->value(QString("carinfo").append(QString::number(whichar)).append("/pdmyinyong").append(QString::number(whichoption).append("1"))).toString();
+                    carInfor.pdmName =  config->value(QString("carinfo").append(QString::number(whichar)).append("/pdmyinyong").append(QString::number(whichoption).append("2"))).toString();
                     for(int j = 1;j< 21;j++)
                     {
-                        proNum = config->value(QString("carinfo").append(QString::number(whichar)).append("/OPProNum").append(QString::number(whichoption)).append(QString::number(j))).toString();
-                        lsNum = config->value(QString("carinfo").append(QString::number(whichar)).append("/OPLSNumber").append(QString::number(whichoption)).append(QString::number(j))).toString();
-                        SCREWID_SQL = config->value(QString("carinfo").append(QString::number(whichar)).append("/OPLuoSuanNum").append(QString::number(whichoption)).append(QString::number(j))).toString();
-                        VIN_PIN_SQL = serialNums;
-                        enableLsnumber = lsNum.toInt();
-                        if(enableLsnumber)
+                        channel = config->value(QString("carinfo").append(QString::number(whichar)).append("/OPChannel").append(QString::number(whichoption)).append(QString::number(j))).toInt();
+                        if(channel == 1)
                         {
-                            ui->label_pronum->setText(proNum);
-                            ui->label_lsnum->setText(lsNum);
-                            QString namepdm =  config->value(QString("carinfo").append(QString::number(whichar)).append("/pdmyinyong").append(QString::number(whichoption))).toString();
-                            tempnumdpm = 0;
-                            QString pathpdm;
-                            int j = 1;
-                            for( j = 1;j<250;j++)
+                            carInfor.proNo[j-1] = config->value(QString("carinfo").append(QString::number(whichar)).append("/OPProNum").append(QString::number(whichoption)).append(QString::number(j))).toString();
+                            carInfor.boltNum[j-1] = config->value(QString("carinfo").append(QString::number(whichar)).append("/OPLSNumber").append(QString::number(whichoption)).append(QString::number(j))).toInt();
+                            if((carInfor.proNo[j-1].toInt())&&(carInfor.boltNum[j-1]))
                             {
-                                if(namepdm == config->value(QString("pdminfo").append(QString::number((j))).append("/pdmname")))
-                                {
-                                    tempnumdpm = config->value(QString("pdminfo").append(QString::number((j))).append("/num")).toInt();
-                                    pathpdm = config->value(QString("pdminfo").append(QString::number((j))).append("/pdmpath")).toString();
-                                    break;
-                                }
+                                carInfor.boltSN[j-1] = config->value(QString("carinfo").append(QString::number(whichar)).append("/OPLuoSuanNum").append(QString::number(whichoption)).append(QString::number(j))).toString();
+                                carInfor.ttNum[j-1]  = config->value(QString("carinfo").append(QString::number(whichar)).append("/OPTaotong").append(QString::number(whichoption)).append(QString::number(j))).toInt();
+                                qDebug()<<"000000000*"<<carInfor.boltSN[j-1];
+                                qDebug()<<"000000000**"<<carInfor.proNo[j-1];
+                                qDebug()<<"000000000***"<<carInfor.boltNum[j-1];
+                                qDebug()<<"000000000****"<<carInfor.ttNum[j-1];
+                                groupAllBoltNumCh += carInfor.boltNum[j-1];
                             }
-                            sendWebValue(1,pathpdm);
-                            if(PDM_PATH != pathpdm)
-                            {
-                                if(j!=250)
-                                {
-                                    ui->label_pdmarea->setStyleSheet(QString("border-image: url(/PDM/").append(pathpdm).append(")"));
-                                }
-                                PDM_PATH = pathpdm;
-                            }
-                            numpdm = 0;
-                            lock.lockForWrite();
-                            info[4] =QString::number(tempnumdpm);
-                            lock.unlock();
-                            for(int i = 0;i < tempnumdpm;i++)
-                            {
-
-                                butt[i] = new QPushButton(this);
-                                label1[i] = new QLabel(this);
-                                label2[i] = new QLabel(this);
-                                butt[i]->raise();
-                                butt[i]->setFlat(true);
-                                label1[i]->setAlignment(Qt::AlignLeft);
-                                label2[i]->setAlignment(Qt::AlignLeft);
-                                butt[i]->setFocusPolicy(Qt::NoFocus);
-                                label1[i]->setFocusPolicy(Qt::NoFocus);
-                                label2[i]->setFocusPolicy(Qt::NoFocus);
-                                butt[i]->setAttribute(Qt::WA_TransparentForMouseEvents);
-                                label1[i]->setAttribute(Qt::WA_TransparentForMouseEvents);
-                                label2[i]->setAttribute(Qt::WA_TransparentForMouseEvents);
-                                numpdm++;
-                                butt[i]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/w01.png);");
-                                butt[i]->setText(QString::number((i+1)));
-
-                                int tempx = config->value(QString("pdminfo").append(QString::number((j))).append("/tempx").append(QString::number((i+1)))).toInt();
-                                int tempy =  config->value(QString("pdminfo").append(QString::number((j))).append("/tempy").append(QString::number((i+1)))).toInt();
-                                lock.lockForWrite();
-                                status[i][3] =QString::number(tempx);
-                                status[i][4] =QString::number(tempy);
-                                lock.unlock();
-                                double x = (double)tempx/1000 * 1166 +  200;
-                                double y = (double)tempy/1000 * 598+ 170;
-                                butt[i]->setGeometry(x,y,46,46);
-                                label1[i]->setGeometry(x+23,y,130,23);
-                                label2[i]->setGeometry(x+23,y+23,130,23);
-                                label1[i]->setStyleSheet("background:transparent;");
-                                label2[i]->setStyleSheet("background:transparent;");
-                                butt[i]->show();
-                                label1[i]->show();
-                                label2[i]->show();
-                            }
-                            ui->progressBar->setValue(0);
-                            m_CurrentValue  = 0;
-                            Start(100, Tacktime*10);
-                            ISmaintenance = true;
-                            workmode = true;
-                            QualifiedNum = 0;
-                            whichpdmnumnow = 0;
-                            timerpdm.start(500);
-                            white_led(1);
-                            ui->pushButton_16->setText("ING");
-                            ui->pushButton_16->setStyleSheet("font: 50pt ; background-color: rgb(250, 225, 0); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
-                            SYSS = "ING";
-                            emit sendoperate();
-                            statusop = 1;
-                            equeloptionbnum = 0;
-                            equeloptionknum = 0;
-                            bxuannumtmp = 0;
-                            break;
-                        }
-                        else
-                        {
-                            whichpronumis++;
-                            continue;
                         }
                     }
-                    if(statusop)
-                        break;
+                    BoltTotalNum = groupAllBoltNumCh ;
+                    if(BoltTotalNum == 0)
+                    {
+                        systemStatus = 14;
+                    }
                 }
-                else
+                else //optional fail
                 {
+                    qDebug() << "***********optional fail***************"<< equeloptionbnum << bxuannumtmp << equeloptionknum;
                     equeloptionknum = 0;
                     equeloptionbnum = 0;
                     bxuannumtmp = 0;
-                    continue;
+                    //                    ui->label_tiaomastate->setText(tr("选配匹配失败"));
+                    qDebug()<<"optional match fail";
+                    systemStatus = 11;
+                    ISmaintenance = false;
+                    gunPower(true);
+
                 }
             }
-            if(k == 6)
+            else//local fis fail
             {
-                ui->label_tiaomastate->setText(tr("选配匹配失败"));
+                qDebug() << "***********local fis fail***************";
+                //                ui->label_tiaomastate->setText(tr("本地无此车信息"));
+                systemStatus = 12;
                 ISmaintenance = false;
-                workmode = false;
-                system("echo 0 > /sys/class/leds/control_uart2/brightness &");
+                qDebug()<<"local fis match fail";
+                gunPower(true);
             }
-        }else
+        }
+        else
         {
             //不选配
             //设置获取匹配成功后的 程序号
             //再判断是否有套筒
-            if(!optionOrNot)
+            //判断是否有套筒
+
+            carInfor.pdmName =  config->value(QString("carinfo").append(QString::number(whichar)).append("/pdmyinyong0")).toString();
+            for(int m=1;m<21;m++)
             {
-                //判断是否有套筒
-                whichpronumis = 1;
-                int j = 1;
-                for(j = 1;j< 21;j++)
+                channel = config->value(QString("carinfo").append(QString::number(whichar)).append("/Channel").append(QString::number(m))).toInt();
+                carInfor.proNo[m-1] = config->value(QString("carinfo").append(QString::number(whichar)).append("/ProNum").append(QString::number(m))).toString();
+                carInfor.boltNum[m-1] = config->value(QString("carinfo").append(QString::number(whichar)).append("/LSNumber").append(QString::number(m))).toInt();
+                if((carInfor.proNo[m-1].toInt())&&(carInfor.boltNum[m-1]))
                 {
-                    int tao_tong = config->value(QString("carinfo").append(QString::number(whichar)).append("/Taotong").append(QString::number(j))).toInt();
-                    if(tao_tong == 1 || tao_tong == 2 || tao_tong == 3 || tao_tong == 4)
+                    carInfor.boltSN[m-1] = config->value(QString("carinfo").append(QString::number(whichar)).append("/LuoSuanNum").append(QString::number(m))).toString();
+                    carInfor.ttNum[m-1] = config->value(QString("carinfo").append(QString::number(whichar)).append("/Taotong").append(QString::number(m))).toInt();
+                    carInfor.IONum[m-1] = config->value(QString("carinfo").append(QString::number(whichar)).append("/Channel").append(QString::number(m))).toInt();
+                    carInfor.barcodeEnable[m-1] = config->value(QString("carinfo").append(QString::number(whichar)).append("/Barcode").append(QString::number(m))).toBool();
+                    qDebug()<<"000000000*"<<carInfor.boltSN[m-1];
+                    qDebug()<<"000000000**"<<carInfor.proNo[m-1];
+                    qDebug()<<"000000000***"<<carInfor.boltNum[m-1];
+                    qDebug()<<"000000000****"<<carInfor.ttNum[m-1];
+                    qDebug()<<"000000000***"<<carInfor.IONum[m-1];
+                    qDebug()<<"GGGGGGGGGGG";
+                    groupAllBoltNumCh += carInfor.boltNum[m-1];
+                }
+            }
+            BoltTotalNum = groupAllBoltNumCh;
+        }
+        if(groupAllBoltNumCh > 0) //read program group and system ING
+        {
+            ui->stackedWidget_6->setCurrentIndex(0);
+            int j = 0;
+            for(j = 0;j< 20;j++)
+            {
+                if(carInfor.boltNum[j]>0)//bolt number
+                {
+                    QString pathpdm;
+                    int k = 1;
+                    for(k = 1;k<100;k++)
                     {
-                        // qDebug() << "tao tong fei xuan pei is  come in !!!!!!!";
-                        VIN_PIN_SQL = serialNums;
-                        TaoTongState = true;
-                        TAOTONG = tao_tong;
-                        QString namepdm =  config->value(QString("carinfo").append(QString::number(whichar)).append("/pdmyinyong")).toString();
-                        tempnumdpm = 0;
-                        whichpronumis=1;
-                        QString pathpdm;
-                        int j = 1;
-                        for( j = 1;j<250;j++)
+                        if(carInfor.pdmName == config->value(QString("pdminfo").append(QString::number((k))).append("/pdmname")))
                         {
-                            if(namepdm == config->value(QString("pdminfo").append(QString::number((j))).append("/pdmname")))
-                            {
-                                tempnumdpm = config->value(QString("pdminfo").append(QString::number((j))).append("/num")).toInt();
-                                pathpdm = config->value(QString("pdminfo").append(QString::number((j))).append("/pdmpath")).toString();
-                                break;
-                            }
+                            tempnumdpm = config->value(QString("pdminfo").append(QString::number((k))).append("/num")).toInt();//PDM bolt number
+                            NOKflag = false;
+                            pathpdm = config->value(QString("pdminfo").append(QString::number((k))).append("/pdmpath")).toString();//PDM name
+                            break;
                         }
-                        if(PDM_PATH != pathpdm)
-                        {
-                            if(j!=250)
-                            {
-                                ui->label_pdmarea->setStyleSheet(QString("border-image: url(/PDM/").append(pathpdm).append(")"));
-                            }
-                            PDM_PATH = pathpdm;
-                        }
-                        numpdm = 0;
-                        //************套筒值为web****************
-                        sendWebValue(1,pathpdm);
-                        lock.lockForWrite();
-                        info[4] =QString::number(tempnumdpm);
-                        lock.unlock();
-                        for(int i = 0;i < tempnumdpm;i++)
-                        {
-                            butt[i] = new QPushButton(this);
-                            label1[i] = new QLabel(this);
-                            label2[i] = new QLabel(this);
-                            butt[i]->raise();
-                            butt[i]->setFlat(true);
-                            label1[i]->setAlignment(Qt::AlignLeft);
-                            label2[i]->setAlignment(Qt::AlignLeft);
-                            butt[i]->setFocusPolicy(Qt::NoFocus);
-                            label1[i]->setFocusPolicy(Qt::NoFocus);
-                            label2[i]->setFocusPolicy(Qt::NoFocus);
-                            butt[i]->setAttribute(Qt::WA_TransparentForMouseEvents);
-                            label1[i]->setAttribute(Qt::WA_TransparentForMouseEvents);
-                            label2[i]->setAttribute(Qt::WA_TransparentForMouseEvents);
-
-                            numpdm++;
-
-
-                            butt[i]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/w01.png);");
-                            butt[i]->setText(QString::number((i+1)));
-
-                            int tempx = config->value(QString("pdminfo").append(QString::number((j))).append("/tempx").append(QString::number((i+1)))).toInt();
-                            int tempy =  config->value(QString("pdminfo").append(QString::number((j))).append("/tempy").append(QString::number((i+1)))).toInt();
-                            lock.lockForWrite();
-                            status[i][3] =QString::number(tempx);
-                            status[i][4] =QString::number(tempy);
-                            lock.unlock();
-                            double x = (double)tempx/1000 * 1166 + 200;
-                            double y = (double)tempy/1000 * 598 + 170;
-                            butt[i]->setGeometry(x,y,46,46);
-                            label1[i]->setGeometry(x+23,y,130,23);
-                            label2[i]->setGeometry(x+23,y+23,130,23);
-                            label1[i]->setStyleSheet("background:transparent;");
-                            label2[i]->setStyleSheet("background:transparent;");
-                            butt[i]->show();
-                            label1[i]->show();
-                            label2[i]->show();
-                        }
-
-                        ui->progressBar->setValue(0);
-                        m_CurrentValue  = 0;
-                        Start(100, Tacktime*10);
-                        ISmaintenance = true;
-                        workmode = true;
-                        //config->setValue("baseinfo/workmode","1");
-                        QualifiedNum = 0;
-                        whichpdmnumnow = 0;
-                        timerpdm.start(500);
-                        ui->pushButton_16->setText("ING");
-                        qDebug() << "here";
-                        white_led(1);
-                        ui->pushButton_16->setStyleSheet("font: 50pt ; background-color: rgb(250, 225, 0); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
-                        SYSS = "ING";
-                        break;
                     }
-
-                    proNum = config->value(QString("carinfo").append(QString::number(whichar)).append("/ProNum").append(QString::number(j))).toString();
-                    lsNum = config->value(QString("carinfo").append(QString::number(whichar)).append("/LSNumber").append(QString::number(j))).toString();
-                    SCREWID_SQL = config->value(QString("carinfo").append(QString::number(whichar)).append("/LuoSuanNum").append(QString::number(j))).toString();
-                    QString carname = "";
-                    carname =  config->value(QString("carinfo").append(QString::number(whichar).append("/carcx"))).toString();
-                    VIN_PIN_SQL = serialNums;
-                    enableLsnumber = lsNum.toInt();
-                    if(enableLsnumber)
+                    ui->label_pdmarea->setStyleSheet(QString("border-image: url(/PDM/").append(pathpdm).append(")"));
+                    ui->label_pdmarea->clear();
+                    /************发给web端空白螺栓****************/
+                    for(int i = 0;i < tempnumdpm;i++)
                     {
-                        ui->label_pronum->setText(proNum);
-                        ui->label_lsnum->setText(lsNum);
-                        QString namepdm =  config->value(QString("carinfo").append(QString::number(whichar)).append("/pdmyinyong")).toString();
-                        tempnumdpm = 0;
-                        QString pathpdm;
-                        int j = 1;
-                        for( j = 1;j<250;j++)
+                        butt[i] = new QPushButton(ui->stackedWidget_2);
+                        label1[i] = new QLabel(ui->stackedWidget_2);
+                        label2[i] = new QLabel(ui->stackedWidget_2);
+
+                        butt[i]->raise();
+                        butt[i]->setFlat(true);
+                        label1[i]->setAlignment(Qt::AlignLeft);
+                        label2[i]->setAlignment(Qt::AlignLeft);
+                        butt[i]->setFocusPolicy(Qt::NoFocus);
+                        label1[i]->setFocusPolicy(Qt::NoFocus);
+                        label2[i]->setFocusPolicy(Qt::NoFocus);
+                        butt[i]->setAttribute(Qt::WA_TransparentForMouseEvents);
+                        label1[i]->setAttribute(Qt::WA_TransparentForMouseEvents);
+                        label2[i]->setAttribute(Qt::WA_TransparentForMouseEvents);
+
+                        butt[i]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/w01.png);font: 18pt;");
+                        butt[i]->setText(QString::number((i+1)));
+
+                        int tempx = config->value(QString("pdminfo").append(QString::number(k)).append("/tempx").append(QString::number((i+1)))).toInt();
+                        int tempy =  config->value(QString("pdminfo").append(QString::number(k)).append("/tempy").append(QString::number((i+1)))).toInt();
+                        double x=0.0;
+                        double y=0.0;
+                        x = (double)tempx/1000 * 1166;
+                        y = (double)tempy/1000 * 598;
+
+                        butt[i]->setGeometry(x,y,46,46);
+                        label1[i]->setGeometry(x+23,y,140,23);
+                        label2[i]->setGeometry(x+23,y+23,140,23);
+                        label1[i]->setStyleSheet("background:transparent;");
+                        label2[i]->setStyleSheet("background:transparent;");
+                        butt[i]->show();
+                        label1[i]->show();
+                        label2[i]->show();
+                    }
+                    SYSS = "ING";
+                    groupNumCh = j;//boltSN number
+                    taotong_Value = carInfor.ttNum[j];
+                    IO_value = carInfor.IONum[j];
+                    barcode_Value = carInfor.barcodeEnable[j];
+                    ui->label_pronum->setText(carInfor.proNo[j]);
+                    ui->label_lsnum->setText(QString::number(carInfor.boltNum[j]));
+                    taotongEnValue = 0;
+                    if(taotong_Value > 0 && taotong_Value < 9)
+                    {
+                        enTaotongFlag = true;
+                    }
+                    else
+                    {
+                        taotongEnValue |= 0x01;
+                        enTaotongFlag = false;
+                    }
+                    if( (IO_value > 0)&&(IO_value < 6) ) //collect IO variable
+                    {
+                        enIOCtlFlag = true;
+                    }
+                    else
+                    {
+                        taotongEnValue |= 0x02;
+                        enIOCtlFlag = false;
+                    }
+                    if(barcode_Value)
+                    {
+                        enBarcodeFlag = true;
+                    }
+                    else
+                    {
+                        taotongEnValue |= 0x04;
+                        enBarcodeFlag = false;
+                    }
+                    if(enTaotongFlag||enIOCtlFlag||enBarcodeFlag)
+                    {
+                        if(enTaotongFlag||enIOCtlFlag)
                         {
-                            if(namepdm == config->value(QString("pdminfo").append(QString::number((j))).append("/pdmname")))
-                            {
-                                tempnumdpm = config->value(QString("pdminfo").append(QString::number((j))).append("/num")).toInt();
-                                pathpdm = config->value(QString("pdminfo").append(QString::number((j))).append("/pdmpath")).toString();
-                                break;
-                            }
+                            TaoTongState = true;
+                            emit send_TT_IO_value(taotong_Value,IO_value,groupNumCh);
+                            qDebug() << "here waitting taotong"<<taotong_Value<<IO_value;
                         }
-                        if(PDM_PATH != pathpdm)
-                        {
-                            if(j!=250)
-                            {
-                                ui->label_pdmarea->setStyleSheet(QString("border-image: url(/PDM/").append(pathpdm).append(")"));
-                            }
-                            PDM_PATH = pathpdm;
-                        }
-
-                        //  qDebug() << pathpdm;
-                        numpdm = 0;
-                        /************发给web端空白螺栓****************/
-                        sendWebValue(1,pathpdm);
-                        lock.lockForWrite();
-                        info[4] =QString::number(tempnumdpm);
-                        lock.unlock();
-                        for(int i = 0;i < tempnumdpm;i++)
-                        {
-                            butt[i] = new QPushButton(this);
-                            label1[i] = new QLabel(this);
-                            label2[i] = new QLabel(this);
-                            butt[i]->raise();
-                            butt[i]->setFlat(true);
-                            label1[i]->setAlignment(Qt::AlignLeft);
-                            label2[i]->setAlignment(Qt::AlignLeft);
-                            butt[i]->setFocusPolicy(Qt::NoFocus);
-                            label1[i]->setFocusPolicy(Qt::NoFocus);
-                            label2[i]->setFocusPolicy(Qt::NoFocus);
-                            butt[i]->setAttribute(Qt::WA_TransparentForMouseEvents);
-                            label1[i]->setAttribute(Qt::WA_TransparentForMouseEvents);
-                            label2[i]->setAttribute(Qt::WA_TransparentForMouseEvents);
-
-                            numpdm++;
-                            // temppdm = numpdm -1;
-
-                            butt[i]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/w01.png);");
-                            butt[i]->setText(QString::number((i+1)));
-
-                            int tempx = config->value(QString("pdminfo").append(QString::number((j))).append("/tempx").append(QString::number((i+1)))).toInt();
-                            int tempy =  config->value(QString("pdminfo").append(QString::number((j))).append("/tempy").append(QString::number((i+1)))).toInt();
-                            lock.lockForWrite();
-                            status[i][3] =QString::number(tempx);
-                            status[i][4] =QString::number(tempy);
-                            lock.unlock();
-                            double x = (double)tempx/1000 * 1166 + 200;
-                            double y = (double)tempy/1000 * 598 + 170;
-                            butt[i]->setGeometry(x,y,46,46);
-                            label1[i]->setGeometry(x+23,y,130,23);
-                            label2[i]->setGeometry(x+23,y+23,130,23);
-                            label1[i]->setStyleSheet("background:transparent;");
-                            label2[i]->setStyleSheet("background:transparent;");
-                            butt[i]->show();
-                            label1[i]->show();
-                            label2[i]->show();
-                        }
-                        ui->progressBar->setValue(0);
-                        m_CurrentValue  = 0;
-                        Start(100, Tacktime*10);
-                        // isworking = true;
-                        ISmaintenance = true;
-                        workmode = true;
-                        QualifiedNum = 0;
-                        whichpdmnumnow = 0;
-                        timerpdm.start(500);
-                        ui->pushButton_16->setText("ING");
-                        white_led(1);
-                        ui->pushButton_16->setStyleSheet("font: 50pt ; background-color: rgb(250, 225, 0); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
-                        SYSS = "ING";
-                        emit sendoperate();
                         break;
                     }
                     else
                     {
-                        whichpronumis++;
-                        continue;
+                        TaoTongState = false;
+                        emit sendOperate1(true,j);
+                        qDebug()<<"*******send enable ch1*********group:"<<j;
+                        break;
                     }
                 }
-                if(j == 21)
+                else
                 {
-                    ui->label_tiaomastate->setText(tr("螺栓数量为0"));
-                    if(SerialGunMode)
-                    {
-                        system("echo 0 > /sys/class/leds/control_uart2/brightness &");
-                    }
-                    ISmaintenance = false;
-                    workmode = false;
+                    continue;
                 }
+            }
+            if(j == 20)
+            {
+                systemStatus = 14;//螺栓数量为0
+            }
+            if(SYSS == "ING")
+            {
+                qDebug() <<"*********** SYSS ing **********";
+                emit sendnexo(serialNums);//download VIN
+                ui->progressBar->setValue(0);
+                m_CurrentValue  = 0;
+                progressBarStart(100, Tacktime*10);
+                ISmaintenance = true;
+                QualifiedNum = 0;
+                whichpdmnumnow = 0;
+                timerpdm.start(500);     //PDM bolt flick
+                ui->pushButton_16->setStyleSheet("font: 50pt ; background-color: rgb(250, 225, 0); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
+                ui->pushButton_16->setText("ING");
+                In_Output->writeIOOutput("w_led",true);
+            }
+            else
+            {
+                qDebug() << "*******vin invalid********";
+                ISmaintenance = false;
+                gunPower(true);
             }
         }
         delete config;
-    }else
+    }
+    else//vin match fail
     {
-        ui->label_tiaomastate->setText(tr("特征码匹配失败"));
-        if(SerialGunMode)
-        {
-            system("echo 0 > /sys/class/leds/control_uart2/brightness &");
-        }
+        systemStatus = 13;
         ISmaintenance = false;
-        workmode = false;
+        qDebug()<<"################vin match fail";
+        gunPower(true);
+        emit sendCmdToStep(2,SYSS,1);//step type2 finish
     }
 }
 
+/****************************/
+//flags: =1 code valide
+//       =0 code invalide
+//whichtmp:choose car number
+/****************************/
+void MainWindow::VinPinCodeViewSB356(QString vinCode, int channelNum,int count)
+{
+    ui->label_17->setText(vinCode);
+    if(timerpdm.isActive())
+        timerpdm.stop();
+    ui->label_hege->setText("");
+    pdmnowromisOk = true;
+    In_Output->writeIOOutput("r_led",false);
+    In_Output->writeIOOutput("g_led",false);
+
+    for(int j=0;j<tempnumdpm;j++)
+    {
+        delete butt[j];
+        delete label1[j];
+        delete label2[j];
+    }
+    PDMCurrentState = "OK";
+    qDebug()<<"113333333333333333333"<<vinCode<<channelNum<<count;
+    tempnumdpm = 0;
+    groupNumCh = 0;
+    groupAllBoltNumCh = 0;
+    carInfor.pdmName = "";
+    for(int j=0;j<20;j++)
+    {
+        carInfor.proNo[j] = "";
+        carInfor.boltNum[j] = 0;
+        carInfor.ttNum[j] = 0;
+        carInfor.IONum[j] = 0;
+        carInfor.barcodeEnable[j] = false;
+    }
+    BoltOrder[0] = 1;
+    BoltOrder[1] = 1;
+    whichar = count;
+    QSettings *config = new QSettings("/config.ini", QSettings::IniFormat);
+    Type = config->value(QString("carinfo").append(QString::number(whichar)).append("/carcx")).toString();//car name
+    carInfor.pdmName =  config->value(QString("carinfo").append(QString::number(whichar)).append("/pdmyinyong0")).toString();
+    for(int m=1;m<21;m++)
+    {
+        carInfor.proNo[m-1] = config->value(QString("carinfo").append(QString::number(whichar)).append("/ProNum").append(QString::number(m))).toString();
+        carInfor.boltNum[m-1] = config->value(QString("carinfo").append(QString::number(whichar)).append("/LSNumber").append(QString::number(m))).toInt();
+        if((carInfor.proNo[m-1].toInt())&&(carInfor.boltNum[m-1]))
+        {
+            carInfor.boltSN[m-1] = config->value(QString("carinfo").append(QString::number(whichar)).append("/LuoSuanNum").append(QString::number(m))).toString();
+            carInfor.ttNum[m-1] = config->value(QString("carinfo").append(QString::number(whichar)).append("/Taotong").append(QString::number(m))).toInt();
+            carInfor.IONum[m-1] = config->value(QString("carinfo").append(QString::number(whichar)).append("/Channel").append(QString::number(m))).toInt();
+            carInfor.barcodeEnable[m-1] = config->value(QString("carinfo").append(QString::number(whichar)).append("/Barcode").append(QString::number(m))).toBool();
+            qDebug()<<"000000000*"<<carInfor.boltSN[m-1];
+            qDebug()<<"000000000**"<<carInfor.proNo[m-1];
+            qDebug()<<"000000000***"<<carInfor.boltNum[m-1];
+            qDebug()<<"000000000****"<<carInfor.ttNum[m-1];
+            qDebug()<<"000000000***"<<carInfor.IONum[m-1];
+            qDebug()<<"TTTTTTTTTT";
+            groupAllBoltNumCh += carInfor.boltNum[m-1];
+            if(m == 1)
+            {
+                bool ch[5];
+                QString strChannel = "";
+                ch[0] = config->value(QString("carinfo").append(QString::number(whichar)).append("/ch0_1")).toBool();
+                ch[1] = config->value(QString("carinfo").append(QString::number(whichar)).append("/ch1_1")).toBool();
+                ch[2] = config->value(QString("carinfo").append(QString::number(whichar)).append("/ch2_1")).toBool();
+                ch[3] = config->value(QString("carinfo").append(QString::number(whichar)).append("/ch3_1")).toBool();
+                ch[4] = config->value(QString("carinfo").append(QString::number(whichar)).append("/ch4_1")).toBool();
+                for(int i=0;i<5;i++)
+                {
+                    if(ch[i])
+                    {
+                        strChannel.append(QString::number(i+1));
+                    }
+                }
+                channelNum = strChannel.toInt();
+                qDebug()<<"************************&&&&&&&&&&&&&&&&&&&"<<strChannel<<channelNum;
+            }
+        }
+    }
+    BoltTotalNum = groupAllBoltNumCh;
+    int j = 0;
+    if(groupAllBoltNumCh > 0) //read program group and system ING
+    {
+        ui->stackedWidget_6->setCurrentIndex(0);
+        for(j = 0;j< 20;j++)
+        {
+            if(carInfor.boltNum[j]>0)//bolt number
+            {
+                QString pathpdm;
+                int k = 1;
+                for(k = 1;k<100;k++)
+                {
+                    if(carInfor.pdmName == config->value(QString("pdminfo").append(QString::number((k))).append("/pdmname")))
+                    {
+                        tempnumdpm = config->value(QString("pdminfo").append(QString::number((k))).append("/num")).toInt();//PDM bolt number
+                        NOKflag = false;
+                        pathpdm = config->value(QString("pdminfo").append(QString::number((k))).append("/pdmpath")).toString();//PDM name
+                        break;
+                    }
+                }
+                ui->label_pdmarea->setStyleSheet(QString("border-image: url(/PDM/").append(pathpdm).append(")"));
+                ui->label_pdmarea->clear();
+                /************发给web端空白螺栓****************/
+                for(int i = 0;i < tempnumdpm;i++)
+                {
+                    butt[i] = new QPushButton(ui->stackedWidget_2);
+                    label1[i] = new QLabel(ui->stackedWidget_2);
+                    label2[i] = new QLabel(ui->stackedWidget_2);
+
+                    butt[i]->raise();
+                    butt[i]->setFlat(true);
+                    label1[i]->setAlignment(Qt::AlignLeft);
+                    label2[i]->setAlignment(Qt::AlignLeft);
+                    butt[i]->setFocusPolicy(Qt::NoFocus);
+                    label1[i]->setFocusPolicy(Qt::NoFocus);
+                    label2[i]->setFocusPolicy(Qt::NoFocus);
+                    butt[i]->setAttribute(Qt::WA_TransparentForMouseEvents);
+                    label1[i]->setAttribute(Qt::WA_TransparentForMouseEvents);
+                    label2[i]->setAttribute(Qt::WA_TransparentForMouseEvents);
+
+                    butt[i]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/w01.png);font: 18pt;");
+                    butt[i]->setText(QString::number((i+1)));
+
+                    int tempx = config->value(QString("pdminfo").append(QString::number(k)).append("/tempx").append(QString::number((i+1)))).toInt();
+                    int tempy =  config->value(QString("pdminfo").append(QString::number(k)).append("/tempy").append(QString::number((i+1)))).toInt();
+                    double x=0.0;
+                    double y=0.0;
+                    x = (double)tempx/1000 * 1166;
+                    y = (double)tempy/1000 * 598;
+
+                    butt[i]->setGeometry(x,y,46,46);
+                    label1[i]->setGeometry(x+23,y,140,23);
+                    label2[i]->setGeometry(x+23,y+23,140,23);
+                    label1[i]->setStyleSheet("background:transparent;");
+                    label2[i]->setStyleSheet("background:transparent;");
+                    butt[i]->show();
+                    label1[i]->show();
+                    label2[i]->show();
+                }
+                ui->label_pronum->setText(carInfor.proNo[j]);
+                ui->label_lsnum->setText(QString::number(carInfor.boltNum[j]));
+                SYSS = "ING";
+                emit sendOperate1(true,channelNum);
+                ui->pushButton_16->setStyleSheet("font: 50pt ; background-color: rgb(250, 225, 0); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
+                ui->pushButton_16->setText("ING");
+                In_Output->writeIOOutput("w_led",true);
+                qDebug() <<"*********** SYSS ing **********";
+                ui->progressBar->setValue(0);
+                m_CurrentValue  = 0;
+                progressBarStart(100, Tacktime*10);
+                QualifiedNum = 0;
+                whichpdmnumnow = 0;
+                timerpdm.start(500);     //PDM bolt flick
+                break;
+            }
+        }
+    }
+    else
+    {
+        systemStatus = 14;//螺栓数量为0
+    }
+    delete config;
+}
 /*****************匹配G9码*********************/
 void MainWindow::searchG9Num()
 {
@@ -734,9 +930,14 @@ void MainWindow::searchG9Num()
     for(i = 1;i < 21;i++)
     {
         temp = config->value(QString("carinfo").append(QString::number(i)).append("/G9")).toString();
-        if(temp.length()!=4)
+        //qDebug()<<"this is G9 to temp"<<temp;
+        qDebug()<<"this is test G9"<<tempG9<<tempG9.size()<<temp;
+        if(temp.length()!=tempG9.size())    //change 2018-0427
+//        if(temp.length()!=4)
             continue;
-        for(int j=0;j<4;j++)
+        flagss = true;       
+        for(int j=0;j<tempG9.size();j++)    //change 2018-0427
+//        for(int j=0;j<4;j++)    //change 2018-0427
         {
             if(temp.at(j) == '?')
                 continue;
@@ -756,7 +957,6 @@ void MainWindow::searchG9Num()
         }
         if(flagss)
         {
-            ui->label_tiaomastate->setText(tr(""));
             break;
         }
 
@@ -772,6 +972,8 @@ void MainWindow::searchVinNum()
     QSettings *config = new QSettings("/config.ini", QSettings::IniFormat);
     bool flags = false;
     int i = 1;
+
+    vinAttributeCode = serialNums.mid(vinAttributeBit,5);
     for(i = 1;i < 21;i++)
     {
         QString temp = config->value(QString("carinfo").append(QString::number(i)).append("/VIN")).toString();
@@ -779,21 +981,21 @@ void MainWindow::searchVinNum()
         {
             continue;
         }
-        int replacetmp = 0;
         flags = true;
-        for(int k = 3;k < 8;k++)
+        for(int k = 0;k < 5;k++)
         {
-            replacetmp = k-3;
-            if(temp.at(replacetmp) == '?')
+            if(temp.at(k) == '?')
             {
                 continue;
-            }else
+            }
+            else
             {
-                if(serialNums.at(k) != temp.at(replacetmp))
+                if(vinAttributeCode.at(k) != temp.at(k))
                 {
                     flags = false;
                     break;
-                }else
+                }
+                else
                 {
                     continue;
                 }
@@ -802,7 +1004,6 @@ void MainWindow::searchVinNum()
         }
         if(flags)
         {
-            ui->label_tiaomastate->setText(tr(""));
             break;
         }
     }
@@ -1001,6 +1202,21 @@ int MainWindow::VIN_VerifyFunc( char *buf)
     unsigned char i;
     unsigned char VinTempBuf[17];
     unsigned short  Sum_Num;
+
+    for(i=0;i<3;i++)
+    {
+        if(buf[i]!=VINhead[i])
+            return 0;
+    }
+
+    for(i=0;i<6;i++)//right 6 bit range(0~9)
+    {
+        if((buf[i+11]>'9')||(buf[i+11]<'0'))
+        {
+            return 0;
+        }
+    }
+
     for(i=0;i<17;i++)
     {
         if(i == 8)
@@ -1081,6 +1297,7 @@ int MainWindow::VIN_VerifyFunc( char *buf)
     Sum_Num += (VinTempBuf[5]+VinTempBuf[15])*3;
     Sum_Num += (VinTempBuf[6]+VinTempBuf[16])*2;
     Sum_Num %=11; //求余数
+    qDebug()<<"***********sum"<<Sum_Num<<VinTempBuf[8];
     if(Sum_Num == 10)
     {
         if(VinTempBuf[8] == 'X')
@@ -1096,264 +1313,150 @@ int MainWindow::VIN_VerifyFunc( char *buf)
             return 0;//Vin code invalid
     }
 }
+
 /********************获取扫描枪的条码**************************/
 void MainWindow::getSerialNum(QString serialNum,bool equeled,QString tempp)
 {
-//    qDebug() << "asdfsadfsdf";
-    ui->label_tiaomastate->setText("");
+    qDebug()<<"***********************&&&&&&&&&&&&&&&&&&&&&"<<serialNum;
+    systemStatus = 0;//clear error status
     serialNums = serialNum;
-    if(isRFID == 1)      //RFID
+    if(1)      //RFID
     {  // 接收RFID G9 pin
+        if(serialNums =="0"||serialNums =="-1")
+            return;
         tempG9  = tempp;
         ui->label_17->setText(serialNums);
         if(equeled)//pin码重复
         {
-            ui->label_tiaomastate->setText(tr("条码重复"));
-        }else //不重复匹配
+            systemStatus = 9;
+        }
+        else //不重复匹配
         {
             if(SYSS == "OK" || SYSS == "NOK")
             {
                 if(timerpdm.isActive())
                     timerpdm.stop();
-                whichpronumis = 1;
-                int tempdata = tempnumdpm;
                 QualifiedNum = 0;
                 ui->label_hege->setText("");
-                PDMCurrentState = "OK";
                 pdmnowromisOk = true;
-                white_led(0);
-                red_led(0);
-                green_led(0);
-                for(int i = 0;i<tempdata;i++)
-                {
-                    delete butt[i];
-                    delete label1[i];
-                    delete label2[i];
-                    tempnumdpm--;
-                }
-            }
-            if(pinCodeRightVerify(serialNum.toLocal8Bit(),8))
-            {
-                searchG9Num();
-            }
-            else
-            {
-                if(pinCodeVerify(serialNum.toLocal8Bit(),14))
-                {
-                    searchG9Num();
-                }
-                else
-                {
-                    ui->label_tiaomastate->setText(tr("条码校验失败"));
-                }
-            }
-        }
+                In_Output->writeIOOutput("w_led",false);
+                In_Output->writeIOOutput("r_led",false);
+                In_Output->writeIOOutput("g_led",false);
 
+                for(int j=0;j<tempnumdpm;j++)
+                {
+                    delete butt[j];
+                    delete label1[j];
+                    delete label2[j];
+                }
+                qDebug()<<"114444444444444444444444";
+                tempnumdpm=0;
+                PDMCurrentState = "OK";
+            }
+            searchG9Num();
+        }
     }
-    else if(isRFID == 0) //条码枪
+    else if(isBarCode) //条码枪
     {
         //接收ＶＩＮ
         serialNums = serialNum;
-
         //设置条码
-        // echo 0
         ui->label_17->setText(serialNums);
         if(equeled)
         {
-            ui->label_tiaomastate->setText(tr("条码重复"));
-            if(SerialGunMode)
-            {
-                system("echo 0 > /sys/class/leds/control_uart2/brightness &");
-            }
+            systemStatus = 9;
+            gunPower(true);
             ISmaintenance = false;
-            workmode = false;
-        }else
-        {
-            ui->label_17->setText(serialNums);
-            //不重复 校验
-            if(VIN_VerifyFunc(serialNum.toLatin1().data()))
-            {
-                if(CsIsConnect) //351没连接 不匹配
-                {
-                    //  qDebug() << "HHHKJJJJJJJJJJHJKHKHKJHKJHKJ";
-                    if(SYSS == "OK" || SYSS == "NOK")
-                    {
-                        //  timerdelay.stop();
-                        timerDelay();
-                        //ui->label_pdmarea->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/DWIN_SET/home.bmp);");
-                        ui->label_17->setText(serialNums);
-                    }
-                    searchVinNum();
-                }
-            }
-            else
-            {
-                ui->label_tiaomastate->setText(tr("条码校验失败"));
-                if(SerialGunMode)
-                {
-                    system("echo 0 > /sys/class/leds/control_uart2/brightness &");
-                }
-                ISmaintenance = false;
-                workmode = false;
-            }
-
-
         }
+        else
+        {
+            qDebug()<<"*****************************************"<<serialNums;
+            if(SYSS == "OK" || SYSS == "NOK")
+            {
+                if(timerpdm.isActive())
+                    timerpdm.stop();
+                QualifiedNum = 0;
+                ui->label_hege->setText("");
+                pdmnowromisOk = true;
+                In_Output->writeIOOutput("w_led",false);
+                In_Output->writeIOOutput("r_led",false);
+                In_Output->writeIOOutput("g_led",false);
 
+                for(int j=0;j<tempnumdpm;j++)
+                {
+                    delete butt[j];
+                    delete label1[j];
+                    delete label2[j];
+                }
+                qDebug()<<"115555555555555555555";
+                tempnumdpm=0;
+                PDMCurrentState = "OK";
+
+            }
+            searchVinNum();
+        }
     }
-    else if(isRFID == 2)  //队列
-    {
-//      qDebug() << "sdfsdfsdfsdf1";
-//        if(tempp == "queue")
-//        {
-//            qDebug() << "sdfsdfsdfsdf2";
-            //重新定位队列，匹配到条码以前没有使用过的条码更新为已使用，确认当前车辆，重新采集队列的条码；
-            if(SaveWhat == "delete_car")     //删除车型
-            {
-                if(serialNums == VIN_PIN_SQL)
-                {
-                    //切使能
-                    ISRESET = true;
-                    emit sendoperate();
-                }
-                emit sendDeleteCar_VIN(serialNums);
-                query.exec("select RecordId, AutoNO from TaskPreview where VIN = '"+ serialNums+"'");
-                if(query.next())
-                {
-                    if(query.exec("update TaskPreview set UseFlag = 2 where RecordID = "+query.value(0).toString()))
-                    {
-                        qDebug()<< "local update UseFlag=2 success "+serialNums;
-                    }
-                    else
-                    {
-                        qDebug()<< "local update UseFlag=2 fail "+serialNums;
-                    }
-                    RFIDlock.lockForWrite();
-                    QVector<QString> vector_temp;
-                    vector_temp.push_back(query.value(1).toString());
-                    vector_temp.push_back(serialNums);
-                    queue.push_back(vector_temp);
-                    RFIDlock.unlock();
-                }
-                else
-                {
-                    qDebug()<<"there is no VIN: "+serialNums+" in TaskPreview";
-                    RFIDlock.lockForWrite();
-                    QVector<QString> vector_temp;
-                    vector_temp.push_back("");
-                    vector_temp.push_back(serialNums);
-                    queue.push_back(vector_temp);
-                    RFIDlock.unlock();
-                }
-            }
-            else if(SYSS == "ING")   //ING状态
-            {
-                if(serialNums != VIN_PIN_SQL)
-                {
-                    query.exec("select RecordID,VIN from FisPreview where UseFlag = 0 order by RecordId");
-                    if(!query.isValid())
-                    {
-                        while(query.next())
-                        {
-                            if(serialNums == query.value(1).toString())
-                            {
-                                //update queue
-                                query.exec("update FisPreview set UseFlag=1 where UseFlag =0 and RecordId <"+query.value(0).toString());
-                                TaoTongState = false;
-                                workmode = false;
-                                white_led(0);
-                                Stop();
-                                ui->progressBar->setValue(0);
-                                m_CurrentValue  = 0;
-                                SYSS = "NOK";
-                                red_led(1);
-                                ui->pushButton_16->setStyleSheet("font: 40pt ; background-color: rgb(255, 0, 0); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
-                                ui->pushButton_16->setText("NOK");
-                                ISRESET  = true;
-                                emit sendoperate();
-                                if(isRFID == 2)
-                                {
-                                    //当前条码打完 去队列找下一条 发使能
-                                    FisTimer.start(2000);
-                                }
+}
 
-                            }
-                        }
-                    }
-
-                }
-            }
-            else    //非ING
-            {
-
-            }
-//        }
-//        else if(tempp == "ready")
-//        {
-//            ui->label_17->setText(serialNums);
-//            if(CsIsConnect) //351没连接 不匹配
-//            {
-//                if(SYSS == "OK" || SYSS == "NOK")
-//                {
-//                    timerDelay();
-//                    ui->label_17->setText(serialNums);
-//                }
-//                searchVinNum();
-//            }
-//        }
-    }
+void MainWindow::closeSave()
+{
+    ui->label_black->hide();
+    delete e3;
+    delete save;
+    SaveWhat = "";
+    isSaveShow = false;
 }
 
 MainWindow::~MainWindow()
 {
+    qDebug()<<"~MainWindow()";
     delete ui;
 }
-void MainWindow::closeEvent(QCloseEvent *event)
-{
-    emit clo();
-    event->accept();
-}
-
-
-
-
-
 
 /**********************PDM闪烁*****************************/
-
+//PDMBoltBuf[i]=0,stop;=1,w and y;=2,r and y;=4,g and y
+/**********************PDM闪烁*****************************/
 void MainWindow::PdmFlicker()
 {
     if(pdmflicker)
-        pdmflicker = false;
-    else
-        pdmflicker = true;
-    if(whichpdmnumnow == tempnumdpm)
     {
-        timerpdm.stop();
-
+        pdmflicker = false;
     }
     else
     {
-        if(PDMCurrentState == "NOK")
+        pdmflicker = true;
+    }
+
+
+    if(whichpdmnumnow == tempnumdpm)
+    {
+        timerpdm.stop();
+    }
+    else
+    {
+        if(whichpdmnumnow != tempnumdpm)
         {
-            if(pdmflicker)
+            if(PDMCurrentState == "NOK")
             {
-                butt[whichpdmnumnow]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/r01.png);");
+                if(pdmflicker)
+                {
+                    butt[whichpdmnumnow]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/r01.png);font: 18pt;color:rgb(248,255,255)");
+                }
+                else
+                {
+                    butt[whichpdmnumnow]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/y01.png);font: 18pt;");
+                }
             }
             else
             {
-                butt[whichpdmnumnow]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/y01.png);");
-            }
-        }
-        else
-        {
-            if(pdmflicker)
-            {
-                butt[whichpdmnumnow]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/y01.png);");
-            }
-            else
-            {
-                butt[whichpdmnumnow]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/w01.png);");
+                if(pdmflicker)
+                {
+                    butt[whichpdmnumnow]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/y01.png);font: 18pt;");
+                }
+                else
+                {
+                    butt[whichpdmnumnow]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/w01.png);font: 18pt;");
+                }
             }
         }
     }
@@ -1361,672 +1464,523 @@ void MainWindow::PdmFlicker()
 /**********************一个条码拧紧完成OK后操作*****************************/
 void MainWindow::timerDelay()
 {
-    // timerdelay.stop();
     ui->label_pronum->setText("");
     ui->label_lsnum->setText("");
-    whichpronumis = 1;
-    // isworking = false;
-    //    QSettings *config = new QSettings("/config.ini", QSettings::IniFormat);
-    //    config->setValue("baseinfo/workmode","0");
-    ui->label_17->setText("");
-    timerpdm.stop();
-    int tempdata = tempnumdpm;
-    // ui->label_17->setText(tr("等待车辆进站..."));
-    for(int i = 0;i<tempdata;i++)
+    if(timerpdm.isActive())
     {
-        delete butt[i];
-        delete label1[i];
-        delete label2[i];
-        tempnumdpm--;
+        timerpdm.stop();
     }
-    ui->label_hege->setText("");
-    ui->pushButton_16->setText("Ready");
-    SYSS = "Ready";
-    ui->pushButton_16->setStyleSheet("font: 30pt ; background-color: rgb(51, 153, 255); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
 
+    qDebug()<<"this is tempumdpm"<<tempnumdpm;
+    for(int j=0;j<tempnumdpm;j++)
+    {
+        qDebug()<<"hahahahhahahahahahahah";
+        delete butt[j];
+        delete label1[j];
+        delete label2[j];
+    }
+    for(int j=0;j<airButtonNum;j++)
+    {
+        delete butt[j];
+        delete label1[j];
+        delete label2[j];
+    }
+    airButtonNum = 0;
+    tempnumdpm = 0;
+    PDMCurrentState = "OK";
+
+    ui->label_hege->setText("");
+    BoltOrder[0] = 1;
+    BoltOrder[1] = 1;
+    SYSS = "Ready";
+    if(CsIsConnect)
+    {
+        ui->pushButton_16->setText("Ready");
+        ui->pushButton_16->setStyleSheet("font: 30pt ; background-color: rgb(51, 153, 255); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
+    }
     QualifiedNum = 0;
     ui->label_hege->setText("");
-    PDMCurrentState = "OK";
     pdmnowromisOk = true;
-    //enablenumberLeft = 0;
+    enablenumberLeft = 0;
     //delete config;
-    white_led(0);
-    red_led(0);
-    green_led(0);
-
+    In_Output->writeIOOutput("w_led",false);
+    In_Output->writeIOOutput("r_led",false);
+    In_Output->writeIOOutput("g_led",false);
+    TaoTongState = false;
 }
 
-/**********************一个螺丝拧紧完成后返回数据获取，下一个使能下发*****************************/
-void MainWindow::fromsecondthreaddata(QString MI,QString WI,QString IsOk)
-{
 
+/*******************************************/
+//more channel 1,2,3,4 接收拧紧的结果，做相应的逻辑处理
+//ch 0,1,2,3
+/*******************************************/
+void MainWindow::fromsecondthreaddata(QString MI,QString WI,QString IsOk,int ch,int groupNum)
+{
     //0 dat  1 time   2 state   3  扭矩 4 角度 5 螺栓编号   6 vin pin 码   7 循环号  8 曲线
-    RFIDlock.lockForRead();
-    if(rfidNextCom)
+
+    //status[whichpdmnumnow[0]][4] = data_model.DATE_b+" "+data_model.TIME_b;//螺栓拧紧时间
+    if(GBlotErrorCount > 2)//螺栓连续不合格次数
     {
-        RFIDlock.unlock();
-        return;
+        emit sendOperate1(false,GiswhichChannel);
+        GisBoltErrorCountFlag = true;
+        ui->label_tishu->show();
     }
     else
-        RFIDlock.unlock();
-    QSettings *config = new QSettings("/config.ini", QSettings::IniFormat);
-    if(IsOk== "Reconnect")  //重新连接
     {
-        if(enableLsnumber)
-        {
-            emit sendnexo(serialNums);
-            enablenumberLeft = enableLsnumber;
-            emit sendoperate();
-        }
-        else if(!enableLsnumber)
-        {
-
-            int k = 0;
-            for( k = whichpronumis;k <21;k++)
-            {
-                if(!optionOrNot)  //非选配
-                {
-                    proNum = config->value(QString("carinfo").append(QString::number(whichar)).append("/ProNum").append(QString::number(k))).toString();
-                    lsNum = config->value(QString("carinfo").append(QString::number(whichar)).append("/LSNumber").append(QString::number(k))).toString();
-                    SCREWID_SQL = config->value(QString("carinfo").append(QString::number(whichar)).append("/LuoSuanNum").append(QString::number(k))).toString();
-                    //ScrewWhichExit = 0;
-                    //info[1] = "0"; //归位状态
-                    //info[4] = "0";//归位剩余时间
-                }
-                else
-                {
-                    proNum = config->value(QString("carinfo").append(QString::number(whichar)).append("/OPProNum").append(QString::number(whichoption)).append(QString::number(whichpronumis))).toString();
-                    lsNum = config->value(QString("carinfo").append(QString::number(whichar)).append("/OPLSNumber").append(QString::number(whichoption)).append(QString::number(whichpronumis))).toString();
-                    SCREWID_SQL = config->value(QString("carinfo").append(QString::number(whichar)).append("/OPLuoSuanNum").append(QString::number(whichoption)).append(QString::number(whichpronumis))).toString();
-
-                }
-                if(lsNum.toInt())
-                {
-                    emit sendoperate();
-                    whichpronumis=k;
-                    break;
-                }
-                else
-                {
-                    whichpronumis=k;
-                    continue;
-                }
-            }
-
-        }
-
 
     }
-    else  //非重新连接
+    if(IsOk == "NOK") // 本次螺栓不合格nok
     {
-        lock.lockForWrite();
-        status[whichpdmnumnow][1] = MI; // 螺栓扭矩
-        status[whichpdmnumnow][2] = WI; // 螺栓角度
-        lock.unlock();
-        //status[whichpdmnumnow][4] = data_model.DATE_b+" "+data_model.TIME_b;//螺栓拧紧时间
-        if(IsOk == "NOK") // 本次螺栓不合格nok
+        if(whichpdmnumnow < tempnumdpm)
         {
-            lock.lockForWrite();
-            status[whichpdmnumnow][0] = "5";  //螺栓状态
-            info[0] = "1"; //拧紧状态
-            lock.unlock();
-            ui->label_ceshipronum->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/32.bmp);");
-            if(whichpdmnumnow < tempnumdpm)
-            {
-                label1[whichpdmnumnow]->setText(QString(tr("   T:").append(MI).append("Nm")));
-                label2[whichpdmnumnow]->setText(QString(tr("   A:").append(WI).append("°")));
-                label1[whichpdmnumnow]->setStyleSheet("font: 14pt;background-color: rgb(248, 248, 248);");
-                label2[whichpdmnumnow]->setStyleSheet("font: 14pt;background-color: rgb(248, 248, 248);");
-                butt[whichpdmnumnow]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/r01.png);");
-            }
-            nok_led(1);
-            PDMCurrentState = "NOK";
-            //timerpdm.stop();
-
+            label1[whichpdmnumnow]->setText(QString("  T:"+MI+"Nm"));
+            label2[whichpdmnumnow]->setText(QString("  A:"+WI+"Deg"));
+            label1[whichpdmnumnow]->setStyleSheet("font: 14pt;background-color: rgb(248, 248, 248);border-width:1px 1px 0 1px; border-style:solid; border-color:rgb(255, 0, 0);");
+            label2[whichpdmnumnow]->setStyleSheet("font: 14pt;background-color: rgb(248, 248, 248);border-width:0 1px 1px 1px; border-style:solid; border-color:rgb(255, 0, 0);");
+            butt[whichpdmnumnow]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/r01.png);font: 18pt;color:rgb(248,255,255)");
         }
-        else  //本次螺栓合格ok
+        In_Output->writeIOOutput("n_led",true);
+        PDMCurrentState = "NOK";
+    }
+    else  //本次螺栓合格ok
+    {
+        GProgramIndex++;
+        //更新螺栓定位配置信息
+        emit sendNewCoordinates(GProgramIndex);//更新坐标
+        if(MI!= "-1" && WI != "-1")
         {
-            ui->label_ceshipronum->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/70.bmp);");
-            if(MI!= "-1" && WI != "-1")
-                QualifiedNum++;//合格数加1
+            QualifiedNum++;//合格数加1
             ui->label_hege->setText(QString::number(QualifiedNum));
-            enableLsnumber--;   //结果ok 数量减1
-            //qDebug() << "enableLsnumber1" << enableLsnumber;
+        }
+        if(carInfor.boltNum[groupNum] > 0)
+        {
+            carInfor.boltNum[groupNum]--;   //结果ok 数量减1
+        }
+        if(groupAllBoltNumCh>0)
+        {
+            groupAllBoltNumCh--;
+        }
+        if(MI == "-1" && WI == "-1")//nok确认1 个
+        {
+            pdmnowromisOk = false;
             if(whichpdmnumnow < tempnumdpm)
             {
-
-                if(MI == "-1" && WI == "-1")
-                { //nok确认1 个
-                    lock.lockForWrite();
-                    status[whichpdmnumnow][0] = "2";  //螺栓状态
-                    lock.unlock();
-                    pdmnowromisOk = false;
-                    butt[whichpdmnumnow]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/r01.png);");
-                    if(PDMCurrentState != "NOK")
-                    {
-                        // qDebug() << "psmdfpsdmfsdfsdfsfsdf";
-                        label1[whichpdmnumnow]->setText(QString(tr("   T:").append("-1").append("Nm")));
-                        label2[whichpdmnumnow]->setText(QString(tr("   A:").append("-1").append("°")));
-                        label1[whichpdmnumnow]->setStyleSheet("font: 14pt;background-color: rgb(248, 248, 248);");
-                        label2[whichpdmnumnow]->setStyleSheet("font: 14pt;background-color: rgb(248, 248, 248);");
-                        //存入数据库
-                    }
-                    nok_led(0);
-                    whichpdmnumnow++;
-                    timerpdm.start();
-                }
-                else
+                butt[whichpdmnumnow]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/r01.png);font: 18pt;color:rgb(248,255,255)");//red button
+                if(PDMCurrentState != "NOK")
                 {
-                    //正常
-                    nok_led(0);
-                    butt[whichpdmnumnow]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/g01.png);");
-                    label1[whichpdmnumnow]->setText(QString(tr("   T:").append(MI).append("Nm")));
-                    label2[whichpdmnumnow]->setText(QString(tr("   A:").append(WI).append("°")));
-                    label1[whichpdmnumnow]->setStyleSheet("font: 14pt;background-color: rgb(248, 248, 248);");
-                    label2[whichpdmnumnow]->setStyleSheet("font: 14pt;background-color: rgb(248, 248, 248);");
-                    lock.lockForWrite();
-                    status[whichpdmnumnow][0] = "1";  //螺栓状态
-                    whichpdmnumnow++;
-                    status[whichpdmnumnow][0] = "3";
-                    lock.unlock();
+                    label1[whichpdmnumnow]->setText(QString("  T:-1Nm"));
+                    label2[whichpdmnumnow]->setText(QString("  A:-1Deg"));
+                    label1[whichpdmnumnow]->setStyleSheet("font: 14pt;background-color: rgb(248, 248, 248);border-width:1px 1px 0 1px; border-style:solid; border-color:rgb(255, 0, 0);");
+                    label2[whichpdmnumnow]->setStyleSheet("font: 14pt;background-color: rgb(248, 248, 248);border-width:0 1px 1px 1px; border-style:solid; border-color:rgb(255, 0, 0);");
+                    //存入数据库
                 }
+                whichpdmnumnow++;
             }
-            enablenumberLeft = enableLsnumber;
-            PDMCurrentState = "OK";
-            if(!enableLsnumber)
+        }
+        else//正常
+        {
+            if(whichpdmnumnow < tempnumdpm)
             {
-                if(whichpronumis == 20)
-                {
-                    TaoTongState = false;
-                    white_led(0);
-                    //程序号 打完
-                    if(SerialGunMode)
-                    {
-                        system("echo 0 > /sys/class/leds/control_uart2/brightness &");
-                    }
-                    ISmaintenance = false;
-                    workmode = false;
-                    if(MI!= "-1" && WI != "-1")
-                    {
-                        ui->pushButton_16->setText("OK");
-                        lock.lockForWrite();
-                        status[whichpdmnumnow][0] = "1";  //螺栓状态
-                        info[0] = "2"; //拧紧状态
-                        lock.unlock();
-                        SYSS = "OK";
-                        ui->pushButton_16->setStyleSheet("font: 60pt ; background-color: rgb(25, 125, 44); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
-                        green_led(1);
-                        white_led(0);
+                GBoltOkNum++;
+                butt[whichpdmnumnow]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/g01.png);font: 18pt;color:rgb(248,255,255)");//green button
+                label1[whichpdmnumnow]->setText(QString("  T:"+MI+"Nm"));
+                label2[whichpdmnumnow]->setText(QString("  A:"+WI+"Deg"));
+                label1[whichpdmnumnow]->setStyleSheet("font: 14pt;background-color: rgb(248, 248, 248);border-width:1px 1px 0 1px; border-style:solid; border-color:rgb(25, 125, 44);");
+                label2[whichpdmnumnow]->setStyleSheet("font: 14pt;background-color: rgb(248, 248, 248);border-width:0 1px 1px 1px; border-style:solid; border-color:rgb(25, 125, 44);");
+                whichpdmnumnow++;
+            }
+        }
 
-                        if(!pdmnowromisOk)
+        In_Output->writeIOOutput("n_led",false);
+        PDMCurrentState = "OK";
+        qDebug() << "******carInfor.boltNum[n]***data***"<<carInfor.boltNum[groupNum]<<ch<<groupNum<<GBoltOkNum<<BoltTotalNum<<GProgramIndex;
+        if(carInfor.boltNum[groupNum] == 0)
+        {
+            QualifiedNum = 0;
+            groupNum++;
+            qDebug() << "********groupNum*****" << groupNum <<groupAllBoltNumCh;
+            int k = 0;
+            if((groupNum == 21)||(groupAllBoltNumCh==0))
+            {
+                k = 20;
+            }
+            else
+            {
+                for( k = groupNum;k <20;k++)
+                {
+                    qDebug() << "****send next****" <<carInfor.boltNum[k]<<carInfor.ttNum[k]<<k;
+                    if(carInfor.boltNum[k])
+                    {
+                        groupNumCh = k;
+                        taotongEnValue = 0;
+                        taotong_Value = carInfor.ttNum[k];
+                        IO_value = carInfor.IONum[k];
+                        barcode_Value = carInfor.barcodeEnable[k];
+                        ui->label_pronum->setText(carInfor.proNo[k]);
+                        ui->label_lsnum->setText(QString::number(carInfor.boltNum[k]));
+                        if( (taotong_Value > 0) && (taotong_Value < 9) )
                         {
-                            ui->pushButton_16->setStyleSheet("font: 40pt ; background-color: rgb(255, 0, 0); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
-                            ui->pushButton_16->setText("NOK");
-                            lock.lockForWrite();
-                            status[whichpdmnumnow][0] = "2";  //螺栓状态
-                            info[0] = "3"; //拧紧状态
-                            lock.unlock();
-                            SYSS = "NOK";
-                            green_led(0);
-                            red_led(1);
-                            ISRESET  = true;
-                            emit sendoperate();
+                            enTaotongFlag = true;
                         }
                         else
                         {
-                            lock.lockForWrite();
-                            status[whichpdmnumnow][0] = "1";  //螺栓状态
-                            info[0] = "2"; //拧紧状态
-                            lock.unlock();
+                            taotongEnValue |= 0x01;
+                            enTaotongFlag = false;
                         }
-
-                    }
-                    else
-                    {
-                        SYSS = "NOK";
-                        ui->pushButton_16->setStyleSheet("font: 40pt ; background-color: rgb(255, 0, 0); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
-                        ui->pushButton_16->setText("NOK");
-                        red_led(1);
-                        ISRESET  = true;
-                        emit sendoperate();
-                    }
-                    m_Timer.stop();
-                    Stop();
-                    ui->progressBar->setValue(0);
-                    m_CurrentValue  = 0;
-                    if(isRFID == 2)
-                    {
-                        //结果打完  队列标志位置1
-                        UpdateSqlFlag();
-                        //当前条码打完 去队列找下一条 发使能
-                        FisTimer.start(2000);
-                    }
-                }else
-                {
-
-                    QualifiedNum = 0;
-                    whichpronumis++;
-                    int k = 0;
-                    for( k = whichpronumis;k <21;k++)
-                    {
-                        if(!optionOrNot)  //非选配
+                        if( (IO_value > 0)&&(IO_value < 6) ) //collect IO variable
                         {
-                            int tao_tong = config->value(QString("carinfo").append(QString::number(whichar)).append("/Taotong").append(QString::number(whichpronumis))).toInt();
-                            if(tao_tong == 1 || tao_tong == 2 || tao_tong == 3 || tao_tong == 4)
+                            enIOCtlFlag = true;
+                        }
+                        else
+                        {
+                            taotongEnValue |= 0x02;
+                            enIOCtlFlag = false;
+                        }
+                        if(barcode_Value)
+                        {
+                            enBarcodeFlag = true;
+                        }
+                        else
+                        {
+                            taotongEnValue |= 0x04;
+                            enBarcodeFlag = false;
+                        }
+                        if(enTaotongFlag||enIOCtlFlag||enBarcodeFlag)
+                        {
+                            if(enTaotongFlag||enIOCtlFlag)
                             {
-                                //qDebug() << "TAO TONG taoTONg tao tong" << tao_tong;
                                 TaoTongState = true;
-                                TAOTONG = tao_tong;
-                                break;
+                                emit send_TT_IO_value(taotong_Value,IO_value,groupNumCh);
+                                qDebug() << "here waitting taotong"<<taotong_Value<<IO_value<<taotongEnValue;
                             }
-                            TaoTongState = false;
-                            proNum = config->value(QString("carinfo").append(QString::number(whichar)).append("/ProNum").append(QString::number(k))).toString();
-                            lsNum = config->value(QString("carinfo").append(QString::number(whichar)).append("/LSNumber").append(QString::number(k))).toString();
-                            SCREWID_SQL = config->value(QString("carinfo").append(QString::number(whichar)).append("/LuoSuanNum").append(QString::number(k))).toString();
-                            //ScrewWhichExit = 0;
-                            //info[1] = "0"; //归位状态
-                            //info[4] = "0";//归位剩余时间
-                        }
-                        else
-                        {
-                            proNum = config->value(QString("carinfo").append(QString::number(whichar)).append("/OPProNum").append(QString::number(whichoption)).append(QString::number(whichpronumis))).toString();
-                            lsNum = config->value(QString("carinfo").append(QString::number(whichar)).append("/OPLSNumber").append(QString::number(whichoption)).append(QString::number(whichpronumis))).toString();
-                            SCREWID_SQL = config->value(QString("carinfo").append(QString::number(whichar)).append("/OPLuoSuanNum").append(QString::number(whichoption)).append(QString::number(whichpronumis))).toString();
-
-                        }
-                        if(lsNum.toInt())
-                        {
-                            ui->label_hege->setText("0");
-                            emit sendoperate();
-                            ui->label_pronum->setText(proNum);
-                            enableLsnumber = lsNum.toInt();
-                            ui->label_lsnum->setText(lsNum);
-                            whichpronumis=k;
                             break;
                         }
                         else
                         {
-                            whichpronumis=k;
-                            continue;
-                        }
-                    }
-                    if(k == 21)
-                    {
-                        TaoTongState = false;
-                        workmode = false;
-                        white_led(0);
-                        Stop();
-                        ui->progressBar->setValue(0);
-                        m_CurrentValue  = 0;
-                        if(MI!= "-1" && WI != "-1")
-                        {
-                            ui->pushButton_16->setText("OK");
-                            SYSS = "OK";
-                            ui->pushButton_16->setStyleSheet("font: 60pt ; background-color: rgb(25, 125, 44); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
-                            green_led(1);
-                            if(!pdmnowromisOk)
-                            {
-                                ui->pushButton_16->setStyleSheet("font: 40pt ; background-color: rgb(255, 0, 0); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
-                                ui->pushButton_16->setText("NOK");
-                                lock.lockForWrite();
-                                status[whichpdmnumnow][0] = "2";  //螺栓状态
-                                info[0] = "3"; //拧紧状态
-                                lock.unlock();
-                                SYSS = "NOK";
-                                red_led(1);
-                                green_led(0);
-                                white_led(0);
-                                ISRESET  = true;
-                                emit sendoperate();
-                            }
-                            else
-                            {
-                                lock.lockForWrite();
-                                status[whichpdmnumnow][0] = "1";  //螺栓状态
-                                info[0] = "2"; //拧紧状态
-                                lock.unlock();
-                            }
-                        }
-                        else
-                        {
-                            lock.lockForWrite();
-                            info[0] = "3"; //拧紧状态
-                            lock.unlock();
-                            SYSS = "NOK";
-                            red_led(1);
-                            ui->pushButton_16->setStyleSheet("font: 40pt ; background-color: rgb(255, 0, 0); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
-                            ui->pushButton_16->setText("NOK");
-                            ISRESET  = true;
-                            emit sendoperate();
-                        }
-                        m_Timer.stop();
-                        // timerdelay.start(25000);
-                        ISmaintenance = false;
-                        if(SerialGunMode)
-                        {
-                            system("echo 0 > /sys/class/leds/control_uart2/brightness &");
-                        }
-                        if(isRFID == 2)
-                        {
-                            //结果打完  队列标志位置1
-                            UpdateSqlFlag();
-                            //当前条码打完 去队列找下一条 发使能
-                            FisTimer.start(2000);
+                            TaoTongState = false;
+                            emit sendOperate1(true,k);
+                            qDebug()<<"*******send enable ch1*********group:"<<k;
+                            break;
                         }
                     }
                 }
             }
-            else
+            if(k == 20)
             {
-                if(MI == "-1" && WI == "-1")
+                if(!pdmnowromisOk)//NOK
                 {
-                    lsNum = QString::number(enableLsnumber);
-                    emit sendoperate();
+                    lock.lockForWrite();
+                    StationStatus = 1;
+                    lock.unlock();
+                    ui->pushButton_16->setStyleSheet("font: 40pt ; background-color: rgb(255, 0, 0); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
+                    ui->pushButton_16->setText("NOK");
+                    SYSS = "NOK";
+                    In_Output->writeIOOutput("r_led",true);
+                }
+                else//OK
+                {
+                    lock.lockForWrite();
+                    StationStatus =2;
+                    lock.unlock();
+                    ui->pushButton_16->setText("OK");
+                    ui->pushButton_16->setStyleSheet("font: 60pt ; background-color: rgb(25, 125, 44); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
+                    SYSS = "OK";
+                    In_Output->writeIOOutput("g_led",true);
+                }
+                emit sendOperate1(false,k);
+                TaoTongState = false;//bolt finished close taotong
+                ISmaintenance = false;
+                In_Output->writeIOOutput("w_led",false);
+                progressBarStop();//progress Bar stop
+                gunPower(true);//open code bar power
+                emit sendCmdToStep(2,SYSS,1);//step type2 finish
+            }
+        }
+        else
+        {
+            if(MI == "-1" && WI == "-1") //more bolt number
+            {
+                qDebug()<<"this is number bolt"<<groupNum;
+                emit sendOperate1(true,groupNum);
+            }
+        }
+    }
+}
+/*******************************************/
+//more channel 1,2,3,4 接收拧紧机发来的部分拧紧数据
+//ch 0,1,2,3
+/*******************************************/
+void MainWindow::fromsecondthreaddataSB356(QString MI,QString WI,QString IsOk,int ch,int groupNum)
+{
+    if(IsOk == "OK")
+    {
+        GBoltOkNum++;
+        QualifiedNum++;//合格数加1
+        ui->label_hege->setText(QString::number(QualifiedNum));
+    }
+    GMI = (MI.toDouble()*100);
+//    if(GErrorTight)
+//    {
+//        GrecEnableCount++;
+//    }
+//    GBoltAllNum++;
+//    GrecEnableCount++;
+//    if(IsOk != "OK")//不合格数据把通道号记下来
+//    {
+//        GErrorChannel.append(QString::number(ch));
+//        qDebug()<<"this is nok"<<GErrorChannel;
+//    }
+    if(carInfor.boltNum[groupNum] > 0)
+    {
+        carInfor.boltNum[groupNum]--;   //结果ok 数量减1
+    }
+    if(groupAllBoltNumCh>0)
+    {
+        groupAllBoltNumCh--;
+    }
+    if(IsOk == "NOK") // 本次螺栓不合格nok
+    {
+        if(whichpdmnumnow < tempnumdpm)
+        {
+            label1[whichpdmnumnow]->setText(QString("  T:"+MI+"Nm"));
+            label2[whichpdmnumnow]->setText(QString("  A:"+WI+"Deg"));
+            label1[whichpdmnumnow]->setStyleSheet("font: 14pt;background-color: rgb(248, 248, 248);border-width:1px 1px 0 1px; border-style:solid; border-color:rgb(255, 0, 0);");
+            label2[whichpdmnumnow]->setStyleSheet("font: 14pt;background-color: rgb(248, 248, 248);border-width:0 1px 1px 1px; border-style:solid; border-color:rgb(255, 0, 0);");
+            butt[whichpdmnumnow]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/r01.png);font: 18pt;color:rgb(248,255,255)");
+        }
+        In_Output->writeIOOutput("n_led",true);
+        pdmnowromisOk = false;
+    }
+    else//正常
+    {
+        if(whichpdmnumnow < tempnumdpm)
+        {
+            label1[whichpdmnumnow]->setText(QString("  T:"+MI+"Nm"));
+            label2[whichpdmnumnow]->setText(QString("  A:"+WI+"Deg"));
+            label1[whichpdmnumnow]->setStyleSheet("font: 14pt;background-color: rgb(248, 248, 248);border-width:1px 1px 0 1px; border-style:solid; border-color:rgb(25, 125, 44);");
+            label2[whichpdmnumnow]->setStyleSheet("font: 14pt;background-color: rgb(248, 248, 248);border-width:0 1px 1px 1px; border-style:solid; border-color:rgb(25, 125, 44);");
+            butt[whichpdmnumnow]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/g01.png);font: 18pt;color:rgb(248,255,255)");//green button
+        }
+        In_Output->writeIOOutput("n_led",false);
+    }
+    whichpdmnumnow++;
+    qDebug() << "******carInfor.boltNum[n]***SB356***"<<carInfor.boltNum[groupNum]<<ch<<groupNum<<"whichpdmnumnow"<<whichpdmnumnow<<GBoltOkNum<<IsOk<<GBoltAllNum;
+    if(carInfor.boltNum[groupNum] == 0)
+    {
+        QualifiedNum = 0;
+        groupNum++;
+        qDebug() << "********groupNum*****" << groupNum <<groupAllBoltNumCh;
+        int k = 0;
+        if((groupNum == 21)||(groupAllBoltNumCh==0))
+        {
+            k = 20;
+        }
+        else
+        {
+            for( k = groupNum;k <20;k++)
+            {
+                qDebug() << "****send next****" <<carInfor.boltNum[k]<<carInfor.ttNum[k]<<k;
+                if(carInfor.boltNum[k])
+                {
+                    groupNumCh = k;
+                    ui->label_pronum->setText(carInfor.proNo[k]);
+                    ui->label_lsnum->setText(QString::number(carInfor.boltNum[k]));
+                    break;
                 }
             }
-
         }
-    }
-    delete config;
-}
-
-
-/**********************主界面维护模式 登陆按钮*****************************/
-void MainWindow::on_pushButton_12_clicked()
-{
-    //GO login
-    //QSettings *config = new QSettings("/config.ini", QSettings::IniFormat);
-    if(!ISmaintenance)
-    {
-        system("echo 0 > /sys/class/leds/control_uart2/brightness &");
-        ISmaintenance = true;
-        workmode = true;
-        if(SYSS == "OK" || SYSS == "NOK" || SYSS == "Ready")
+        if(k == 20)
         {
-            timerDelay();
-            PDM_PATH="";
-            ui->label_17->setText(tr("等待车辆进站..."));
-            ui->label_pdmarea->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/DWIN_SET/home.bmp);");
-        }
-        ui->stackedWidget->setCurrentIndex(2);
-        isFull = 0;
-        person = 0;
-        temp = "";
-        ui->pushButton_13->setStyleSheet("border-image : url(:/re/93.bmp)");
-        ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
-
-        //config->setValue("baseinfo/workmode","1");
-    }
-
-    //delete config;
-}
-
-
-
-void MainWindow::on_pushButton_1_clicked()
-{
-    temp.append("1");
-    isFull++;
-    judge();
-}
-
-void MainWindow::on_pushButton_2_clicked()
-{
-    temp.append("2");
-    isFull++;
-    judge();
-}
-
-void MainWindow::on_pushButton_3_clicked()
-{
-    temp.append("3");
-    isFull++;
-    judge();
-}
-
-void MainWindow::on_pushButton_4_clicked()
-{
-    temp.append("4");
-    isFull++;
-    judge();
-}
-
-void MainWindow::on_pushButton_5_clicked()
-{
-    temp.append("5");
-    isFull++;
-    judge();
-}
-
-void MainWindow::on_pushButton_6_clicked()
-{
-    temp.append("6");
-    isFull++;
-    judge();
-}
-
-void MainWindow::on_pushButton_7_clicked()
-{
-    temp.append("7");
-    isFull++;
-    judge();
-}
-
-void MainWindow::on_pushButton_8_clicked()
-{
-    temp.append("8");
-    isFull++;
-    judge();
-}
-
-void MainWindow::on_pushButton_9_clicked()
-{
-    temp.append("9");
-    isFull++;
-    judge();
-}
-
-void MainWindow::on_pushButton_0_clicked()
-{
-    temp.append("0");
-    isFull++;
-    judge();
-}
-
-
-void MainWindow::on_pushButton_delete_clicked()
-{
-    if(isFull == 1)
-    {
-        ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
-        isFull--;
-        temp.resize(temp.size() - 1);
-    }
-    else if(isFull == 2)
-    {
-        ui->pushButton_password->setStyleSheet("border-image : url(:/re/95.bmp)");
-        isFull--;
-        temp.resize(temp.size() - 1);
-    }
-    else if(isFull == 3)
-    {
-        ui->pushButton_password->setStyleSheet("border-image : url(:/re/96.bmp)");
-        isFull--;
-        temp.resize(temp.size() - 1);
-    }
-}
-
-void MainWindow::judge()
-{
-    if(isFull == 1)
-    {
-        ui->pushButton_password->setStyleSheet("border-image : url(:/re/95.bmp)");
-        ui->pushButton_error->setStyleSheet("border-image: url(:/re/142.bmp)");
-    }
-    else if(isFull == 2)
-        ui->pushButton_password->setStyleSheet("border-image : url(:/re/96.bmp)");
-    else if(isFull == 3)
-        ui->pushButton_password->setStyleSheet("border-image : url(:/re/97.bmp)");
-    else if(isFull == 4)
-    {
-        ui->pushButton_password->setStyleSheet("border-image : url(:/re/98.bmp)");
-        QSettings *configIniRead = new QSettings("/config.ini", QSettings::IniFormat);
-        if(configIniRead->value(QString("baseinfo/GCpassword")).toString()==""||
-                configIniRead->value(QString("baseinfo/cs351Ip")).toString()=="" )
-        {
-            system("cp /config1.ini /config.ini &");
-        }
-        delete configIniRead;
-        QSettings *config = new QSettings("/config.ini", QSettings::IniFormat);
-        if (person ==0)
-        {
-            if(temp == config->value(QString("baseinfo/GCpassword")).toString()||
-                    temp == "5027")
+            if(!pdmnowromisOk)//NOK
             {
-                isJS = false;
-                ui->stackedWidget->setCurrentIndex(0);
-                newconfiginfo->initui();
-                //newconfiginfo->clearCache();
-                newconfiginfo->show();
-                ui->pushButton_13->setStyleSheet("border-image: url(:/re/99.png)");
-                ui->pushButton_password->setStyleSheet("border-image : url(:)");
-                ui->pushButton_14->setStyleSheet("border-image : url(:/re/100.png)");
-                ui->pushButton_error->setStyleSheet("border-image : url(:)");
-                //ui->stackedWidget->setCurrentIndex(0);
-                //usleep(10000);
+                ui->pushButton_16->setStyleSheet("font: 40pt ; background-color: rgb(255, 0, 0); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
+                ui->pushButton_16->setText("NOK");
+                SYSS = "NOK";
+                In_Output->writeIOOutput("r_led",true);
             }
-            //            else if(temp == "0852")
-            //            {
-            //                e3 = new QGraphicsOpacityEffect(this);
-            //                e3->setOpacity(0.5);
-            //                ui->label_black->setGraphicsEffect(e3);
-            //                ui->label_black->show();
-            //                ui->label_black->setGeometry(0,0,1366,768);
-            //                SaveWhat = "config_init";
-            //                save = new Save;
-            //                connect(save,SIGNAL(configinit(bool)),this,SLOT(config_init(bool)));
-            //                save->show();
-            //            }
-            else
+            else//OK
             {
-                ui->pushButton_error->setStyleSheet("border-image : url(:/re/124.bmp)");
-                ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
-                isFull = 0;
-                temp = "";
+                ui->pushButton_16->setText("OK");
+                ui->pushButton_16->setStyleSheet("font: 60pt ; background-color: rgb(25, 125, 44); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
+                SYSS = "OK";
+                In_Output->writeIOOutput("g_led",true);
             }
+            ISmaintenance = false;
+            In_Output->writeIOOutput("w_led",false);
+            progressBarStop();//progress Bar stop
+            emit sendCmdToStep(2,SYSS,1);//step type2 finish
         }
-        else if (person ==1)
-        {
-            if(temp == config->value(QString("baseinfo/JSpassword")).toString())
-            {
-                // qDebug() << "SSSSSSSSSSSSSSSS";
-                isJS = true;
-                ui->stackedWidget->setCurrentIndex(0);
-                newconfiginfo->initui();
-                newconfiginfo->show();
-                ui->pushButton_14->setStyleSheet("border-image: url(:/re/100.png)");
-                ui->pushButton_13->setStyleSheet("border-image : url(:/re/99.png)");
-                ui->pushButton_error->setStyleSheet("border-image : url(:)");
-                ui->pushButton_password->setStyleSheet("border-image : url(:)");
-                // ui->stackedWidget->setCurrentIndex(0);
-                //usleep(10000);
+    }
+    else
+    {}
+}
+/*******************************************/
+//more channel 1,2,3,4
+//ch 0,1,2,3
+/*******************************************/
+void MainWindow::fromsecondthreaddataAirTest(QString MI,QString WI,QString IsOk,int ch)
+{
 
+    if(GPackType == "PHEV")
+    {
+        recCount++;
+        if(IsOk == "NOK")
+        {
+
+        }
+        else
+        {
+            OKCount++;
+        }
+        if(recCount >= 2)
+        {
+            recCount = 0;
+            if(OKCount == 2)
+            {
+                //greenflash
+                 onLEDFlashAllOFF(500,"flash_green",true);//合格绿闪
             }
             else
             {
-                ui->pushButton_error->setStyleSheet("border-image : url(:/re/124.bmp)");
-                ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
-                isFull = 0;
-                temp = "";
+                //redflash
+                onLEDFlashAllOFF(500,"flash_red",true);//不合格红闪
+            }
+            OKCount =0;
+        }
+    }
+    else
+    {
+        if(IsOk == "NOK")
+        {
+            // send redflash
+            onLEDFlashAllOFF(500,"flash_red",true);//不合格红闪
+        }
+        else
+        {
+            //send greenflash
+             onLEDFlashAllOFF(500,"flash_green",true);//合格绿闪
+        }
+    }
+    if(IsOk == "NOK") // 本次螺栓不合格nok
+    {
+        pdmnowromisOk = false;
+        butt[ch]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/r01.png);font: 18pt;color:rgb(248,255,255)");
+    }
+    else//正常
+    {
+        butt[ch]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/g01.png);font: 18pt;color:rgb(248,255,255)");//green button
+    }
+    label1[ch]->setText(QString("   VL:"+MI+""));
+    label2[ch]->setText(QString("   PM:"+WI+""));
+    label1[ch]->setStyleSheet("font: 14pt;background-color: rgb(248, 248, 248);border-width:1px 1px 0 1px; border-style:solid; border-color:rgb(255, 0, 0);");
+    label2[ch]->setStyleSheet("font: 14pt;background-color: rgb(248, 248, 248);border-width:0 1px 1px 1px; border-style:solid; border-color:rgb(255, 0, 0);");
+
+    if(GPackType == "PHEV")
+    {
+        if(ch == 0)
+        {
+            if(IsOk == "OK") // 本次螺栓合格ok
+            {
+                qDebug()<<"ch1 is ok";
+                airTestStatus |= ch+1;
+            }
+            else
+            {
+                airTestStatus = 0;
+                huCh1++;
+                if(huCh1 > 2)
+                {
+                    qDebug()<<"this is ch1 error times 3";
+                    emit sendCmdToStep(3,"",pdmnowromisOk);//
+                    huCh1 = 0;
+                }
             }
         }
-        delete config;
+        if(ch == 1)
+        {
+            if(IsOk == "OK") // 本次螺栓合格ok
+            {
+                qDebug()<<"rh2 is ok";
+                airTestStatus |= ch+1;
+            }
+            else
+            {
+                airTestStatus = 0;
+                huCh2++;
+                if(huCh2 > 2)
+                {
+                    qDebug()<<"this is ch2 error times 3";
+                    emit sendCmdToStep(3,"",pdmnowromisOk);//
+                    huCh2 = 0;
+                }
+            }
+        }
+
+        if(airTestStatus == 0x03)
+        {
+            emit sendCmdToStep(3,"",pdmnowromisOk);//
+            huCh1 = 0;
+            huCh2 = 0;
+        }
+        else if(airTestStatus == 0x02)
+        {
+            airTestStatus = 0;
+        }
     }
-}
-
-
-void MainWindow::on_pushButton_13_clicked()
-{
-    if(person != 0)
+    else                    //-----bev
     {
-        ui->pushButton_13->setStyleSheet("border-image : url(:/re/93.bmp)");
-        ui->pushButton_14->setStyleSheet("border-image: url(:/re/100.png)");
-
-        ui->pushButton_error->setStyleSheet("border-image : url(:)");
-        ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
-        isFull = 0;
-        temp = "";
-        person = 0;
+        butt[0]->hide();
+        label1[0]->hide();
+        label2[0]->hide();
+        if(IsOk == "OK") // 本次螺栓合格ok
+        {
+            qDebug()<<"bev air test is ok";
+            emit sendCmdToStep(3,"",pdmnowromisOk);//
+            huCh3 = 0;
+        }
+        else
+        {
+            huCh3++;
+            if(huCh3 > 2)
+            {
+                qDebug()<<"this is bev air test error times 3";
+                emit sendCmdToStep(3,"",pdmnowromisOk);//
+                huCh3 = 0;
+            }
+        }
     }
+//    if(){
+//        onLEDFlashAllOFF(500,"flash_green",true);//合格绿闪
+//    }else{
+//        onLEDFlashAllOFF(500,"flash_red",true);//不合格红闪
+//    }
 }
-
-void MainWindow::on_pushButton_14_clicked()
-{
-    if(person != 1)
-    {
-        ui->pushButton_14->setStyleSheet("border-image : url(:/re/92.bmp)");
-        ui->pushButton_13->setStyleSheet("border-image: url(:/re/99.png)");
-
-        ui->pushButton_error->setStyleSheet("border-image : url(:)");
-        ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
-        isFull = 0;
-        temp = "";
-        person = 1;
-    }
-}
-
-void MainWindow::on_pushButton_15_clicked()
-{
-    //workmode = true;
-    ISmaintenance = false;
-    ui->pushButton_13->setStyleSheet("border-image : url(:/re/93.png)");
-    ui->pushButton_14->setStyleSheet("border-image : url(:/re/100.png)");
-    ui->pushButton_error->setStyleSheet("border-image : url(:)");
-    ui->pushButton_password->setStyleSheet("border-image : url(:/re/94.bmp)");
-    ui->stackedWidget->setCurrentIndex(0);
-    ui->stackedWidget_6->setCurrentIndex(0);
-    //QSettings *config = new QSettings("/config.ini", QSettings::IniFormat);
-    //config->setValue("baseinfo/workmode","0");
-    //delete config;
-    workmode = false;
-}
-
 void MainWindow::ShowTime()
 {
+    //    qDebug()<<"@@@@@@@@@@@@@@@@@@@@@@@ShowTime#################";
+    qDebug()<<"changeTime";
     QDateTime time = QDateTime::currentDateTime();//获取系统现在的时间
-    QString str = time.toString("yyyy-MM-dd hh:mm:ss ddd"); //设置显示格式
+    QString str = time.toString("yyyy-MM-dd hh:mm:ss"); //设置显示格式
     ui->label_12->setText(str);
-    ui->label_14->setText(str);
 }
 
-void MainWindow::on_pushButton_18_clicked()
-{
-    ui->stackedWidget_6->setCurrentIndex(0);
-}
 
 void MainWindow::UpdateSlot()
 {
     m_CurrentValue++;
     TimeLeft = Tacktime-m_CurrentValue/10;
-    lock.lockForWrite();
-    info[2] = QString::number(TimeLeft);
-    lock.unlock();
     if( m_CurrentValue == m_MaxValue )
     {
-        m_CurrentValue = 0;
-        Stop();
+        progressBarStop();
     }
 
     ui->progressBar->setValue(m_CurrentValue);
 
 }
 
-void MainWindow::Start(int interval/* =100 */, int maxValue/* =600 */)
+void MainWindow::progressBarStart(int interval/* =100 */, int maxValue/* =600 */)
 {
     TimeLeft=Tacktime;
-    lock.lockForWrite();
-    info[2] = QString::number(TimeLeft);
-    lock.unlock();
     m_UpdateInterval = interval;
     m_MaxValue = maxValue;
     m_Timer.start(m_UpdateInterval);
@@ -2034,197 +1988,141 @@ void MainWindow::Start(int interval/* =100 */, int maxValue/* =600 */)
     ui->progressBar->setValue(0);
 }
 
-void MainWindow::Stop()
+void MainWindow::progressBarStop()
 {
     ui->progressBar->setValue(0);
     m_Timer.stop();
+    m_CurrentValue  = 0;
     TimeLeft=0;
-    lock.lockForWrite();
-    info[2] = QString::number(TimeLeft);
-    lock.unlock();
 }
 //rfid Ui
 void MainWindow::setRfidState(bool istrue)
 {
     if(istrue)
+    {
+        isRFIDConnected = true;
         ui->label_ss4->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/68.bmp);");
+    }
     else
+    {
+        isRFIDConnected = false;
         ui->label_ss4->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/69.bmp);");
+    }
 }
 
+/*******************************************/
+//NOK all bolt
+/*******************************************/
 void MainWindow::on_pushButton_reset_clicked()
 {
     //no ok 确认全部
-   RFIDlock.lockForWrite();
-    if(rfidNextCom)
+    qDebug()<<"normal reset";
+    for(int j=whichpdmnumnow;j<tempnumdpm;j++)
     {
-        //RFID模式 ING 状态确认
-        rfidNextCom = false;
-        RFIDlock.unlock();
-        resetUiDo();
-        QString pintmpp = VIN_PIN_SQL_RFID.mid(0,14);
-        QString G9tmpp = VIN_PIN_SQL_RFID.right(2);
-        getSerialNum(pintmpp,false,G9tmpp);
-    }
-    else
-    {
-        RFIDlock.unlock();
-        if(SYSS == "ING")
+        qDebug() << "******nok all*******"<<j;
+        butt[j]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/r01.png);font: 18pt;color:rgb(248,255,255)");
+        if(label1[j]->text() == "")
         {
-            if(SerialGunMode)
-            {
-                system("echo 0 > /sys/class/leds/control_uart2/brightness &");
-            }
-            resetUiDo();
-            ISRESET  = true;
-            emit sendoperate();
-            if(!whichpdmnumnow)
-            {
-                for(int j = 0;j<tempnumdpm;j++)
-                {
-                    butt[j]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/r01.png);");
-                    if(label1[j]->text() == "")
-                    {
-                        label1[j]->setText(QString(tr("   T:").append("-1").append("Nm")));
-                        label2[j]->setText(QString(tr("   A:").append("-1").append("°")));
-                        label1[j]->setStyleSheet("font: 14pt;background-color: rgb(248, 248, 248);");
-                        label2[j]->setStyleSheet("font: 14pt;background-color: rgb(248, 248, 248);");
-                        lock.lockForWrite();
-                        status[j][0]="2";
-                        status[j][1]="-1";
-                        status[j][2]="-1";
-                        lock.unlock();
-                    }
-                }
-            }
-            else
-            {
-                for(int j = whichpdmnumnow;j<tempnumdpm;j++)
-                {
-                    butt[j]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/r01.png);");
-                    if(label1[j]->text() == "")
-                    {
-                        label1[j]->setText(QString(tr("   T:").append("-1").append("Nm")));
-                        label2[j]->setText(QString(tr("   A:").append("-1").append("°")));
-                        label1[j]->setStyleSheet("font: 14pt;background-color: rgb(248, 248, 248);");
-                        label2[j]->setStyleSheet("font: 14pt;background-color: rgb(248, 248, 248);");
-                        lock.lockForWrite();
-                        status[j][0]="2";
-                        status[j][1]="-1";
-                        status[j][2]="-1";
-                        lock.unlock();
-                    }
-                }
-            }
-            emit sendConfigureAll(optionOrNot,whichar,whichpronumis,whichoption);
-
-            ui->pushButton_16->setStyleSheet("font: 40pt ; background-color: rgb(255, 0, 0); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
-            ui->pushButton_16->setText("NOK");
-            red_led(1);
-            TaoTongState = false; //确认全部关闭套筒
+            label1[j]->setText(QString("   T:-1Nm"));
+            label2[j]->setText(QString("   A:-1Deg"));
+            label1[j]->setStyleSheet("font: 14pt;background-color: rgb(248, 248, 248);border-width:1px 1px 0 1px; border-style:solid; border-color:rgb(255, 0, 0);");
+            label2[j]->setStyleSheet("font: 14pt;background-color: rgb(248, 248, 248);border-width:0 1px 1px 1px; border-style:solid; border-color:rgb(255, 0, 0);");
         }
     }
+    qDebug() << "******nok all*******";
+    ISRESET = true;
+    emit sendOperate1(false,1);
+    emit sendNokAll(1);//send to SqlThreadSVW2::
+    gunPower(true);
+    ISmaintenance = false;
+    TaoTongState = false; //NOK all bolt close taotong
+    SYSS = "NOK";
+    ui->pushButton_16->setStyleSheet("font: 40pt ; background-color: rgb(255, 0, 0); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
+    ui->pushButton_16->setText("NOK");
+    In_Output->writeIOOutput("r_led",true);
+    In_Output->writeIOOutput("w_led",false);
+    In_Output->writeIOOutput("n_led",false);
+    if(timerpdm.isActive())
+        timerpdm.stop();
+    progressBarStop();
+    emit sendCmdToStep(2,SYSS,1);//step type2 finish
 }
 // ING 状态确认
 void MainWindow::resetUiDo()
 {
-    lock.lockForWrite();
-    info[0] = "3";
-    lock.unlock();
-    SYSS = "NOK";
-    m_Timer.stop();
-    Stop();
-    ui->progressBar->setValue(0);
-    workmode = false;
-    ISmaintenance = false;
-    white_led(0);
-    nok_led(0);
-    m_CurrentValue  = 0;
-    enableLsnumber = 0;
-    enablenumberLeft =0;
-    m_Timer.stop();
-    timerpdm.stop();
+
 }
 
-void MainWindow::on_pushButton_17_clicked()
-{
-    //nok确认1个
-    RFIDlock.lockForRead();
-    if(rfidNextCom)
-    {
-        RFIDlock.unlock();
-        on_pushButton_reset_clicked();
-    }
-    else
-    {
-        RFIDlock.unlock();
-        if(SYSS == "ING")
-        {
-            emit  sendfromsecondthread(SCREWID_SQL,VIN_PIN_SQL,proNum);
-            pdmnowromisOk = false;
-            if(TaoTongState)
-            {
-                if(enableLsnumber == 1)
-                {
-                    ISRESET = true;
-                    emit sendoperate();
-                }
-            }
-            fromsecondthreaddata("-1","-1","ok");
-        }
-    }
-}
+
+
 //重启系统
 void MainWindow::signal_mysqlerror_do()
 {
-    ISRESET = true;
-    sendoperate();
-    e3 = new QGraphicsOpacityEffect(this);
-    e3->setOpacity(0.5);
-    ui->label_black->setGraphicsEffect(e3);
-    ui->label_black->show();
-    ui->label_black->setGeometry(0,0,1366,768);
-    SaveWhat = "sqlerror";
-    save = new Save;
-    connect(save,SIGNAL(sendShutDown(int)),this,SLOT(shutdown(int)));
-    save->show();
+    if(!isSaveShow)
+    {
+        emit sendOperate1(false,groupNumCh);
+        e3 = new QGraphicsOpacityEffect(this);
+        e3->setOpacity(0.5);
+        ui->label_black->setGraphicsEffect(e3);
+        ui->label_black->show();
+        ui->label_black->setGeometry(0,0,1366,768);
+        isSaveShow = true;
+        SaveWhat = "sqlerror";
+        save = new Save;
+        save->show();
+    }
 }
 
-void MainWindow::init()
+void MainWindow::mainWindowInit()
 {
-    QSettings *config = new QSettings("/config.ini", QSettings::IniFormat);
-    ui->label_gongwei->setText(config->value(QString("baseinfo/StationName")).toString());
-    ui->label_gonghao->setText(config->value(QString("baseinfo/StationId")).toString());
-    //ui->label_pdmarea->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/DWIN_SET/mainlogo.png);");
-    workmode = false;
-    //config->setValue("baseinfo/workmode","0");
-    //ui->stackedWidget->setCurrentIndex(0);
-    ui->label_17->setText(tr("等待车辆进站..."));
-    if(isRFID == 1)
+    ui->stackedWidget_6->setCurrentIndex(0);
+    //    QSettings *config = new QSettings("/config.ini", QSettings::IniFormat);
+    ui->label_gongduan->setText(stationName);//config->value(QString("baseinfo/StationName")).toString());
+    ui->label_gongwei->setText(QSettings("/config.ini", QSettings::IniFormat).value(QString("baseinfo/showStation")).toString()); //config->value(QString("baseinfo/StationId")).toString());
+    if(!controlMode)
     {
-        ui->label_tiaoma->setText("RFID");
-        ui->label_11->show();
-        ui->label_ss4->show();
+        if(vari1 == "MM")//modual ready
+        {
+            ui->label_17->setText(tr("等待托盘到位..."));
+        }
+        else
+        {
+            ui->label_17->setText(tr("等待小车进站..."));
+        }
+        if(isRFID)
+        {
+            ui->pushButton_tiaoma->setText("RFID");
+            ui->label_11->show();
+            ui->label_ss4->show();
+        }
+        else if(isBarCode)
+        {
+            ui->pushButton_tiaoma->setText(tr("条码枪"));
+            ui->label_11->hide();
+            ui->label_ss4->hide();
+        }
     }
     else
     {
-        ui->label_tiaoma->setText(tr("条码枪"));
-        ui->label_11->hide();
-        ui->label_ss4->hide();
+        ui->pushButton_tiaoma->setText(tr("手动"));
+        ui->label_17->setText(tr("当前手动模式..."));
     }
-    ui->label_ss3->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/68.bmp);");
-    Tacktime = config->value("baseinfo/TackTime").toInt();
-
-    lock.lockForWrite();
-    info[5] = QString::number(Tacktime);
-    info[6] = config->value(QString("baseinfo/StationId")).toString();
-    lock.unlock();
-
-    delete config;
-
+    if(vari1 == "M")
+    {
+        qDebug()<<"this is manual station";
+        ui->label_10->setText(tr("系统"));
+        ui->label_ss3->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/68.bmp);");
+    }
+    else
+    {
+        qDebug()<<"this is aoto station";
+        ui->label_ss3->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/69.bmp);");
+    }
+    //    Tacktime = config->value("baseinfo/TackTime").toInt();
+    //    delete config;
     QDateTime dateTime = QDateTime::currentDateTime();
     int year=dateTime.date().year();
-    if(year<2015)
+    if(year<2017)
         ui->label_time->setText(tr("系统时间错误"));
     else
     {
@@ -2232,69 +2130,106 @@ void MainWindow::init()
     }
 }
 
-void MainWindow::configwarning(bool isconfigone)
+void MainWindow::initBack()
 {
-    //qDebug() << "come hererer!";
-    ConfigOneOrAll = isconfigone;
-    if(!isconfigone)
-    {
-        ISWARNING = true;
-        e3 = new QGraphicsOpacityEffect(this);
-        e3->setOpacity(0.5);
-        ui->label_black->setGraphicsEffect(e3);
-        ui->label_black->show();
-        ui->label_black->setGeometry(0,0,1366,768);
-        SaveWhat = "input";
-        save = new Save;
-        connect(save,SIGNAL(sendCloseInput(bool)),this,SLOT(receiveCloseInput(bool)));
-        save->show();
-    }
+    //    ui->stackedWidget_6->setCurrentIndex(0);
+    //    QSettings *config = new QSettings("/config.ini", QSettings::IniFormat);
+    ui->label_gongduan->setText(stationName);//;config->value(QString("baseinfo/StationName")).toString());
+    ui->label_gongwei->setText(QSettings("/config.ini", QSettings::IniFormat).value(QString("baseinfo/showStation")).toString());//config->value(QString("baseinfo/StationId")).toString());
+
+    ui->label_ss3->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/68.bmp);");
+
+    //    Tacktime = config->value("baseinfo/TackTime").toInt();
+
+
+    //    delete config;
+
+    QDateTime dateTime = QDateTime::currentDateTime();
+    int year=dateTime.date().year();
+    if(year<2017)
+        ui->label_time->setText(tr("系统时间错误"));
     else
     {
-        on_pushButton_17_clicked();
+        ui->label_time->clear();
     }
+}
 
+//处理屏幕右上角的放行按钮
+void MainWindow::configwarning(bool isconfigone)
+{
+    qDebug() << "come hererer!" << isconfigone;
+    if(SYSS == "ING")//nok one bolt 不合格跳过一个
+    {
+        ConfigOneOrAll = isconfigone;
+        if(!isconfigone)
+        {
+            if(!isSaveShow)
+            {
+                ISWARNING = true;
+                e3 = new QGraphicsOpacityEffect(this);
+                e3->setOpacity(0.5);
+                ui->label_black->setGraphicsEffect(e3);
+                ui->label_black->show();
+                ui->label_black->setGeometry(0,0,1366,768);
+                isSaveShow = true;
+                SaveWhat = "input";
+                save = new Save;
+                connect(save,SIGNAL(sendCloseInput(bool)),this,SLOT(receiveCloseInput(bool)));
+                save->show();
+            }
+        }
+        else
+        {
+            //nok确认1个
+            if(!GIsTestStartFlag){
+                emit  sendfromsecondthread(carInfor.boltSN[groupNumCh],VIN_PIN_SQL,carInfor.proNo[groupNumCh],1);
+            }
+                ISRESET = true;
+                qDebug()<<"this is error enabled";
+                GBlotErrorCount = 0;
+            fromsecondthreaddata("-1","-1","ok",0,groupNumCh);
+        }
+    }
+    else//放行操作
+    {
+        qDebug() << "come hererer11111" << isconfigone;
+        emit sendMoveButtonToStep();
+    }
 }
 
 /*****************套筒选择信号对应使能发送********************************/
-void MainWindow::taotong_main(int  which_t)
+void MainWindow::taotong_main(int type)
 {
-    QSettings *config = new QSettings("/config.ini", QSettings::IniFormat);
-    int tao_tong = config->value(QString("carinfo").append(QString::number(whichar)).append("/Taotong").append(QString::number(whichpronumis))).toInt();
-    if(tao_tong == which_t)
+    qDebug()<<"33333 rev taotong 333333333"<<type<<taotongEnValue;
+    if(type == 1)//receive taotong collect value
     {
-        if(!enableLsnumber)
+        taotongEnValue |= 0x01;
+    }
+    else if(type == 2)//receive IO collect value
+    {
+        taotongEnValue |= 0x02;
+    }
+    else if(type == 4)//receive part code
+    {
+        taotongEnValue |= 0x04;
+    }
+    else if(type == 0)
+    {
+        qDebug() << "************taotong and IO and partCode send disable";
+        taotongEnValue &= ~0x01;
+        systemStatus = 15;
+        emit sendOperate1(false,groupNumCh);
+    }
+    if(taotongEnValue == 0x07)
+    {
+        qDebug() << "************taotong and IO and partCode send enable *************";
+        systemStatus = 0;
+        emit sendOperate1(true,groupNumCh);
+        if(enIOCtlFlag)
         {
-            ui->label_tiaomastate->setText("");
-            proNum = config->value(QString("carinfo").append(QString::number(whichar)).append("/ProNum").append(QString::number(whichpronumis))).toString();
-            lsNum = config->value(QString("carinfo").append(QString::number(whichar)).append("/LSNumber").append(QString::number(whichpronumis))).toString();
-            ui->label_pronum->setText(proNum);
-            ui->label_lsnum->setText(lsNum);
-            SCREWID_SQL = config->value(QString("carinfo").append(QString::number(whichar)).append("/LuoSuanNum").append(QString::number(whichpronumis))).toString();
-            QString carname = "";
-            carname =  config->value(QString("carinfo").append(QString::number(whichar).append("/carcx"))).toString();
-            VIN_PIN_SQL = serialNums;
-            enableLsnumber = lsNum.toInt();
-            if(enableLsnumber)
-            {
-                //emit sendnexo(serialNums);
-                emit sendoperate();
-            }
+            emit send_IO_Reset();
         }
     }
-    else
-    {
-        ui->label_tiaomastate->setText(tr("请正确选择套筒"));
-        TaoTongState = true;
-        if(enableLsnumber)
-        {
-            enableLsnumber=0;
-            ISRESET  = true;
-            emit sendoperate();
-        }
-    }
-
-    delete config;
 }
 
 void MainWindow::receiveCloseInput(bool tmp)
@@ -2325,284 +2260,993 @@ void MainWindow::receiveCloseInput(bool tmp)
         ISWARNING = false;
     }
     SaveWhat ="";
-}
-
-void MainWindow::red_led(int leds)
-{
-    if(leds)
-        system("echo 1 > /sys/class/leds/control_led2/brightness &");
-    else
-        system("echo 0 > /sys/class/leds/control_led2/brightness &");
-}
-void MainWindow::green_led(int leds)
-{
-    if(leds)
-        system("echo 1 > /sys/class/leds/control_led3/brightness &");
-    else
-        system("echo 0 > /sys/class/leds/control_led3/brightness &");
-}
-void MainWindow::yellow_led(int leds)
-{
-    if(leds)
-        system("echo 1 > /sys/class/leds/control_led4/brightness &");
-    else
-        system("echo 0 > /sys/class/leds/control_led4/brightness &");
-}
-void MainWindow::white_led(int leds)
-{
-    if(leds)
-        system("echo 1 > /sys/class/leds/control_led9/brightness &");
-    else
-        system("echo 0 > /sys/class/leds/control_led9/brightness &");
-}
-void MainWindow::nok_led(int leds)
-{
-    if(leds)
-        system("echo 1 > /sys/class/leds/control_led8/brightness &");
-    else
-        system("echo 0 > /sys/class/leds/control_led8/brightness &");
+    isSaveShow = false;
 }
 
 void MainWindow::wifishow(bool wificonnect)
 {
     if(wificonnect)
+    {
         ui->label_wifi->show();
+    }
     else
+    {
         ui->label_wifi->hide();
+    }
 }
 void MainWindow::datashow(bool dataconnect)
 {
     if(dataconnect)
+    {
         ui->label_ss2->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/68.bmp);");
+    }
     else
+    {
         ui->label_ss2->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/69.bmp);");
+    }
 }
 
 void MainWindow::batteryshow1(QString power)
 {
     if(power == "17")
     {
-        if(timer_showdown.isActive())
-        {
-            qDebug()<<"timer_showdown stop";
-            timer_showdown.stop();
-        }
+
         ui->label_battery->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/battery2.png);background:transparent;");
     }
     else if(power == "16")
     {
-        if(timer_showdown.isActive())
-        {
-            qDebug()<<"timer_showdown stop";
-            timer_showdown.stop();
-        }
         ui->label_battery->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/battery1.png);background:transparent;");
     }
     else if(power == "05")
+    {
         ui->label_battery->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/battery.png);background:transparent;");
+    }
     else if(power == "04")
+    {
         ui->label_battery->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/battery_2.png);background:transparent;");
+    }
     else if(power == "03")
+    {
         ui->label_battery->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/battery_red.png);background:transparent;");
+    }
     else if(power == "02"||power == "01")
     {
         //15 分钟后关机
         ui->label_battery->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/battery_red.png);background:transparent;");
-        timer_showdown.start(900000);
+        //        timer_showdown.start(900000);
     }
 }
 
-void MainWindow::battery15()
+void MainWindow::showhome()
 {
-    system("echo 0 > /sys/class/leds/control_lvds/brightness");  //关背光
-    qDebug("power down 1");
-    system("halt");
+    ui->label_pdmarea->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/DWIN_SET/home_SVW2.bmp);");
+    ui->label_pdmarea->clear();
 }
 
-void MainWindow::batteryshow2(bool balive)
+void MainWindow::send_Info()
 {
-    if(balive)
-    {
-        shutdown_timer.start(300000);
-        //        ui->label_battery->show();
-        ui->label_battery->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/battery.png);background:transparent;");
-    }
+    ShowTime();
+    int OK;
+    if(SYSS == "ING") //当前状态 ING or OK or NOK
+        OK = 1;
+    else if(SYSS == "OK")
+        OK = 2;
+    else if(SYSS == "NOK")
+        OK = 3;
     else
+        OK = 2;
+    //    qDebug()<<"################sendInfo########################1";
+    emit sendInfo(linkCount&0x01,linkCount&0x02,TimeLeft,OK);
+    //    qDebug()<<"################sendInfo########################2";
+    /************************************************************************/
+    //    1.拧紧控制器断开连接；
+    //    2.PLC断开连接；
+    //    3.RFID断开连接；
+    //    9.条码重复；
+    //    10.条码校验失败；
+    //    11.选配匹配失败；
+    //    12.本地无此车信息；
+    //    13.特征码匹配失败；
+    //    14.车型螺栓数量为0；
+    //    15.请正确选择套筒；
+    //    16.VIN码匹配失败；
+    //    17.通道匹配失败；
+    /************************************************************************/
+    if(preSystemStatus != systemStatus)
     {
-        shutdown_timer.stop();
-        battry_num = 0;
-        ui->label_battery->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/battery2.png);background:transparent;");
-        //        ui->label_battery->show();
-    }
-}
-
-
-void MainWindow::clocked()
-{
-    battry_num++;
-    if(battry_num == 1)
-    {
-        ui->label_battery->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/battery_2.png);background:transparent;");
-    }
-    else if(battry_num == 2)
-    {
-        ui->label_battery->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/logo/battery_red.png);background:transparent;");
-    }
-    else if(battry_num == 3)
-    {
-        system("echo 0 > /sys/class/leds/control_lvds/brightness");
-        qDebug("power down 2");
-        system("halt");
-    }
-
-}
-
-void MainWindow::time_warning(bool time_warn)
-{
-    if(time_warn)
-        ui->label_time->setText(tr("系统时间错误"));
-    else
-        ui->label_time->clear();
-}
-
-void MainWindow::ReceGunNotReady()
-{
-    yellow_led(1);
-    ui->label_tiaomastate->setText(tr("拧紧枪没有准备"));
-    ui->label_ss1->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/69.bmp);");
-    ui->pushButton_16->setText("Not Ready");
-    ui->pushButton_16->setStyleSheet("font: 19pt ; background-color: rgb(250, 0, 0); color: rgb(248, 248, 255); border-width:0px;   border-style:solid; border-color: rgb(51, 153, 255);  ");
-}
-
-void MainWindow::on_pushButton_shutdown_clicked()
-{
-    if(!ISmaintenance)
-    {
-        ISmaintenance = true;
-        workmode = true;
-        e3 = new QGraphicsOpacityEffect(this);
-        e3->setOpacity(0.5);
-        ui->label_black->setGraphicsEffect(e3);
-        ui->label_black->show();
-        ui->label_black->setGeometry(0,0,1366,768);
-        SaveWhat = "shutdown";
-        save = new Save;
-        connect(save,SIGNAL(sendShutDown(int)),this,SLOT(shutdown(int)));
-        save->show();
-    }
-}
-
-void MainWindow::ReceFisSerial(QString serials)
-{
-    //接收fis队列发送条码
-    if(SYSS!="ING")
-        getSerialNum(serials,false,"ready");
-}
-
-void MainWindow::FisTimerDo()
-{
-    //当前条码打完 延时
-    FisTimer.stop();
-    if(!query.exec("select VIN from FisPreview where RecordId in(select min(RecordId) from FisPreview where UseFlag = 0)"))
-        qDebug() <<"mainwindow 2161 row "  << query.lastError();
-    else
-    {
-        if(query.next())
+        preSystemStatus = systemStatus;
+        qDebug() << "*********systemStatus**********"<<systemStatus << preSystemStatus;
+        switch(systemStatus)
         {
-            ReceFisSerial(query.value(0).toString());
+        case 1:
+            ui->label_tiaomastate->setText(tr("拧紧控制器断开连接"));
+            break;
+        case 2:
+            ui->label_tiaomastate->setText(tr("PLC断开连接"));
+            break;
+        case 3:
+            ui->label_tiaomastate->setText(tr("PLC read error"));
+            break;
+        case 9:
+            ui->label_tiaomastate->setText(tr("条码重复"));
+            break;
+        case 10:
+            ui->label_tiaomastate->setText(tr("条码校验失败"));
+            break;
+        case 11:
+            ui->label_tiaomastate->setText(tr("选配匹配失败"));
+            break;
+        case 12:
+            ui->label_tiaomastate->setText(tr("本地无此车信息"));
+            break;
+        case 13:
+            ui->label_tiaomastate->setText(tr("特征码匹配失败"));
+            break;
+        case 14:
+            ui->label_tiaomastate->setText(tr("螺栓参数设置异常"));
+            break;
+        case 15:
+            ui->label_tiaomastate->setText(tr("请正确选择套筒"));
+            break;
+        case 16:
+            ui->label_tiaomastate->setText(tr("VIN码匹配失败"));
+            break;
+        case 17:
+            ui->label_tiaomastate->setText(tr("通道匹配失败"));
+            break;
+        case 18:
+            ui->label_tiaomastate->setText(tr("获取Job信息失败"));
+            break;
+        case 19:
+            ui->label_tiaomastate->setText(tr("不存在条码信息"));
+            break;
+        case 20:
+            ui->label_tiaomastate->setText(tr("条码不属于本站"));
+            break;
+        case 21:
+            ui->label_tiaomastate->setText(tr("此辆车不操作"));
+            //            ui->label_tiaomastate->setText(tr("Job匹配失败"));
+            break;
+        default:
+            ui->label_tiaomastate->setText("");
+            break;
+        }
+    }
+}
+
+void MainWindow::on_pushButton_18_clicked()
+{
+    this->close();
+}
+
+
+void MainWindow::gunPower(bool isOn)
+{
+    if(isOn)
+    {
+        if(SerialGunMode)
+        {
+            system("echo 0 > /sys/class/leds/control_uart2/brightness &");
+        }
+    }
+    else
+    {
+    }
+}
+
+/********************************************/
+//scan barcode
+/********************************************/
+void MainWindow::displayScanBarcode(QString name,QString type)
+{
+    qDebug()<<"&&&&&&&&&&&&&&&&& display num &&&&&&&&&&&&&&&&&&&&"<<name<<type;
+    if(type == "1")//请扫描条码
+    {
+        timerDelay();
+//        ui->label_17->setText(packSN);
+        ui->label_pdmarea->setStyleSheet(QString("border-image: url(/PDM/").append(name).append(")"));
+        ui->label_pdmarea->clear();
+    }
+    else if(type == "DisplayPressureResults"){//显示压力结果
+        if(name == "newshow"){
+            ui->label_17->setText(packSN);
+        }else{
+            ui->label_17->setText(name);
+        }
+    }else if(type == "startAirTest"){//检验通过，请开始密封测试
+        ui->label_17->setText(name);
+    }
+    else if(type == "21")//display packSN1
+    {
+        timerDelay();
+        qDebug()<<"this is display pack";
+        packSN = name;
+        ui->label_17->setText(packSN);
+        ui->label_pdmarea->clear();
+        ui->label_pdmarea->setStyleSheet("font: 100pt \"黑体\";background:transparent;");
+        ui->label_pdmarea->setText(tr("操作PACK1"));
+    }
+    else if(type == "301")
+    {
+        timerDelay();
+        ui->label_17->setText("条码匹配失败");
+        ui->label_pdmarea->clear();
+        ui->label_pdmarea->setStyleSheet("font: 50pt \"黑体\";background:transparent;");
+        ui->label_pdmarea->setText(name);
+    }
+    else if(type == "220")
+    {
+        timerDelay();
+        ui->label_17->setText("AGV放行");
+    }
+    else if(type == "201")//display packSN1
+    {
+        timerDelay();
+        ui->label_pdmarea->clear();
+        ui->label_pdmarea->setStyleSheet("font: 100pt \"黑体\";background:transparent;");
+        ui->label_pdmarea->setText(tr("请求拧紧位置"));
+    }
+    else if(type == "202")//display packSN1
+    {
+        timerDelay();
+        ui->label_pdmarea->clear();
+        ui->label_pdmarea->setStyleSheet("font: 100pt \"黑体\";background:transparent;");
+        ui->label_pdmarea->setText(tr("拧紧完成"));
+    }
+    else if(type == "203")//display packSN1
+    {
+        timerDelay();
+        ui->label_pdmarea->clear();
+        ui->label_pdmarea->setStyleSheet("font: 100pt \"黑体\";background:transparent;");
+        ui->label_pdmarea->setText(tr("请求堵头位置"));
+    }
+    else if(type == "204")//display packSN1
+    {
+        timerDelay();
+        ui->label_pdmarea->clear();
+        ui->label_pdmarea->setStyleSheet("font: 100pt \"黑体\";background:transparent;");
+        ui->label_pdmarea->setText(name);
+    }
+    else if(type == "205")//display packSN1
+    {
+        timerDelay();
+        ui->label_pdmarea->clear();
+        ui->label_pdmarea->setStyleSheet("font: 100pt \"黑体\";background:transparent;");
+        ui->label_pdmarea->setText(tr("请求下箱体位置号"));
+    }
+    else if(type == "206")//display
+    {
+        timerDelay();
+        ui->label_pdmarea->clear();
+        ui->label_pdmarea->setStyleSheet("font: 100pt \"黑体\";background:transparent;");
+        ui->label_pdmarea->setText(tr("操作错误！"));
+    }
+    else if(type == "22")//display packSN2
+    {
+        timerDelay();
+        packSN = name;
+        ui->label_17->setText(packSN);
+        ui->label_pdmarea->clear();
+        ui->label_pdmarea->setStyleSheet("font: 60pt \"黑体\";background:transparent;");
+        ui->label_pdmarea->setText(tr("操作PACK2"));
+    }
+    else if(type == "15")
+    {
+        timerDelay();
+        ui->label_17->setText(tr("等待托盘到位..."));
+        showhome();
+    }
+    else if(type == "30")
+    {
+        timerDelay();
+        qDebug()<<"this is put car";
+        ui->label_pdmarea->setStyleSheet("font: 60pt \"黑体\";background:transparent;");
+        if("MM" == vari1)
+            ui->label_pdmarea->setText(tr("托盘完成放行"));
+        if("M" == vari1)
+            ui->label_pdmarea->setText(tr("手动站AGV完成放行"));
+        if("A" == vari1)
+            ui->label_pdmarea->setText(tr("自动站AGV完成放行"));
+
+         //onLEDFlashAllOFF(0,"0",false);//关掉红绿黄灯
+         //FlashTime_y.start(500);//完成放行黄闪
+    }
+    else if(type == "122")
+    {
+        ui->pushButton_errorGo->show();
+        ui->pushButton_errorContinue_2->show();
+    }
+    else if(type == "111")
+    {
+        qDebug()<<"this is send pack error to mainwindow"<<GWhichPackError;
+        ui->label_pdmarea->setStyleSheet("font: 60pt \"黑体\";background:transparent;color: rgb(255, 0, 0);");
+        if(GWhichPackError == 1)
+        {
+            ui->label_pdmarea->setText(tr("PACK1异常，等待放行!!!"));
+        }
+        else if(GWhichPackError == 2)
+        {
+            ui->label_pdmarea->setText(tr("PACK2异常，等待放行!!!"));
+        }
+        else if(GWhichPackError == 3)
+        {
+            ui->label_pdmarea->setText(tr("PACK12异常，等待放行!!!"));
+        }
+        else if(GWhichPackError == 4)
+        {
+            ui->label_pdmarea->setText(tr("PACK不存在，等待放行!!!"));
+            isGostRun=true;
+            emit sendDrectGo();
+            //showhome();
+            QTimer::singleShot(3000,this,SLOT(directShowHome()));
         }
         else
-            QueueIsNull = true;
+        {
+            ui->label_pdmarea->setText(tr("PACK异常，等待放行!!!"));
+        }
+        if (!isGostRun)
+        {
+            ui->pushButton_errorGo->show();
+            ui->pushButton_errorContinue->show();
+            ui->pushButton_errorContinue_2->show();
+            isGostRun=false;
+        }
+        isGostRun=false;
     }
-}
+    else if(type == "31")
+    {
+        timerDelay();
+        ui->label_17->setText(tr("等待小车进站..."));
+        showhome();
+    }
+    else if(type == "4")//wait IO input
+    {
+        ui->label_17->setText(tr("等待触发信号"));
+    }
+    else if(type == "7")//display picture
+    {
+        timerDelay();
+        ui->label_17->setText(packSN);
+        ui->label_pdmarea->setStyleSheet(QString("border-image: url(/PDM/").append(name).append(")"));
+        ui->label_pdmarea->clear();
+    }
+    else if(type == "8")//display air test
+    {
+        timerDelay();
+        ui->label_17->setText(packSN);
+        ui->label_pdmarea->setStyleSheet(QString("border-image: url(/PDM/").append(name).append(")"));
+        ui->label_pdmarea->clear();
+        int x,y;
 
-void MainWindow::UpdateSqlFlag()
-{
-    // 更新数据库队列标志位
-    int flag = 0;
-    if(!query.exec("select min(RecordId) from FisPreview where UseFlag = 0"))
-        qDebug() <<"mainwindow 2187 row "  << query.lastError();
+        airTestStatus = 0;
+        pdmnowromisOk = true;
+        for(int i=0;i<2;i++)
+        {
+            qDebug()<<i<<"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@################";
+            butt[i] = new QPushButton(ui->stackedWidget_2);
+            label1[i] = new QLabel(ui->stackedWidget_2);
+            label2[i] = new QLabel(ui->stackedWidget_2);
+            butt[i]->raise();
+            butt[i]->setFlat(true);
+            label1[i]->setAlignment(Qt::AlignLeft);
+            label2[i]->setAlignment(Qt::AlignLeft);
+            butt[i]->setFocusPolicy(Qt::NoFocus);
+            label1[i]->setFocusPolicy(Qt::NoFocus);
+            label2[i]->setFocusPolicy(Qt::NoFocus);
+            butt[i]->setAttribute(Qt::WA_TransparentForMouseEvents);
+            label1[i]->setAttribute(Qt::WA_TransparentForMouseEvents);
+            label2[i]->setAttribute(Qt::WA_TransparentForMouseEvents);
+            butt[i]->setStyleSheet("border-image: url(:/LCD_CS351/LCD_CS351/35_all/w01.png);font: 18pt;");
+            //            butt[i]->setText(QString::number((i+1)));
+            if(i==0)
+            {
+                butt[i]->setText("1");
+            }
+            else
+            {
+                butt[i]->setText("2");
+            }
+            x = 10;
+            y = 10 + 50*i;
+            butt[i]->setGeometry(x,y,46,46);
+            label1[i]->setGeometry(x+23,y,140,23);
+            label2[i]->setGeometry(x+23,y+23,140,23);
+            label1[i]->setStyleSheet("background:transparent;");
+            label2[i]->setStyleSheet("background:transparent;");
+            butt[i]->show();
+            label1[i]->show();
+            label2[i]->show();
+        }
+        airButtonNum = 2;
+    }
+    else if(type == "显示托盘请求状态"){
+        ui->label_17->setText(name);
+    }
+    else if(type == "displayOnly"){
+        ui->label_17->setText(name);
+    }else if(type == "scanStepError"){
+        if(ui->label_tishu->isHidden()){
+            ui->label_tishu->show();
+        }
+        ui->label_tishu->setText(name);
+        QTimer::singleShot(20*1000,this,SLOT(closeTishu()));
+    }
     else
     {
-        if(query.next())
-        {
-            flag = query.value(0).toInt();
-            query.exec("update FisPreview set UseFlag = 1 where RecordId ="+QString::number(flag));
-        }
+        ui->label_17->setText(type);
     }
 }
-
-//RFID新来车型显示
-void MainWindow::receiveGetCar()
+void MainWindow::directShowHome()
 {
-    ISRESET  = true;
-    emit sendoperate();
-    system("echo 1 > /sys/class/leds/control_led2/brightness &");
-    system("echo 0 > /sys/class/leds/control_led9/brightness &");
-    ui->label_17->setText(tr("下辆车已进站"));
-    SYSS = "ING";
+    showhome();
 }
-
-void MainWindow::shutdown(int tmp)
-{
-    //qDebug() << "tmp " << tmp;
-    if(tmp == 1)
-    {
-        qDebug() << "halt here";
-        system("echo 0 > /sys/class/leds/control_lvds/brightness");
-        system("halt");
-    }
-    else if(tmp == 2)
-    {
-        qDebug() << "reboot here";
-        system("reboot");
-    }
-    else if(tmp == 3)
-    {
-        ui->label_black->hide();
-        delete e3;
-        delete save;
-    }
-    SaveWhat = "";
-    ISmaintenance = false;
-    workmode = false;
-}
-
+/*************************/
+//OK Button
+/*************************/
 void MainWindow::on_pushButton_16_clicked()
 {
-    if(isRFID == 2)
+#if DYTEST4
+    showWarningSpearhead();
+    showWarningSpearhead();
+#endif
+    configwarning(true);
+    emit sendToPlcReadyClicked();
+#if DYTEST1
+    //模拟做个托盘RFID读取，测试用
+    QString errorCode = "0000";
+    QByteArray code = (QString("BMCE-0")+QString::number(testAdd)).toLocal8Bit();
+    testAdd++;
+    emit sendTrayNUMTest(errorCode,code);
+#endif
+
+#if DYTEST2
+    displayScanBarcode("条码校验失败\n实际扫码#3Q0915646A\n需要扫码3#5NG915183C","301");
+#endif
+}
+
+/*************************/
+//EmergencyStop  急停
+/*************************/
+void MainWindow::showEmergencyStop(bool isMove)
+{
+    //FlashTime_r.start(200);
+    //In_Output->writeIOOutput("r_led",true);
+    if(!isMove)
     {
+        isEmergencyStop = true;
         e3 = new QGraphicsOpacityEffect(this);
         e3->setOpacity(0.5);
         ui->label_black->setGraphicsEffect(e3);
         ui->label_black->show();
         ui->label_black->setGeometry(0,0,1366,768);
-        SaveWhat = "delete_car";
-//        if(SerialGunMode)
-//        {
-//            system("echo 0 > /sys/class/leds/control_uart2/brightness &");
-//        }
+        isSaveShow = true;
+        SaveWhat = "EmergencyStop";
         save = new Save;
-        connect(save,SIGNAL(sendDelete_car(bool)),this,SLOT(delete_car(bool)));
-        connect(this,SIGNAL(sendDeleteCar_VIN(QString)),save,SLOT(show_VIN(QString)));
+        connect(this,SIGNAL(sendChangeEmergencyStop()),save,SLOT(revChangeEmergencyStop()));
+        connect(save,SIGNAL(sendresetEmergencyStop(bool)),this,SLOT(resetEmergencyStop(bool)));
         save->show();
-    }
-}
-
-void MainWindow::delete_car(bool deleteCar)
-{
-    if(deleteCar)
-    {
-        ui->label_black->hide();
-        delete e3;
-        delete save;
-        SaveWhat = "";
     }
     else
     {
-        ui->label_black->hide();
-        delete e3;
-        delete save;
-        SaveWhat = "";
+        emit sendChangeEmergencyStop();
+    }
+}
+
+void MainWindow::resetEmergencyStop(bool isReset)
+{
+    if(isReset)
+        closeSave();
+    emit sendStepResetEmergencyStop(isReset);
+}
+
+
+void MainWindow::on_pushButton_errorGo_clicked()
+{
+    if(Station.mid(0,2) == "OP")
+    {
+        emit sendErrorGo(1);
+        sleep(1);
+        ui->pushButton_errorGo->hide();
+        ui->pushButton_errorContinue_2->hide();
+    }
+    else
+    {
+        emit sendErrorGo(2);
+        sleep(1);
+        ui->pushButton_errorGo->hide();
+        ui->pushButton_errorContinue->hide();
+        ui->pushButton_errorContinue_2->hide();
+    }
+
+}
+
+void MainWindow::on_pushButton_errorContinue_clicked()
+{
+    emit sendErrorContinue();
+    sleep(1);
+    ui->pushButton_errorGo->hide();
+    ui->pushButton_errorContinue->hide();
+    ui->pushButton_errorContinue_2->hide();
+}
+
+void MainWindow::on_pushButton_errorContinue_2_clicked()
+{
+    if(Station.mid(0,2) == "OP")
+    {
+        qDebug()<<"bmceErrorContinue";
+        emit sendErrorContinue();
+        sleep(1);
+        ui->pushButton_errorGo->hide();
+        ui->pushButton_errorContinue_2->hide();
+    }
+    else
+    {
+        GWorkStatus = true;
+        emit sendErrorContinue();
+        qDebug()<<"this is GworkStatus"<<GWorkStatus;
+        sleep(1);
+        ui->pushButton_errorGo->hide();
+        ui->pushButton_errorContinue->hide();
+        ui->pushButton_errorContinue_2->hide();
+    }
+}
+
+//收到EKS钥匙信号
+void MainWindow::EKSStausChange(int eksStatus)
+{
+    if(eksStatus == greenKey || eksStatus == redKey){
+        if(GisBoltErrorCountFlag)//有过3次不合格
+        {
+            GisBoltErrorCountFlag = false;
+            GBlotErrorCount = 0;//螺栓连续错误个数清0，又可以重新打
+            emit sendOperate1(true,GiswhichChannel);
+            ui->label_tishu->hide();
+        }
+        else
+        {
+            ui->pushButton_readRFID->show();
+            ui->pushButton_deep1->show();
+            ui->pushButton_deep2->show();
+            ui->pushButton_deepUp->show();
+            ui->pushButton_deepDown->show();
+            ui->label_6->show();
+            ui->label_13->show();
+            ui->label_14->show();
+            ui->label_15->show();
+        }
+    }
+}
+
+//跳过PACK1
+void MainWindow::on_pushButton_deep1_clicked()
+{
+    sendEKSStatusEvent(1);
+    ui->pushButton_readRFID->hide();
+    ui->pushButton_deep1->hide();
+    ui->pushButton_deep2->hide();
+    ui->pushButton_deepUp->hide();
+    ui->pushButton_deepDown->hide();
+    ui->label_6->hide();
+    ui->label_13->hide();
+    ui->label_14->hide();
+    ui->label_15->hide();
+
+}
+
+//跳过PACK2
+void MainWindow::on_pushButton_deep2_clicked()
+{
+    sendEKSStatusEvent(2);
+    ui->pushButton_readRFID->hide();
+    ui->pushButton_deep1->hide();
+    ui->pushButton_deep2->hide();
+    ui->pushButton_deepUp->hide();
+    ui->pushButton_deepDown->hide();
+    ui->label_6->hide();
+    ui->label_13->hide();
+    ui->label_14->hide();
+    ui->label_15->hide();
+}
+
+//点击上一步
+void MainWindow::on_pushButton_deepUp_clicked()
+{
+    sendEKSStatusEvent(3);
+    ui->pushButton_readRFID->hide();
+    ui->pushButton_deep1->hide();
+    ui->pushButton_deep2->hide();
+    ui->pushButton_deepUp->hide();
+    ui->pushButton_deepDown->hide();
+    ui->label_6->hide();
+    ui->label_13->hide();
+    ui->label_14->hide();
+    ui->label_15->hide();
+}
+//点击下一步
+void MainWindow::on_pushButton_deepDown_clicked()
+{
+    sendEKSStatusEvent(4);
+    ui->pushButton_readRFID->hide();
+    ui->pushButton_deep1->hide();
+    ui->pushButton_deep2->hide();
+    ui->pushButton_deepUp->hide();
+    ui->pushButton_deepDown->hide();
+    ui->label_6->hide();
+    ui->label_13->hide();
+    ui->label_14->hide();
+    ui->label_15->hide();
+}
+
+//重新读取RFID
+void MainWindow::on_pushButton_readRFID_clicked()
+{
+    emit sendRFIDRead();
+    emit sendOperate1(false,0);
+    ui->pushButton_readRFID->hide();
+    ui->pushButton_deep1->hide();
+    ui->pushButton_deep2->hide();
+    ui->pushButton_deepUp->hide();
+    ui->pushButton_deepDown->hide();
+    ui->label_6->hide();
+    ui->label_13->hide();
+    ui->label_14->hide();
+    ui->label_15->hide();
+}
+
+//在label_showState上滚动显示文字内容
+void MainWindow::onShowState(QString states)
+{
+    qDebug()<<"this onShowState states"<<states;
+    QString next = ui->label_showState->text();
+    if(states == "handleRecvStatusMess is true"){
+        emit sendRollLable(next+" "+"handleRecvStatusMess is true");
+        qDebug()<<"this is onShowState states true"<<states;
+    }else{
+        qDebug()<<"this is onShowState states false"<<states;
+        emit sendRollLable(states);
+    }
+}
+
+//收到添加挂起步骤的信号
+void MainWindow::onGetSuspend()
+{
+    ui->label_pdmarea->clear();
+    ui->pushButton_Go->show();
+}
+
+//继续操作
+void MainWindow::on_pushButton_Go_clicked()
+{
+    ui->pushButton_Go->hide();
+    GisTightenGoOn = 1;
+}
+
+//红灯闪
+void MainWindow::onLEDFlash_r()
+{
+    if(LEDIsON_r){
+        LEDIsON_r = false;
+    }else{
+        LEDIsON_r = true;
+    }
+    In_Output->writeIOOutput("r_led",LEDIsON_r);
+    //qDebug()<<"red led on";
+    //onShowState("red on");//启动按钮亮
+}
+
+//绿灯闪
+void MainWindow::onLEDFlash_g()
+{
+    if(LEDIsON_g){
+        LEDIsON_g = false;
+    }else{
+        LEDIsON_g = true;
+    }
+    In_Output->writeIOOutput("g_led",LEDIsON_g);
+    //onShowState("green on");
+    //qDebug()<<"green led on";
+}
+
+//黄灯闪
+void MainWindow::onLEDFlash_y()
+{
+    if(LEDIsON_y){
+        LEDIsON_y = false;
+    }else{
+        LEDIsON_y = true;
+    }
+    In_Output->writeIOOutput("y_led",LEDIsON_y);
+    //qDebug()<<"yellow led on";
+    //onShowState("yellow on");
+}
+
+//关掉红绿黄灯
+void MainWindow::onLEDFlashAllOFF(int frequency,QString command,bool flag)
+{
+    FlashTime_r.stop();
+    FlashTime_g.stop();
+    FlashTime_y.stop();
+    In_Output->writeIOOutput("r_led",false);
+    In_Output->writeIOOutput("g_led",false);
+    In_Output->writeIOOutput("y_led",false);
+    QString flagToString = "";
+    if(flag){
+        flagToString = "true";
+    }else{
+        flagToString = "false";
+    }
+    //onShowState("frequency:" + QString::number(frequency) +",command:"+ command + ",flag:" +flagToString);
+
+    if(command == "light_red"){//亮红灯
+        In_Output->writeIOOutput("r_led",flag);
+    }else if(command == "light_green"){//亮绿灯
+        In_Output->writeIOOutput("g_led",flag);
+    }else if(command == "light_yellow"){//亮黄灯
+        In_Output->writeIOOutput("y_led",flag);
+    }else if(command == "flash_red"){//红闪
+        FlashTime_r.start(frequency);
+    }else if(command == "flash_green"){//绿闪
+        FlashTime_g.start(frequency);
+    }else if(command == "flash_yellow"){//黄闪
+        FlashTime_y.start(frequency);
+    }
+}
+
+void MainWindow::recEncoderFromTight(qint64 yEN, qint64 aEN)
+{
+    ui->label_AEN->show();
+    ui->label_YEN->show();
+    ui->label_AEN->setText(QString::number(aEN));
+    ui->label_YEN->setText(QString::number(yEN));
+}
+
+void MainWindow::revM020FromStep()
+{
+    ui->label_pdmarea->hide();
+    ui->label_m020Pack1Sn->show();
+    ui->label_m020Pqck2SN->show();
+    ui->label_m020Result->show();
+    ui->lineEdit_M020LineEdit->show();
+    ui->pushButton_M020SendPost->show();
+}
+
+void MainWindow::on_pushButton_M020SendPost_clicked()
+{
+    QString agvSN = ui->lineEdit_M020LineEdit->text();
+    emit sendM020ToPost(agvSN);
+    ui->label_m020Result->setText("");
+    ui->label_m020Pack1Sn->setText("");
+    ui->label_m020Pqck2SN->setText("");
+}
+
+void MainWindow::revm020FromInterface(QString result, QString pack1SN, QString pack2SN, QString packType)
+{
+    qDebug()<<"revm020FromInterface"<<result<<pack1SN<<pack2SN<<packType;
+    if(result == "0")
+    {
+        ui->label_m020Result->setText("绑定流水号失败！！！");
+    }
+    else
+    {
+        ui->label_m020Result->setText("绑定流水号成功！！！");
+        QString pack1SNTemp = "pack1SN:" + pack1SN;
+        QString pack2SNTemp = "pack2SN:" + pack2SN;
+        ui->label_m020Pack1Sn->setText(pack1SNTemp);
+        ui->label_m020Pqck2SN->setText(pack2SNTemp);
+    }
+}
+
+void MainWindow::revStartNewPack()
+{
+    packTime.start(1000);
+}
+
+//处理产量数据统计新增逻辑 在界面上显示
+void MainWindow::revEndNewPack(QString packType,QString pack1SN,QString pack1Status,QString pack2SN,QString pack2Status,QDateTime timeStartPack1,QDateTime timeStartPack2,QDateTime timeEnd)
+{
+    packTime.stop();
+    //GpackCount = packCount;
+    packNumber = 0;
+    qDebug()<<"addPackCount:"<<packType<<pack1SN<<pack1Status<<pack2SN<<pack2Status<<timeStartPack1<<timeStartPack2<<timeEnd;
+    double diffTime = 0;
+    if(pack1SN.size() > 0 || pack2SN.size() > 0){//有包
+        if(packType == "BEV"){
+            diffTime = timeStartPack1.secsTo(timeEnd);
+            if("1" == pack1Status){
+                packNumber++;
+            }
+        }else{//PHEV
+            if(Station.mid(0,2) == "OP" ||  Station.mid(0,2) == "VM"){
+                diffTime = timeStartPack1.secsTo(timeEnd);
+            }else{
+                diffTime = timeStartPack1.secsTo(timeEnd)/2;
+            }
+            if("1" == pack1Status || "1" == pack2Status){
+                if("1" == pack1Status && "1" == pack2Status){//两个包合格
+                    packNumber+=2;
+                }else{//一个包合格
+                    packNumber++;
+                }
+            }
+        }
+    }
+    GOutputToday += packNumber;
+    QString aaa = "当前节拍：";
+    QString bbb = "当天产量：";
+    aaa.append(QString::number(diffTime));
+    bbb.append(QString::number(GOutputToday));
+    ui->label_18->setText(aaa);
+    ui->label_19->setText(bbb);
+
+    //存储产量信息到产量表
+    if(pack1SN.size() > 0){
+        if(pack2SN.size() > 0){//两个包
+            emit sendpackMesToSql(pack1SN,packType,timeStartPack1,timeStartPack2,pack1Status,diffTime);
+            emit sendPackMesToInterface(pack1SN,packType,timeStartPack1.toString("yyyy-MM-dd hh:mm:ss"),timeStartPack2.toString("yyyy-MM-dd hh:mm:ss"),diffTime,pack1Status.toInt());
+        }else{//只有PACK1
+            emit sendpackMesToSql(pack1SN,packType,timeStartPack1,timeEnd,pack1Status,diffTime);
+            emit sendPackMesToInterface(pack1SN,packType,timeStartPack1.toString("yyyy-MM-dd hh:mm:ss"),timeEnd.toString("yyyy-MM-dd hh:mm:ss"),diffTime,pack1Status.toInt());
+        }
+    }
+    if(pack2SN.size() > 0){
+        emit sendpackMesToSql(pack2SN,packType,timeStartPack2,timeEnd,pack2Status,diffTime);
+        emit sendPackMesToInterface(pack2SN,packType,timeStartPack2.toString("yyyy-MM-dd hh:mm:ss"),timeEnd.toString("yyyy-MM-dd hh:mm:ss"),diffTime,pack2Status.toInt());
+    }
+
+    packCount = 0;
+}
+
+
+void MainWindow::displayDailyProduction()
+{
+    ui->label_19->setText("当天产量："+QString::number(GOutputToday));
+}
+
+void MainWindow::revPackNumberSum()
+{
+    packNumber++;
+
+}
+
+void MainWindow::packTimeStart()
+{
+    packCount++;
+    QString aaa = "当前节拍：";
+    aaa.append(QString::number(packCount)).append("秒");
+    ui->label_18->setText(aaa);
+}
+
+//测试发条码
+void MainWindow::on_pushButton_clicked()
+{
+#if DYTEST1
+    QByteArray va = "3#5NG915183C    #H004S0941#*K8CV6D-V0107.04.2003012178*=";
+    QString str = ui->lineEdit->text();
+    if(str.size() > 0){
+        va = str.toLocal8Bit().data();
+    }
+    emit sendCodeTest(va);
+#endif
+
+
+#if DYTEST3
+    EKSBuff = "";
+    emit saveEKSStatus();
+#endif
+}
+
+void MainWindow::on_but_bd2_clicked()
+{
+#if DYTEST1
+    QByteArray va = "#3Q0915646A    ###060319*288 LS301AAXC46*=";
+    QString str = ui->lineEdit->text();
+    if(str.size() > 0){
+        va = str.toLocal8Bit().data();
+    }
+    emit sendCodeTest(va);
+#endif
+
+#if DYTEST3
+    EKSBuff = "123456";
+    emit saveEKSStatus();
+#endif
+
+}
+
+void MainWindow::on_but_bd3_clicked()
+{
+#if DYTEST1
+    QByteArray va = "#5QE919891     ##432514305#040919*288 AX902584479*=";
+    QString str = ui->lineEdit->text();
+    if(str.size() > 0){
+        va = str.toLocal8Bit().data();
+    }
+    emit sendCodeTest(va);
+#endif
+}
+
+void MainWindow::on_but_bd4_1_clicked()
+{
+#if DYTEST1
+    QByteArray va = "#3Q0915646B    ###040919*288 LS300YLIKK1*=";
+    QString str = ui->lineEdit->text();
+    if(str.size() > 0){
+        va = str.toLocal8Bit().data();
+    }
+    emit sendCodeTest(va);
+#endif
+}
+
+void MainWindow::on_but_bd4_2_clicked()
+{
+#if DYTEST1
+    QByteArray va = "#3Q0915646B    ###040919*288 LS300YLIKK2*=";
+    QString str = ui->lineEdit->text();
+    if(str.size() > 0){
+        va = str.toLocal8Bit().data();
+    }
+    emit sendCodeTest(va);
+#endif
+}
+
+void MainWindow::on_but_bd4_3_clicked()
+{
+#if DYTEST1
+    QByteArray va = "#3Q0915646B    ###040919*288 LS300YLIKK3*=";
+    QString str = ui->lineEdit->text();
+    if(str.size() > 0){
+        va = str.toLocal8Bit().data();
+    }
+    emit sendCodeTest(va);
+#endif
+}
+
+void MainWindow::on_but_bd4_4_clicked()
+{
+#if DYTEST1
+    QByteArray va = "#3Q0915646B    ###040919*288 LS300YLIKK4*=";
+    QString str = ui->lineEdit->text();
+    if(str.size() > 0){
+        va = str.toLocal8Bit().data();
+    }
+    emit sendCodeTest(va);
+#endif
+}
+
+void MainWindow::on_but_ac1_clicked()
+{
+#if DYTEST1
+    QByteArray va = "3#5KE915227A    ###060319*288 LS301AAXC46*=";
+    QString str = ui->lineEdit->text();
+    if(str.size() > 0){
+        va = str.toLocal8Bit().data();
+    }
+    emit sendCodeTest(va);
+#endif
+}
+
+//显示枪头剩余次数低的警告
+void MainWindow::showWarningSpearhead()
+{
+    qDebug()<<"MainWindow::showWarningSpearhead";
+//    emit sendOperate1(false,groupNumCh);//切掉使能
+    e3 = new QGraphicsOpacityEffect(this);
+    e3->setOpacity(0.5);
+    ui->label_black->setGraphicsEffect(e3);
+    ui->label_black->show();
+    ui->label_black->setGeometry(0,0,1366,768);
+    isSaveShow = true;
+    SaveWhat = "WarningSpearhead";
+    save = new Save(this);
+    connect(save,SIGNAL(sendClose()),this,SLOT(closeSave()));
+    save->show();
+}
+
+
+void MainWindow::closeTishu()
+{
+    QString text = ui->label_tishu->text();
+    if((text.contains("别扫码") || text.contains("无订单信息"))&& !ui->label_tishu->isHidden()){
+        ui->label_tishu->hide();
     }
 }

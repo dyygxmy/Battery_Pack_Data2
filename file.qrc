@@ -17,8 +17,6 @@
         <file>LCD_CS351/LCD_CS351/35_all/21.bmp</file>
         <file>LCD_CS351/LCD_CS351/35_all/22.bmp</file>
         <file>LCD_CS351/LCD_CS351/35_all/50.bmp</file>
-        <file>LCD_CS351/LCD_CS351/35_all/52.bmp</file>
-        <file>LCD_CS351/LCD_CS351/35_all/53.bmp</file>
         <file>LCD_CS351/LCD_CS351/35_all/67.bmp</file>
         <file>LCD_CS351/LCD_CS351/35_all/68.bmp</file>
         <file>LCD_CS351/LCD_CS351/35_all/69.bmp</file>
@@ -43,9 +41,7 @@
         <file>LCD_CS351/LCD_CS351/logo/back2.png</file>
         <file>LCD_CS351/LCD_CS351/logo/back.png</file>
         <file>LCD_CS351/LCD_CS351/logo/go2.png</file>
-        <file>LCD_CS351/LCD_CS351/logo/server.bmp</file>
         <file>LCD_CS351/LCD_CS351/logo/RFID.bmp</file>
-        <file>LCD_CS351/LCD_CS351/logo/351.bmp</file>
         <file>LCD_CS351/LCD_CS351/logo/luosi.png</file>
         <file>LCD_CS351/LCD_CS351/logo/xuan.bmp</file>
         <file>LCD_CS351/LCD_CS351/logo/cancel.bmp</file>
@@ -66,8 +62,6 @@
         <file>LCD_CS351/LCD_CS351/logo/code.bmp</file>
         <file>LCD_CS351/LCD_CS351/logo/line.bmp</file>
         <file>LCD_CS351/LCD_CS351/logo/triangle.png</file>
-        <file>LCD_CS351/LCD_CS351/logo/barcode.bmp</file>
-        <file>LCD_CS351/LCD_CS351/logo/RFID_small.bmp</file>
         <file>LCD_CS351/LCD_CS351/logo/redcha.png</file>
         <file>LCD_CS351/LCD_CS351/logo/serve set.png</file>
         <file>LCD_CS351/LCD_CS351/logo/RFID set.png</file>
@@ -92,10 +86,73 @@
         <file>LCD_CS351/LCD_CS351/logo/battery_red.png</file>
         <file>LCD_CS351/LCD_CS351/logo/battery_red_2.png</file>
         <file>LCD_CS351/LCD_CS351/logo/on_0ff.png</file>
-        <file>LCD_CS351/LCD_CS351/DWIN_SET/home.bmp</file>
         <file>LCD_CS351/LCD_CS351/logo/battery1.png</file>
         <file>LCD_CS351/LCD_CS351/logo/battery2.png</file>
+        <file>LCD_CS351/LCD_CS351/35_all/LOGO.png</file>
+        <file>LCD_CS351/LCD_CS351/logo/barcode.bmp</file>
+        <file>LCD_CS351/LCD_CS351/logo/RFID_small.bmp</file>
+        <file>LCD_CS351/LCD_CS351/35_all/52.bmp</file>
+        <file>LCD_CS351/LCD_CS351/35_all/53.bmp</file>
         <file>LCD_CS351/LCD_CS351/35_all/queue.bmp</file>
         <file>LCD_CS351/LCD_CS351/35_all/queue1.bmp</file>
+        <file>LCD_CS351/LCD_CS351/logo/351.bmp</file>
+        <file>LCD_CS351/LCD_CS351/DWIN_SET/home_VW.bmp</file>
+        <file>LCD_CS351/LCD_CS351/DWIN_SET/home_BYD.bmp</file>
+        <file>LCD_CS351/LCD_CS351/logo/ICON-01.png</file>
+        <file>maindialog/35-08.png</file>
+        <file>maindialog/ICON-01.png</file>
+        <file>maindialog/ICON-02.png</file>
+        <file>maindialog/ICON-03.png</file>
+        <file>maindialog/ICON-04.png</file>
+        <file>maindialog/ICON-05.png</file>
+        <file>maindialog/ICON-06.png</file>
+        <file>maindialog/ICON-08.png</file>
+        <file>maindialog/ICON-09.png</file>
+        <file>maindialog/ICON-10.png</file>
+        <file>maindialog/ICON-11.png</file>
+        <file>maindialog/ICON-12.png</file>
+        <file>maindialog/ICON-13.png</file>
+        <file>maindialog/logo.png</file>
+        <file>LCD_CS351/LCD_CS351/logo/Radio_gray.png</file>
+        <file>LCD_CS351/LCD_CS351/logo/Head.png</file>
+        <file>LCD_CS351/LCD_CS351/logo/Barcode.png</file>
+        <file>LCD_CS351/LCD_CS351/logo/card.png</file>
+        <file>re/Administrator.png</file>
+        <file>re/Engineer.png</file>
+        <file>re/Operator.png</file>
+        <file>re/head/3.png</file>
+        <file>re/head/4.png</file>
+        <file>re/head/5.png</file>
+        <file>re/head/6.png</file>
+        <file>re/head/1.png</file>
+        <file>re/head/2.png</file>
+        <file>re/head/7.png</file>
+        <file>re/head/8.png</file>
+        <file>re/head/9.png</file>
+        <file>re/head/10.png</file>
+        <file>re/Administrator_white.png</file>
+        <file>maindialog/ICON-PDM.png</file>
+        <file>maindialog/ICON-14.png</file>
+        <file>LCD_CS351/LCD_CS351/logo/dat.png</file>
+        <file>LCD_CS351/LCD_CS351/logo/search.png</file>
+        <file>LCD_CS351/LCD_CS351/logo/checked_gray.png</file>
+        <file>LCD_CS351/LCD_CS351/logo/Down.png</file>
+        <file>LCD_CS351/LCD_CS351/logo/UP.png</file>
+        <file>LCD_CS351/LCD_CS351/DWIN_SET/home_GM.bmp</file>
+        <file>LCD_CS351/LCD_CS351/DWIN_SET/home_Benz.bmp</file>
+        <file>LCD_CS351/LCD_CS351/logo/GWK.png</file>
+        <file>LCD_CS351/LCD_CS351/35_all/background.png</file>
+        <file>LCD_CS351/LCD_CS351/logo/Server.png</file>
+        <file>LCD_CS351/LCD_CS351/logo/battery_white.png</file>
+        <file>LCD_CS351/LCD_CS351/logo/battery1_white.png</file>
+        <file>LCD_CS351/LCD_CS351/logo/battery2_white.png</file>
+        <file>LCD_CS351/LCD_CS351/logo/battery_2_white.png</file>
+        <file>LCD_CS351/LCD_CS351/logo/wifi_white.png</file>
+        <file>LCD_CS351/LCD_CS351/DWIN_SET/home_Haima.bmp</file>
+        <file>LCD_CS351/LCD_CS351/logo/Controller.png</file>
+        <file>LCD_CS351/LCD_CS351/logo/65-04.png</file>
+        <file>LCD_CS351/LCD_CS351/DWIN_SET/home_Dongfeng.bmp</file>
+        <file>LCD_CS351/LCD_CS351/DWIN_SET/home_BAIC.bmp</file>
+        <file>LCD_CS351/LCD_CS351/DWIN_SET/home_SVW2.bmp</file>
     </qresource>
 </RCC>
