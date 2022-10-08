@@ -1,1 +1,2 @@
-# Battery_Pack_Data2\n\rPackA160
+# Battery_Pack_Data2
+PackA160
