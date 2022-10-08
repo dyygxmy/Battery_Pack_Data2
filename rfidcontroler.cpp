@@ -1,26 +1,29 @@
 #include "rfidcontroler.h"
-
+#include <QDomDocument>
+//QByteArray sendToRfid;
 RfidControler::RfidControler(QObject *parent) :
     QObject(parent)
 {
-    RFIDISConnect = false;
+    RFIDIsConnect = false;
+
     this->moveToThread(&m_thread);
     m_thread.start();
+    readRFIDFlag = false;
+    count1 = 0;
+    dataTemp = "";
 }
 
 void RfidControler::rfidInit()
 {
-    QSettings *configIniRead = new QSettings("/config.ini", QSettings::IniFormat);
-    rfidip = configIniRead->value("baseinfo/RfidIp").toString();
-    rfidport = configIniRead->value("baseinfo/RfidPort").toInt();
+    qDebug()<< "rfidcontroller thread start 32111111111"<<rfidip<<rfidport;
     m_pTcpSocket = new QTcpSocket;
     connect(m_pTcpSocket,SIGNAL(readyRead()),this,SLOT(receivemss()));
     connect(m_pTcpSocket,SIGNAL(connected()),this,SLOT(connectedDo()));
     connect(m_pTcpSocket,SIGNAL(disconnected()),this,SLOT(disconnectedDo()));
     connect(&pingTimer,SIGNAL(timeout()),this,SLOT(pingTimers()));
     connect(m_pTcpSocket,SIGNAL(error(QAbstractSocket::SocketError)),this,SLOT(displayError(QAbstractSocket::SocketError)));
-    pingTimer.start(5000);
-    delete configIniRead;
+    pingTimer.start(2000);
+
 }
 
 void RfidControler::newConnect()
@@ -29,10 +32,10 @@ void RfidControler::newConnect()
     m_pTcpSocket->connectToHost(rfidip,rfidport); //连接到主机
 }
 
-void RfidControler::displayError(QAbstractSocket::SocketError )
+void RfidControler::displayError(QAbstractSocket::SocketError)
 {
     // qDebug() << "df" << m_pTcpSocket->errorString(); //输出错误信息
-    RFIDISConnect = false;
+    RFIDIsConnect = false;
 }
 
 void RfidControler::connectedDo()
@@ -40,17 +43,18 @@ void RfidControler::connectedDo()
     qDebug() << "rfid connect success";
     pingTimer.stop();
     emit rfidConnected(true);
-    RFIDISConnect = true;
-
+    RFIDIsConnect = true;
+    sendReset();
 }
 
 void RfidControler::disconnectedDo()
 {
     qDebug() << "rfidconnect dis";
     emit rfidConnected(false);
-    RFIDISConnect = false;
-    pingTimer.start(5000);
+    RFIDIsConnect = false;
+    pingTimer.start(2000);
 }
+
 void RfidControler::rfidDisconnectDo(bool istrue)
 {
     if(!istrue)
@@ -58,113 +62,156 @@ void RfidControler::rfidDisconnectDo(bool istrue)
         disconnectedDo();
     }
 }
+
 void RfidControler::pingTimers()
 {
-    if(!RFIDISConnect)
+    if(!RFIDIsConnect)
     {
         newConnect();
     }
-}
-
-//判断条码10条是否重复
-void RfidControler::pinIsEqual()
-{
-    isequeal = false;
-    if(seriallist.isEmpty())
+    if(readRFIDFlag)
     {
-        seriallist.push_back(tempPin);
-        whichindex++;
-    }
-    else
-    {
-        QList<QString>::iterator i;
-        for (i = seriallist.begin(); i != seriallist.end(); ++i)
-        {
-            if(!(QString::compare(tempPin, *i, Qt::CaseSensitive)))
-            {
-                isequeal = true;
-                break;
-            }
-        }
-        if(!isequeal)
-        {
-            if(seriallist.size() == 10)
-            {
-                seriallist[whichindex] = tempPin;
-            }
-            else
-            {
-                seriallist.push_back(tempPin);
-            }
-            whichindex++;
-            if(whichindex == 10)
-                whichindex = 0;
-        }
+        count1 ++;
     }
 }
-
+/*************************************************/
+//receive RFID Data
+/*************************************************/
 void RfidControler::receivemss()
 {
-    if(!CsIsConnect)
-    {
-        m_pTcpSocket->readAll();
-    }
-    else
-    {
-        QString hex = QString(m_pTcpSocket->readAll());
-       // qDebug() << "hex" << hex;
-        QByteArray ret;
-        QString &org = hex;
-        hex=hex.trimmed();
-        int n =2;
-        int size= org.size();
-        int space= qRound(size*1.0/n+0.5)-1;
-        if(space<=0)
-            return ;
-        for(int i=0,pos=n;i<space;++i,pos+=(n+1))
-        {
-            org.insert(pos,' ');
-        }
+    QByteArray data = m_pTcpSocket->readAll();
+    qDebug() <<"RfidControler::receivemss()"<< data;
+    sendToRfid=data;
+    dataTemp = data;
+    emit sendRequest();
+    //    emit sendPinToMasterTcp(true,data);
+    //qDebug() << "emit sendPinToMasterTcp";
+    QString errorStr;
+    int errorLine;
+    int errorColumn;
 
-        QStringList sl=hex.split(" ");
-        foreach(QString s,sl)
-        {
-            if(!s.isEmpty())
-                ret.append((char)s.toInt(0,16)&0xFF);
-        }
-        QString pin = QString(ret);
-        tempPin = pin.mid(2,14);
-        tempG9  = pin.mid(16,2);
-        pinIsEqual();
-        if(isequeal)
-        {
-            //qDebug() << tempPin << "fd1" << tempG9;
-        }
-        else
-        {
-            if(SYSS!="ING")
+    QDomDocument doc;
+    if (!doc.setContent(data, false, &errorStr, &errorLine,
+                        &errorColumn)) {
+        qDebug()<<tr("Parse error at line %1, column %2: %3").arg(errorLine).arg(errorColumn).arg(errorStr);
+        return;
+    }
+
+    QDomElement root = doc.documentElement();
+    if (root.tagName() != "reply") {
+        qCritical("Not a valid reply");
+        return;
+    }
+
+    parseReplyElement(root);
+    return;
+}
+
+void RfidControler::parseReplyElement(const QDomElement &element)
+{
+    QDomNode child = element.firstChild();
+    while (!child.isNull()) {
+        if (child.toElement().tagName() == "resultCode") {
+            QString resultCode = child.toElement().text();
+            qDebug()<<"resultCode:"<<resultCode;
+            if(resultCode != "0000")//readwrite fail
             {
-               // qDebug() << tempPin << "fd2" << tempG9;
-                emit sendPinToUi(tempPin,isequeal,tempG9);
-            }
-            else
-            {
-                //是ING状态，切断当前使能，等待工人确认
-                RFIDlock.lockForWrite();
-                if(rfidNextCom)
+                if(resultCode == "0018" || resultCode == "0019" || resultCode == "001F")
                 {
-                    RFIDlock.unlock();
-                    VIN_PIN_SQL_RFID = tempPin+tempG9;
+                    sleep(5);
+                    sendReset();
+                    qDebug()<<"this is reset rfid";
                 }
                 else
                 {
-                    rfidNextCom = true;
-                    RFIDlock.unlock();
-                    VIN_PIN_SQL_RFID = tempPin+tempG9;
-                    emit sendGetCar();
+                    emit RFIDDataToPLC("0003","");//RFID read error data
+                    return;
                 }
             }
         }
+        else if (child.toElement().tagName() == "reset") {
+            qDebug()<<"reset success!";
+            read_data("0000","0015");
+        }
+        else if (child.toElement().tagName() == "writeTagData") {
+            emit RFIDSuccess("write","");
+            qDebug()<<"write success!";
+        }
+        else if (child.toElement().tagName() == "readTagData") {
+            emit sendPinToMasterTcp(true,dataTemp);
+            parseReadElement(child.toElement());
+        }
+        child = child.nextSibling();
     }
 }
 
+void RfidControler::parseReadElement(const QDomElement &element)
+{
+    QDomNode child = element.firstChild();
+    while (!child.isNull()) {
+        if (child.toElement().tagName() == "returnValue") {
+            QDomNode returnValueChild = child.toElement().firstChild();
+            while (!returnValueChild.isNull()) {
+                if (returnValueChild.toElement().tagName() == "data") {
+                    QString data = returnValueChild.toElement().text();
+                    QByteArray data1 = data.left(data.indexOf("0D")).toAscii();
+                    emit RFIDSuccess("read",data1);
+                    emit RFIDDataToPLC("0000",QByteArray::fromHex(data1));//RFID read success
+                    qDebug()<<"rfid read data:"<<data;
+                }
+                returnValueChild = returnValueChild.nextSibling();
+            }
+        }
+        child = child.nextSibling();
+    }
+}
+
+
+void RfidControler::write_data(QByteArray add,QByteArray data)
+{
+    if(RFIDIsConnect)
+    {
+        QByteArray header =  "<command><writeTagData><startAddress>";
+        QByteArray tail = "</data></writeTagData></command>";
+        QByteArray writeCMD = header+add+"</startAddress><data>"+data+tail;
+        qDebug() <<"write RFID:"<< writeCMD;
+        m_pTcpSocket->write(writeCMD,writeCMD.length());
+    }
+}
+
+
+//请求rfid发送数据
+void RfidControler::read_data(QByteArray add,QByteArray lenth)
+{
+    if(!readRFIDFlag)
+    {
+        readRFIDFlag = true;
+        count1 = 0;
+    }
+    if(RFIDIsConnect)
+    {
+        readRFIDFlag = false;
+        count1 = 0;
+        QByteArray header =  "<command><readTagData><startAddress>";
+        QByteArray tail = "</dataLength></readTagData></command>";
+        QByteArray readCMD = header+add+"</startAddress><dataLength>"+lenth+tail;
+        qDebug() <<"read RFID"<<readCMD;
+        m_pTcpSocket->write(readCMD,readCMD.length());
+    }
+    else
+    {
+         if(count1 >= 2)
+         {
+            count1 = 0 ;
+            readRFIDFlag = false;
+            emit RFIDDataToPLC("0001","");//RFID no connect
+         }
+    }
+}
+
+void RfidControler::sendReset()
+{   
+    QByteArray resetdata = "<command><reset><param>0005000000010001</param></reset></command>";
+    qDebug()<<"this is rfid reset"<<resetdata;
+    m_pTcpSocket->write(resetdata,resetdata.length());
+}
